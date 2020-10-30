@@ -8,13 +8,14 @@ import com.google.gson.JsonObject;
 import ransomaware.Server;
 import ransomaware.SessionManager;
 import ransomaware.exceptions.InvalidMethodException;
+import ransomaware.exceptions.SessionExpiredException;
 import ransomaware.exceptions.UnauthorizedException;
 
 import java.io.IOException;
 
 public abstract class AbstractHandler implements HttpHandler {
 
-    private final Server server;
+    protected final Server server;
     private final String method;
     private final boolean requireAuth;
     private JsonObject body;
@@ -30,10 +31,13 @@ public abstract class AbstractHandler implements HttpHandler {
             throw new InvalidMethodException();
         }
         if (requireAuth) {
-            String token = getBodyAsJSON(exchange).get("login-token").getAsString();
-            if (SessionManager.validateSession(token)) {
-            } else {
-                throw new UnauthorizedException();
+            Integer token = getBodyAsJSON(exchange).get("login-token").getAsInt();
+            switch (SessionManager.isValidSession(token)) {
+                case INVALID:
+                    throw new UnauthorizedException();
+                case EXPIRED:
+                    throw new SessionExpiredException();
+                default:
             }
         }
     }
@@ -51,6 +55,6 @@ public abstract class AbstractHandler implements HttpHandler {
         } catch (IOException e) {
             System.err.println("Error on reading request body");
         }
+        return null;
     }
-
 }

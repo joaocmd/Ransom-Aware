@@ -6,7 +6,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import ransomaware.exceptions.DuplicateUsernameException;
 
-import java.security.MessageDigest;
+import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,11 +15,32 @@ public class SessionManager {
 
     private static ConcurrentHashMap<Integer, SessionObject> sessions = new ConcurrentHashMap<>();
 
-    public static boolean validateSession(String sessionToken) {
-
+    public enum SessionState {
+        VALID,
+        INVALID,
+        EXPIRED
     }
 
-    public static void register(String username, String password) {
+    public static SessionState isValidSession(Integer sessionToken) {
+        if (sessions.containsKey(sessionToken)) {
+            if (sessions.get(sessionToken).expirationMoment.isAfter(Instant.now())) {
+                return SessionState.VALID;
+            } else {
+                sessions.remove(sessionToken);
+                return SessionState.EXPIRED;
+            }
+        }
+        return SessionState.INVALID;
+    }
+
+    public static String getUsername(Integer sessionToken) {
+        if (sessions.containsKey(sessionToken)) {
+            return sessions.get(sessionToken).username;
+        }
+        return null;
+    }
+
+    public static void register(String username, String password) throws UnknownHostException {
         MongoClient client = new MongoClient(new MongoClientURI(ServerVariables.mongoUri));
         var query = new BasicDBObject("name", username);
 
@@ -36,7 +57,7 @@ public class SessionManager {
 
     }
 
-    public static int login(String username, String password) {
+    public static int login(String username, String password) throws UnknownHostException {
         MongoClient client = new MongoClient(new MongoClientURI(ServerVariables.mongoUri));
 
         var query = new BasicDBObject("name", username);

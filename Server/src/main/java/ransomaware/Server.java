@@ -19,6 +19,7 @@ public class Server {
         this.name = name;
         if (firstTime) {
             // createFS()
+            // createAdmin()
         } else {
             // validateFS()
         }
@@ -29,11 +30,13 @@ public class Server {
         HttpServer server;
         server = HttpServer.create(socketAddress, 0);
 
-        server.createContext("/login", new LoginHandler(this, "POST", false));
-        server.createContext("/create", new CreateFileHandler(this, "POST", true));
-        server.createContext("/list", new ListFileHandler(this, "GET", true));
-        server.createContext("/save", new SaveFileHandler(this, "POST", true));
-        server.createContext("/get", new GetFileHandler(this, "GET", true));
-    }
+//        server.createContext("/register", new RegisterHandler(this, "POST", false));
+//        server.createContext("/rollback", new RollBackHandler(this, "POST", false));
 
+        server.createContext("/login", new LoginHandler(this, "POST", false));
+//        server.createContext("/create", new CreateFileHandler(this, "POST", true));
+//        server.createContext("/list", new ListFileHandler(this, "GET", true));
+//        server.createContext("/get", new GetFileHandler(this, "GET", true));
+//        server.createContext("/save", new SaveFileHandler(this, "POST", true));
+    }
 }
