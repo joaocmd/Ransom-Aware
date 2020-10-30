@@ -1,9 +1,7 @@
 package ransomaware;
 
 import picocli.CommandLine;
-import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
 
 import java.util.concurrent.Callable;
 
@@ -22,7 +20,9 @@ public class App implements Callable<Integer> {
     private String mongoUrl = "mongodb://localhost:27017";
 
     public Integer call() throws Exception {
-        Server server = new Server(name, port, firstTime, mongoUrl);
+        Server server = new Server(name, port, firstTime);
+        ServerVariables.mongoUri = mongoUrl;
+        ServerVariables.name = name;
         server.start();
         return 0;
     }
