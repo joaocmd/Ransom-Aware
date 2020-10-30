@@ -5,6 +5,7 @@ import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import ransomaware.exceptions.DuplicateUsernameException;
+import ransomaware.exceptions.UnauthorizedException;
 
 import java.net.UnknownHostException;
 import java.security.SecureRandom;
@@ -13,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class SessionManager {
 
-    private static ConcurrentHashMap<Integer, SessionObject> sessions = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Integer, SessionObject> sessions = new ConcurrentHashMap<>();
 
     public enum SessionState {
         VALID,
@@ -21,7 +22,7 @@ public class SessionManager {
         EXPIRED
     }
 
-    public static SessionState isValidSession(Integer sessionToken) {
+    public static SessionState getSessionSate(Integer sessionToken) {
         if (sessions.containsKey(sessionToken)) {
             if (sessions.get(sessionToken).expirationMoment.isAfter(Instant.now())) {
                 return SessionState.VALID;
@@ -41,9 +42,9 @@ public class SessionManager {
     }
 
     public static void register(String username, String password) throws UnknownHostException {
-        MongoClient client = new MongoClient(new MongoClientURI(ServerVariables.mongoUri));
-        var query = new BasicDBObject("name", username);
+        MongoClient client = getMongoClient();
 
+        var query = new BasicDBObject("name", username);
         var collection = client.getDB(ServerVariables.name).getCollection("users");
         var user = collection.findOne(query);
         if (user == null) {
@@ -57,8 +58,8 @@ public class SessionManager {
 
     }
 
-    public static int login(String username, String password) throws UnknownHostException {
-        MongoClient client = new MongoClient(new MongoClientURI(ServerVariables.mongoUri));
+    public static int login(String username, String password) {
+        MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("name", username);
         DBObject user = client.getDB(ServerVariables.name).getCollection("users").findOne(query);
@@ -66,18 +67,30 @@ public class SessionManager {
 
         if (user != null) {
             String passwordDigest = SecurityUtils.getBase64(SecurityUtils.getDigest(password));
-            if (((String)user.get("password")).equals(passwordDigest)) {
+            if (user.get("password").equals(passwordDigest)) {
                 SecureRandom rand = new SecureRandom();
                 Integer token = rand.nextInt();
                 sessions.put(token, new SessionObject(username, Instant.now().plusSeconds(ServerVariables.SESSION_DURATION)));
                 return rand.nextInt();
             }
         }
+        throw new UnauthorizedException();
+    }
+
+    private static MongoClient getMongoClient() {
+        MongoClient client = null;
+        try {
+            client = new MongoClient(new MongoClientURI(ServerVariables.mongoUri));
+        } catch (UnknownHostException e) {
+            System.err.println("Can't establish connection to the database.");
+            System.exit(1);
+        }
+        return client;
     }
 
     private static class SessionObject {
-        private String username;
-        private Instant expirationMoment;
+        private final String username;
+        private final Instant expirationMoment;
 
         public SessionObject(String username, Instant expirationMoment) {
             this.username = username;
