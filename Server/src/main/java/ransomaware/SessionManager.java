@@ -7,8 +7,8 @@ import com.mongodb.MongoClientURI;
 import ransomaware.exceptions.DuplicateUsernameException;
 import ransomaware.exceptions.UnauthorizedException;
 
+import java.io.File;
 import java.net.UnknownHostException;
-import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,7 +46,7 @@ public class SessionManager {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("name", username);
-        var collection = client.getDB(ServerVariables.name).getCollection("users");
+        var collection = client.getDB(ServerVariables.NAME).getCollection("users");
         var user = collection.findOne(query);
         if (user == null) {
             String passwordDigest = SecurityUtils.getBase64(SecurityUtils.getDigest(password));
@@ -54,6 +54,11 @@ public class SessionManager {
                     .append("password", passwordDigest)
                     .append("key", userKey);
             collection.insert(obj);
+            client.close();
+
+            // FIXME: don't allow weird usernames ('joao/david/')
+            File userFolder = new File(String.format("%s/%s", ServerVariables.FS_PATH, username));
+            userFolder.mkdir();
         } else {
             client.close();
             throw new DuplicateUsernameException();
@@ -65,7 +70,7 @@ public class SessionManager {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("name", username);
-        DBObject user = client.getDB(ServerVariables.name).getCollection("users").findOne(query);
+        DBObject user = client.getDB(ServerVariables.NAME).getCollection("users").findOne(query);
         client.close();
 
         if (user != null) {
@@ -83,7 +88,7 @@ public class SessionManager {
     private static MongoClient getMongoClient() {
         MongoClient client = null;
         try {
-            client = new MongoClient(new MongoClientURI(ServerVariables.mongoUri));
+            client = new MongoClient(new MongoClientURI(ServerVariables.MONGO_URI));
         } catch (UnknownHostException e) {
             System.err.println("Can't establish connection to the database.");
             System.exit(1);

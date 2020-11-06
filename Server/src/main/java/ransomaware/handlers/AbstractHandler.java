@@ -5,6 +5,8 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.google.gson.JsonObject;
 
+import com.sun.net.httpserver.HttpsExchange;
+import ransomaware.RansomAware;
 import ransomaware.Server;
 import ransomaware.SessionManager;
 import ransomaware.exceptions.InvalidMethodException;
@@ -17,13 +19,13 @@ import java.io.OutputStream;
 
 public abstract class AbstractHandler implements HttpHandler {
 
-    protected final Server server;
+    protected final RansomAware server;
     private final String method;
     private final boolean requireAuth;
     private JsonObject body;
     private HttpExchange exchange;
 
-    public AbstractHandler(Server server, String method, boolean requireAuth) {
+    public AbstractHandler(RansomAware server, String method, boolean requireAuth) {
         this.server = server;
         this.method = method;
         this.requireAuth = requireAuth;
@@ -35,7 +37,7 @@ public abstract class AbstractHandler implements HttpHandler {
             throw new InvalidMethodException();
         }
         if (requireAuth) {
-            Integer token = getBodyAsJSON(exchange).get("login-token").getAsInt();
+            Integer token = getBodyAsJSON().get("login-token").getAsInt();
             switch (SessionManager.getSessionSate(token)) {
                 case INVALID:
                     throw new UnauthorizedException();

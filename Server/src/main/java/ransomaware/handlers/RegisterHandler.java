@@ -1,22 +1,21 @@
 package ransomaware.handlers;
 
 import com.google.gson.JsonObject;
-import com.sun.net.httpserver.HttpExchange;
-import ransomaware.Server;
+import com.sun.net.httpserver.HttpsExchange;
+import ransomaware.RansomAware;
 import ransomaware.SessionManager;
 import ransomaware.exceptions.DuplicateUsernameException;
-import ransomaware.exceptions.UnauthorizedException;
 
 import java.net.HttpURLConnection;
 import java.net.UnknownHostException;
 
 public class RegisterHandler extends AbstractHandler {
 
-    public RegisterHandler(Server server, String method, boolean requireAuth) {
+    public RegisterHandler(RansomAware server, String method, boolean requireAuth) {
         super(server, method, requireAuth);
     }
 
-    public void handle(HttpExchange exchange) {
+    public void handle(HttpsExchange exchange) {
         super.handle(exchange);
         JsonObject body = getBodyAsJSON();
 

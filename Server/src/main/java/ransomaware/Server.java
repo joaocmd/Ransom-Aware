@@ -1,55 +1,33 @@
 package ransomaware;
 
-import com.mongodb.MongoClient;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsParameters;
 import com.sun.net.httpserver.HttpsServer;
-import ransomaware.handlers.*;
+import ransomaware.handlers.LoginHandler;
+import ransomaware.handlers.RegisterHandler;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.TrustManagerFactory;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
 
 public class Server {
 
-    private String name;
-    private int port;
-    private MongoClient mongoClient;
-
-    public Server(String name, int port, boolean firstTime) throws UnknownHostException {
-        this.port = port;
-        this.name = name;
-        if (firstTime) {
-            firstTimeSetup();
-            // createFS()
-        } else {
-            // validateFS()
-        }
-    }
-
-    private void firstTimeSetup() {
-    }
-
-    private HttpsServer prepareHttpsServer(int port) {
+    private static HttpsServer prepareHttpsServer(RansomAware domain, int port) {
         SSLContext context = null;
         HttpsServer server = null;
         try {
             server = HttpsServer.create(new InetSocketAddress(port), 0);
             context = SSLContext.getInstance("TLS");
-            char[] password = ServerVariables.SSL_PASS.toCharArray();
             KeyStore ks = KeyStore.getInstance("JKS");
             FileInputStream fis = new FileInputStream(ServerVariables.SSL_KEYSTORE);
-            ks.load(fis, password);
+            ks.load(fis, ServerVariables.SSL_STOREPASS.toCharArray());
 
             KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-            kmf.init(ks, password);
+            kmf.init(ks, ServerVariables.SSL_KEYPASS.toCharArray());
 
             TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
             tmf.init(ks);
@@ -60,7 +38,7 @@ public class Server {
             System.exit(1);
         }
 
-        registerEndpoints(server);
+        registerEndpoints(domain, server);
 
         HttpsConfigurator configurator = new HttpsConfigurator(context) {
             public void configure(HttpsParameters params) {
@@ -73,20 +51,20 @@ public class Server {
         return  server;
     }
 
-    private void registerEndpoints(HttpsServer server) {
-        server.createContext("/register", new RegisterHandler(this, "POST", false));
-        server.createContext("/login", new LoginHandler(this, "POST", false));
-//        server.createContext("/create", new CreateFileHandler(this, "POST", true));
-//        server.createContext("/list", new ListFileHandler(this, "GET", true));
-//        server.createContext("/get", new GetFileHandler(this, "GET", true));
-//        server.createContext("/save", new SaveFileHandler(this, "POST", true));
-//        server.createContext("/grant", new GrantHandler(this, "POST", false));
-//        server.createContext("/revoke", new GrantHandler(this, "POST", false));
+    private static void registerEndpoints(RansomAware domain, HttpsServer server) {
+        server.createContext("/register", new RegisterHandler(domain, "POST", false));
+        server.createContext("/login", new LoginHandler(domain, "POST", false));
+//        server.createContext("/create", new CreateFileHandler(domain, "POST", true));
+//        server.createContext("/list", new ListFileHandler(domain, "GET", true));
+//        server.createContext("/get", new GetFileHandler(domain, "GET", true));
+//        server.createContext("/save", new SaveFileHandler(domain, "POST", true));
+//        server.createContext("/grant", new GrantHandler(domain, "POST", false));
+//        server.createContext("/revoke", new GrantHandler(domain, "POST", false));
 
     }
 
-    public void start() {
-        HttpsServer server = prepareHttpsServer(port);
+    public static void start(RansomAware domain, int port) {
+        HttpsServer server = prepareHttpsServer(domain, port);
         server.start();
         System.out.println("Server started successfully");
     }
