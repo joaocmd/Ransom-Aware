@@ -21,8 +21,7 @@ public class App implements Callable<Integer> {
 
     public Integer call() throws Exception {
         Server server = new Server(name, port, firstTime);
-        ServerVariables.mongoUri = mongoUrl;
-        ServerVariables.name = name;
+        ServerVariables.init(name, mongoUrl);
         server.start();
         return 0;
     }

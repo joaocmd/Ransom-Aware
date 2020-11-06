@@ -8,6 +8,7 @@ import ransomaware.exceptions.DuplicateUsernameException;
 import ransomaware.exceptions.UnauthorizedException;
 
 import java.net.UnknownHostException;
+import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,7 +42,7 @@ public class SessionManager {
         return null;
     }
 
-    public static void register(String username, String password) throws UnknownHostException {
+    public static void register(String username, String password, String userKey) throws UnknownHostException {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("name", username);
@@ -49,7 +50,9 @@ public class SessionManager {
         var user = collection.findOne(query);
         if (user == null) {
             String passwordDigest = SecurityUtils.getBase64(SecurityUtils.getDigest(password));
-            var obj = new BasicDBObject("name", username).append("password", passwordDigest);
+            var obj = new BasicDBObject("name", username)
+                    .append("password", passwordDigest)
+                    .append("key", userKey);
             collection.insert(obj);
         } else {
             client.close();
