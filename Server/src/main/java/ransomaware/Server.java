@@ -1,10 +1,7 @@
 package ransomaware;
 
-import com.sun.net.httpserver.HttpsConfigurator;
-import com.sun.net.httpserver.HttpsParameters;
-import com.sun.net.httpserver.HttpsServer;
-import ransomaware.handlers.LoginHandler;
-import ransomaware.handlers.RegisterHandler;
+import com.sun.net.httpserver.*;
+import ransomaware.handlers.*;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -48,14 +45,14 @@ public class Server {
             }
         };
         server.setHttpsConfigurator(configurator);
-        return  server;
+        return server;
     }
 
-    private static void registerEndpoints(RansomAware domain, HttpsServer server) {
+    private static void registerEndpoints(RansomAware domain, HttpServer server) {
         server.createContext("/register", new RegisterHandler(domain, "POST", false));
         server.createContext("/login", new LoginHandler(domain, "POST", false));
 //        server.createContext("/create", new CreateFileHandler(domain, "POST", true));
-//        server.createContext("/list", new ListFileHandler(domain, "GET", true));
+        server.createContext("/list", new ListFileHandler(domain, "GET", false));
 //        server.createContext("/get", new GetFileHandler(domain, "GET", true));
 //        server.createContext("/save", new SaveFileHandler(domain, "POST", true));
 //        server.createContext("/grant", new GrantHandler(domain, "POST", false));
@@ -65,7 +62,7 @@ public class Server {
 
     public static void start(RansomAware domain, int port) {
         HttpsServer server = prepareHttpsServer(domain, port);
+        System.out.println("Server starting!");
         server.start();
-        System.out.println("Server started successfully");
     }
 }

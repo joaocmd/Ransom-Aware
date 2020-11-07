@@ -1,6 +1,7 @@
 package ransomaware.handlers;
 
 import com.google.gson.JsonObject;
+import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpsExchange;
 import ransomaware.RansomAware;
 import ransomaware.SessionManager;
@@ -14,7 +15,8 @@ public class LoginHandler extends AbstractHandler {
         super(server, method, requireAuth);
     }
 
-    public void handle(HttpsExchange exchange) {
+    @Override
+    public void handle(HttpExchange exchange) {
         super.handle(exchange);
         JsonObject body = getBodyAsJSON();
 

@@ -4,7 +4,7 @@ import java.io.File;
 
 public class RansomAware {
 
-    public RansomAware(String name, int port, boolean firstTime) {
+    public RansomAware(String path, int port, boolean firstTime) {
         if (!firstTime) {
             // validateFS()
         }

@@ -46,7 +46,7 @@ public class SessionManager {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("name", username);
-        var collection = client.getDB(ServerVariables.NAME).getCollection("users");
+        var collection = client.getDB(ServerVariables.FS_PATH).getCollection("users");
         var user = collection.findOne(query);
         if (user == null) {
             String passwordDigest = SecurityUtils.getBase64(SecurityUtils.getDigest(password));
@@ -70,7 +70,7 @@ public class SessionManager {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("name", username);
-        DBObject user = client.getDB(ServerVariables.NAME).getCollection("users").findOne(query);
+        DBObject user = client.getDB(ServerVariables.FS_PATH).getCollection("users").findOne(query);
         client.close();
 
         if (user != null) {

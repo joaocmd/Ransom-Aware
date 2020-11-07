@@ -31,6 +31,7 @@ public abstract class AbstractHandler implements HttpHandler {
         this.requireAuth = requireAuth;
     }
 
+    @Override
     public void handle(HttpExchange exchange) {
         this.exchange = exchange;
         if (!exchange.getRequestMethod().equalsIgnoreCase(method)) {
