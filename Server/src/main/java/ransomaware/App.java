@@ -20,13 +20,12 @@ public class App implements Callable<Integer> {
     private String mongoUrl = "mongodb://localhost:27017";
 
     public Integer call() throws Exception {
-        Server server = new Server(name, port, firstTime);
         ServerVariables.init(name, mongoUrl);
-        server.start();
+        RansomAware ransomAware = new RansomAware(name, port, firstTime);
         return 0;
     }
 
-    public static void Main(String[] args) {
+    public static void main(String[] args) {
         int exitCode = new CommandLine(new App()).execute(args);
         System.exit(exitCode);
     }
