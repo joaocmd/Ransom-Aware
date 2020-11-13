@@ -8,7 +8,7 @@
     <artifactId>Server</artifactId>
     <version>1.0-SNAPSHOT</version>
     <properties>
-        <mainClass>ransomaware.client.App</mainClass>
+        <mainClass>ransomaware.App</mainClass>
     </properties>
     <build>
         <plugins>

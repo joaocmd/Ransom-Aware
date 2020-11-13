@@ -1,4 +1,4 @@
-package ransomaware.client;
+package ransomaware;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -11,8 +11,9 @@ public class Client {
 
     public static void requestGetFromURL(String url) {
         try {
-            System.setProperty("javax.net.ssl.trustStore", ClientVariables.KEYSTORE);
-            System.setProperty("javax.net.ssl.trustStorePassword", ClientVariables.SSL_STOREPASS);
+            // TODO: use custom keystore if desired
+//            System.setProperty("javax.net.ssl.trustStore", ClientVariables.KEYSTORE);
+//            System.setProperty("javax.net.ssl.trustStorePassword", ClientVariables.SSL_STOREPASS);
             URL myUrl = new URL(url);
             HttpsURLConnection conn = (HttpsURLConnection) myUrl.openConnection();
 

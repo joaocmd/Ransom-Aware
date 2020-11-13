@@ -20,7 +20,7 @@ public class Server {
             server = HttpsServer.create(new InetSocketAddress(port), 0);
             context = SSLContext.getInstance("TLS");
             KeyStore ks = KeyStore.getInstance("JKS");
-            FileInputStream fis = new FileInputStream(ServerVariables.KEYSTORE);
+            FileInputStream fis = new FileInputStream(ServerVariables.SSL_KEYSTORE);
             ks.load(fis, ServerVariables.SSL_STOREPASS.toCharArray());
 
             KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");

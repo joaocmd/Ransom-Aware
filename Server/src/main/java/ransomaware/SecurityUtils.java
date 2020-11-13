@@ -5,6 +5,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
 public class SecurityUtils {
+
+    private SecurityUtils() {}
+
     public static byte[] getDigest(String text) {
         MessageDigest digest;
         try {
@@ -13,7 +16,6 @@ public class SecurityUtils {
         } catch (NoSuchAlgorithmException e) {
             System.err.println("Couldn't get SHA-256 instance.");
             System.exit(1);
-            // FIXME: UGLY
             return new byte[0];
         }
     }

@@ -1,4 +1,4 @@
-package ransomaware.client;
+package ransomaware;
 
 public class ClientVariables {
     public static String FS_PATH;

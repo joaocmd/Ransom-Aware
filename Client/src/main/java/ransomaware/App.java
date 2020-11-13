@@ -1,4 +1,4 @@
-package ransomaware.client;
+package ransomaware;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Option;

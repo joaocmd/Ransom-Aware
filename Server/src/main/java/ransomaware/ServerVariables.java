@@ -6,13 +6,13 @@ public class ServerVariables {
     public static String FS_PATH;
 
     public static final long SESSION_DURATION = 60*20;
-    public static String KEYSTORE;
-    public static final String SSL_STOREPASS = "simulator";
-    public static final String SSL_KEYPASS = "simulator";
+    public static String SSL_KEYSTORE;
+    public static final String SSL_STOREPASS = "changeme";
+    public static final String SSL_KEYPASS = "changeme";
 
     public  static void init(String path, String mongoUri) {
         MONGO_URI = mongoUri;
         FS_PATH = path;
-        KEYSTORE = String.format("%s/server.keystore", FS_PATH);
+        SSL_KEYSTORE = String.format("%s/server-ssl.p12", FS_PATH);
     }
 }
