@@ -7,7 +7,6 @@ import com.mongodb.MongoClientURI;
 import ransomaware.exceptions.DuplicateUsernameException;
 import ransomaware.exceptions.UnauthorizedException;
 
-import java.io.File;
 import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.time.Instant;
@@ -43,7 +42,7 @@ public class SessionManager {
         return null;
     }
 
-    public static void register(String username, String password) throws UnknownHostException {
+    public static void register(String username, String password) {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("_id", username);
@@ -56,10 +55,7 @@ public class SessionManager {
 //                    .append("key", userKey);
             collection.insert(obj);
             client.close();
-
             // FIXME: don't allow weird usernames ('joao/david/')
-            File userFolder = new File(String.format("%s/%s", ServerVariables.FS_PATH, username));
-            userFolder.mkdir();
         } else {
             client.close();
             throw new DuplicateUsernameException();
@@ -78,9 +74,9 @@ public class SessionManager {
             String passwordDigest = SecurityUtils.getBase64(SecurityUtils.getDigest(password));
             if (user.get("password").equals(passwordDigest)) {
                 SecureRandom rand = new SecureRandom();
-                Integer token = rand.nextInt();
+                int token = rand.nextInt();
                 sessions.put(token, new SessionObject(username, Instant.now().plusSeconds(ServerVariables.SESSION_DURATION)));
-                return rand.nextInt();
+                return token;
             }
         }
         throw new UnauthorizedException();

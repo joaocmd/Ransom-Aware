@@ -14,10 +14,10 @@ public class SecurityUtils {
             digest = MessageDigest.getInstance("SHA-256");
             return digest.digest(text.getBytes());
         } catch (NoSuchAlgorithmException e) {
-            System.err.println("Couldn't get SHA-256 instance.");
+            e.printStackTrace();
             System.exit(1);
-            return new byte[0];
         }
+        return new byte[0];
     }
 
     public static String getBase64(byte[] src) {

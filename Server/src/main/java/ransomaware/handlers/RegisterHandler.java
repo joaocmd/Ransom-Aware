@@ -28,8 +28,6 @@ public class RegisterHandler extends AbstractHandler {
             sendResponse(HttpURLConnection.HTTP_OK, "Successfully registered");
         } catch (DuplicateUsernameException e) {
             super.sendResponse(HttpURLConnection.HTTP_CONFLICT, "Username already registered");
-        } catch (UnknownHostException e) {
-            super.sendResponse(HttpURLConnection.HTTP_INTERNAL_ERROR, "Something went wrong, we'll look into it");
         }
     }
 }

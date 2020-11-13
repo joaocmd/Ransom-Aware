@@ -6,7 +6,6 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
@@ -46,7 +45,7 @@ public class FileManager {
         String fileDir = ServerVariables.FILES_PATH + '/' + fileName;
         var dir = new File(fileDir);
 
-        var a = dir.mkdirs();
+        dir.mkdirs();
 
         // TODO: validate file here (what verifications though?)
 
