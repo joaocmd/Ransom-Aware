@@ -43,14 +43,10 @@ public class FileManager {
     }
 
     public static void saveFile(String fileName, byte[] data) {
-        System.out.println("Saving file " + fileName);
         String fileDir = ServerVariables.FILES_PATH + '/' + fileName;
         var dir = new File(fileDir);
 
         var a = dir.mkdirs();
-
-        System.out.println(fileDir);
-        System.out.println("Created dir? " + Boolean.toString(a));
 
         // TODO: validate file here (what verifications though?)
 
@@ -63,6 +59,8 @@ public class FileManager {
             saveNewFileVersion(fileName, newVersion);
         } catch (IOException e) {
             e.printStackTrace();
+            System.err.println("Error writing to file");
+            System.exit(1);
         }
     }
 

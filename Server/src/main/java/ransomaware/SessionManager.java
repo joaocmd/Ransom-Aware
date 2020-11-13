@@ -39,10 +39,11 @@ public class SessionManager {
         if (sessions.containsKey(sessionToken)) {
             return sessions.get(sessionToken).username;
         }
+        // TODO: else should never happen but should still be checked
         return null;
     }
 
-    public static void register(String username, String password, String userKey) throws UnknownHostException {
+    public static void register(String username, String password) throws UnknownHostException {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("_id", username);
@@ -51,8 +52,8 @@ public class SessionManager {
         if (user == null) {
             String passwordDigest = SecurityUtils.getBase64(SecurityUtils.getDigest(password));
             var obj = new BasicDBObject("_id", username)
-                    .append("password", passwordDigest)
-                    .append("key", userKey);
+                    .append("password", passwordDigest);
+//                    .append("key", userKey);
             collection.insert(obj);
             client.close();
 

@@ -23,4 +23,8 @@ public class SecurityUtils {
     public static String getBase64(byte[] src) {
         return new String(Base64.getEncoder().encode(src));
     }
+
+    public static byte[] decodeBase64(String data) {
+        return Base64.getDecoder().decode(data.getBytes());
+    }
 }

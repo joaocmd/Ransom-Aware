@@ -22,9 +22,9 @@ public class RegisterHandler extends AbstractHandler {
 
         String username = body.get("username").getAsString();
         String password = body.get("password").getAsString();
-        String encodedPublicKey = body.get("publicKey").getAsString();
+//        String encodedPublicKey = body.get("publicKey").getAsString();
         try {
-            SessionManager.register(username, password, encodedPublicKey);
+            SessionManager.register(username, password);
             sendResponse(HttpURLConnection.HTTP_OK, "Successfully registered");
         } catch (DuplicateUsernameException e) {
             super.sendResponse(HttpURLConnection.HTTP_CONFLICT, "Username already registered");
