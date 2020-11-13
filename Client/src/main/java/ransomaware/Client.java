@@ -15,20 +15,56 @@ public class Client {
 
         do {
             command = console.readLine("> ");
-            String[] args;
+            String[] args = command.split(" ");
 
             // TODO: Commands
-            switch (command) {
+            switch (args[0]) {
+                // list
                 case ("list"):
+                    if (args.length > 1) {
+                        System.out.println("List: Too many arguments.\nExample: list");
+                        break;
+                    }
                     String response = requestGetFromURL(ClientVariables.URL + "/list");
                     System.out.print(response);
                     break;
-                case ()
+                // get user/file.txt
+                case ("get"):
+                    getFile(args);
+                    break;
+                // send file.txt
+                case ("send"):
+                    sendFile(args);
+                    break;
                 default:
                     System.out.println("Command not found.");
             }
 
         } while (!command.equals("exit"));
+    }
+
+    public static void getFile(String[] args) {
+        if (args.length == 1 || args.length > 2) {
+            System.out.println("get: Too many arguments.\nExample: get a.txt");
+            return;
+        }
+        String file[] = args[1].split("/"), user = "", filename = "";
+        if (file.length == 1) { user = "me"; filename = file[0]; }
+        else if (file.length == 2) { user = file[0]; filename = file[1]; }
+
+        System.out.println(user + " - " + filename);
+    }
+
+    public static void sendFile(String[] args) {
+        if (args.length == 1 || args.length > 2) {
+            System.out.println("send: Too many arguments.\nExample: send a.txt");
+            return;
+        }
+        String file[] = args[1].split("/"), user = "", filename = "";
+        if (file.length == 1) { user = "me"; filename = file[0]; }
+        else if (file.length == 2) { user = file[0]; filename = file[1]; }
+
+        System.out.println(user + " - " + filename);
     }
 
     public static String requestGetFromURL(String url) {
