@@ -2,6 +2,10 @@
 
 ## Setup
 
+Go to your Java Security folder:
+
+`cd $(readlink -f /usr/bin/java | sed "s:bin/java::")/lib/security`
+
 Import the root-ca certificate into your JVM truststore:
 
 `sudo keytool -importcert -alias trustedca.pem -keystore cacerts -file /home/joao/Documents/Ransom-Aware/resources/root-ca/root-ca.pem -storepass changeit`

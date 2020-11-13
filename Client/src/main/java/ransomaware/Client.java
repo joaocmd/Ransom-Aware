@@ -9,7 +9,29 @@ import javax.net.ssl.*;
 
 public class Client {
 
-    public static void requestGetFromURL(String url) {
+    public static void start() {
+        Console console = System.console();
+        String command = "";
+
+        do {
+            command = console.readLine("> ");
+            String[] args;
+
+            // TODO: Commands
+            switch (command) {
+                case ("list"):
+                    String response = requestGetFromURL(ClientVariables.URL + "/list");
+                    System.out.print(response);
+                    break;
+                case ()
+                default:
+                    System.out.println("Command not found.");
+            }
+
+        } while (!command.equals("exit"));
+    }
+
+    public static String requestGetFromURL(String url) {
         try {
             // TODO: use custom keystore if desired
 //            System.setProperty("javax.net.ssl.trustStore", ClientVariables.KEYSTORE);
@@ -28,16 +50,22 @@ public class Client {
             BufferedReader br = new BufferedReader(isr);
 
             String inputLine;
+            StringBuilder output = new StringBuilder();
 
             while ((inputLine = br.readLine()) != null) {
-                System.out.println(inputLine);
+                // System.out.println(inputLine);
+                output.append(inputLine + '\n');
             }
 
             br.close();
+
+            return output.toString();
         } catch (Exception e) {
             //FIXME: UGLY
             System.out.println(e.getMessage());
             System.exit(1);
         }
+
+        return "";
     }
 }

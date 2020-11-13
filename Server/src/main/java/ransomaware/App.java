@@ -7,8 +7,8 @@ import java.util.concurrent.Callable;
 
 public class App implements Callable<Integer> {
 
-    @Option(names = {"-p", "--path"}, required = true, description = "Instance path.")
-    private String path;
+    @Option(names = {"-p", "--path"}, required = false, description = "Instance path.")
+    private String path = "ransom-aware";
 
     @Option(names = {"-P", "--port"}, description = "Server port to bind to.")
     private int port = 8443;

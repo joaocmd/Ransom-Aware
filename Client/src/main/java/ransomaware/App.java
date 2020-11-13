@@ -8,7 +8,7 @@ import java.util.concurrent.Callable;
 public class App implements Callable<Integer> {
 
     @Option(names = {"-p", "--path"}, required = false, description = "Instance path.")
-    private String path = "ransom-aware";
+    private String path = "workspace";
 
     @Option(names = {"-s", "--set-up"}, negatable = true, description = "Run first time setup if specified.")
     private boolean firstTime;
@@ -17,7 +17,6 @@ public class App implements Callable<Integer> {
     private String url = "localhost:8443";
 
     public Integer call() throws Exception {
-        ClientVariables.init(path, url);
         RansomAware ransomAware = new RansomAware(path, url);
         return 0;
     }
