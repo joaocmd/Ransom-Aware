@@ -45,12 +45,12 @@ public class SessionManager {
     public static void register(String username, String password, String userKey) throws UnknownHostException {
         MongoClient client = getMongoClient();
 
-        var query = new BasicDBObject("name", username);
+        var query = new BasicDBObject("_id", username);
         var collection = client.getDB(ServerVariables.FS_PATH).getCollection("users");
         var user = collection.findOne(query);
         if (user == null) {
             String passwordDigest = SecurityUtils.getBase64(SecurityUtils.getDigest(password));
-            var obj = new BasicDBObject("name", username)
+            var obj = new BasicDBObject("_id", username)
                     .append("password", passwordDigest)
                     .append("key", userKey);
             collection.insert(obj);
@@ -69,7 +69,7 @@ public class SessionManager {
     public static int login(String username, String password) {
         MongoClient client = getMongoClient();
 
-        var query = new BasicDBObject("name", username);
+        var query = new BasicDBObject("_id", username);
         DBObject user = client.getDB(ServerVariables.FS_PATH).getCollection("users").findOne(query);
         client.close();
 

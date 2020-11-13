@@ -21,12 +21,13 @@ public class App implements Callable<Integer> {
 
     public Integer call() {
         ServerVariables.init(path, mongoUrl);
-        RansomAware ransomAware = new RansomAware(path, port, firstTime);
+//        RansomAware ransomAware = new RansomAware(path, port, firstTime);
         return 0;
     }
 
     public static void main(String[] args) {
         int exitCode = new CommandLine(new App()).execute(args);
+        FileManager.saveFile("a/teste", "test123".getBytes());
 //        System.exit(exitCode);
     }
 }

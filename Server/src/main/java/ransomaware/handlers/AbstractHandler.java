@@ -16,6 +16,7 @@ import ransomaware.exceptions.UnauthorizedException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 
 public abstract class AbstractHandler implements HttpHandler {
 
