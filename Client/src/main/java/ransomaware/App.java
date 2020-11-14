@@ -17,7 +17,9 @@ public class App implements Callable<Integer> {
     private String url = "localhost:8443";
 
     public Integer call() throws Exception {
-        RansomAware ransomAware = new RansomAware(path, url);
+        ClientVariables.init(path, url);
+        Client client = new Client();
+        client.start();
         return 0;
     }
 
