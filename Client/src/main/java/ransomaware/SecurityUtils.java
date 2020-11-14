@@ -1,4 +1,4 @@
-package ransomaware.client;
+package ransomaware;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

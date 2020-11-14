@@ -27,6 +27,9 @@ public class LoginHandler extends AbstractHandler {
             sendResponse(HttpURLConnection.HTTP_OK, Integer.toString(sessionToken));
         } catch (UnauthorizedException e) {
             super.sendResponse(HttpURLConnection.HTTP_UNAUTHORIZED, "Invalid credentials");
+        } catch (Exception e) {
+            // FIXME: Check if mongo is started :(
+            e.printStackTrace();
         }
     }
 }
