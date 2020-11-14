@@ -36,6 +36,7 @@ public abstract class AbstractHandler implements HttpHandler {
         if (!exchange.getRequestMethod().equalsIgnoreCase(method)) {
             throw new InvalidMethodException();
         }
+        convertBodyToJSON();
         if (requireAuth) {
             Integer token = getBodyAsJSON().get("login-token").getAsInt();
             this.sessionToken = token;
@@ -51,21 +52,20 @@ public abstract class AbstractHandler implements HttpHandler {
         }
     }
 
-    protected JsonObject getBodyAsJSON() {
-        if (this.body != null) {
-            return this.body;
-        }
-
+    protected void convertBodyToJSON() {
         try (InputStream is = exchange.getRequestBody()) {
             String bodyString = new String(is.readAllBytes());
             JsonObject bodyJson = JsonParser.parseString(bodyString).getAsJsonObject();
             this.body = bodyJson;
-            return bodyJson;
         } catch (IOException e) {
+            e.printStackTrace();
             System.err.println("Error on reading request body");
             sendResponse(HttpURLConnection.HTTP_BAD_REQUEST, "Malformed request body");
         }
-        return null;
+    }
+
+    protected JsonObject getBodyAsJSON() {
+        return this.body;
     }
 
     protected void sendResponse(int statusCode, String message) {

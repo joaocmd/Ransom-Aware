@@ -8,10 +8,10 @@ import java.io.Console;
 import java.net.http.HttpClient;
 
 public class LoginCommand extends AbstractCommand {
-    int sessionToken;
+    String sessionToken;
 
     public LoginCommand() {
-        super();
+        super("");
     }
 
     /**
@@ -40,12 +40,21 @@ public class LoginCommand extends AbstractCommand {
         String response = super.requestPostFromURL(ClientVariables.URL + "/login", jsonRoot, client);
 
         // TODO: Store session token or check if error
-        System.out.println("Response: " + response);
+        // Check if error
+        JsonObject jsonResponse = JsonParser.parseString(response).getAsJsonObject();
+        int status = jsonResponse.get("status").getAsInt();
+        if (status != 200) {
+            // FIXME: Check for unauthorized, etc.
+            System.out.println("Error logging in.");
+            return false;
+        }
+        sessionToken = jsonResponse.get("login-token").getAsString();
+        System.out.println("Login successful!");
         return true;
     }
 
     @Override
-    public int getSessionToken() {
+    public String getSessionToken() {
         return sessionToken;
     }
 }

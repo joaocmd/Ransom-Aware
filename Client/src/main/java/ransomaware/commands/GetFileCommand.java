@@ -5,16 +5,14 @@ import com.google.gson.JsonParser;
 import ransomaware.ClientVariables;
 import ransomaware.SecurityUtils;
 
-import java.io.File;
 import java.net.http.HttpClient;
 import java.nio.file.Files;
-import java.nio.file.FileWriter;
 import java.nio.file.Path;
 
 public class GetFileCommand extends AbstractCommand {
 
-    public GetFileCommand() {
-        super();
+    public GetFileCommand(String sessionToken) {
+        super(sessionToken);
     }
 
     /**
@@ -38,18 +36,16 @@ public class GetFileCommand extends AbstractCommand {
             JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
             jsonRoot.addProperty("user", user);
             jsonRoot.addProperty("name", filename);
-            //TODO
-            jsonRoot.addProperty("login-token", null);
+            // FIXME: this should be in all methods
+            jsonRoot.addProperty("login-token", Integer.valueOf(super.getSessionToken()));
 
-            String response = requestPostFromURL(ClientVariables.URL + "/get", jsonRoot, client);
+            String response = requestPostFromURL(ClientVariables.URL + "/files", jsonRoot, client);
             
-            JsonObject json = JsonParser.parse(response).asJsonObject();
+            JsonObject json = JsonParser.parseString(response).getAsJsonObject();
 
-            Path path = new Path(filename);
             byte[] data = SecurityUtils.decodeBase64(json.get("data").getAsString());
 
-            Files.write(path, data);
-            Files.close();
+            Files.write(Path.of(ClientVariables.FS_PATH + filename), data);
         } catch (Exception e) {
             // FIXME:
             e.printStackTrace();

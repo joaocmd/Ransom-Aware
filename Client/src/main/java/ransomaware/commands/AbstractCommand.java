@@ -8,14 +8,16 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 public abstract class AbstractCommand {
+    String sessionToken;
 
-    public AbstractCommand() {
+    public AbstractCommand(String sessionToken) {
+        this.sessionToken = sessionToken;
     }
 
     public abstract boolean run(String[] args, HttpClient client);
 
-    public int getSessionToken() {
-        return 0;
+    public String getSessionToken() {
+        return sessionToken;
     }
 
     String requestGetFromURL(String url, HttpClient client) {
@@ -42,6 +44,7 @@ public abstract class AbstractCommand {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
                     .header("Content-Type", "application/json")
+                    .header("Cache-Control", "no-store")
                     .POST(HttpRequest.BodyPublishers.ofString(jsonObject.toString()))
                     .build();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());

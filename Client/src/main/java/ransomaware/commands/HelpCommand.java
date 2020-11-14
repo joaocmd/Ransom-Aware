@@ -5,7 +5,7 @@ import java.net.http.HttpClient;
 public class HelpCommand extends AbstractCommand {
 
     public HelpCommand() {
-        super();
+        super("");
     }
 
     /**

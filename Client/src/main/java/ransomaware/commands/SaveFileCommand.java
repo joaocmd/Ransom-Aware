@@ -12,8 +12,8 @@ import java.nio.file.Path;
 
 public class SaveFileCommand extends AbstractCommand {
 
-    public SaveFileCommand() {
-        super();
+    public SaveFileCommand(String sessionToken) {
+        super(sessionToken);
     }
 
     /**
@@ -56,6 +56,8 @@ public class SaveFileCommand extends AbstractCommand {
             jsonInfo.addProperty("user", user);
             jsonInfo.addProperty("name", filename);
             jsonRoot.add("info", jsonInfo);
+            // FIXME: this should be in all methods
+            jsonRoot.addProperty("login-token", Integer.valueOf(super.getSessionToken()));
 
             System.out.println(jsonRoot);
 

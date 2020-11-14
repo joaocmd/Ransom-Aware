@@ -30,6 +30,8 @@ public class ListFileHandler extends AbstractHandler {
         JsonObject response = JsonParser.parseString("{}").getAsJsonObject();
         response.add("files", files);
 
+        // System.out.println("files: " + response);
+
         super.sendResponse(HttpURLConnection.HTTP_OK, response);
     }
 }

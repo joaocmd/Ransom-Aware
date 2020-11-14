@@ -23,6 +23,6 @@ public class SecurityUtils {
     }
 
     public static byte[] decodeBase64(String src) {
-        return new String(Base64.getDecoder().decode(src));
+        return Base64.getDecoder().decode(src);
     }
 }

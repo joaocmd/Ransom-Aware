@@ -1,13 +1,15 @@
 package ransomaware.commands;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import ransomaware.ClientVariables;
 
 import java.net.http.HttpClient;
 
 public class ListFilesCommand extends AbstractCommand {
 
-    public ListFilesCommand() {
-        super();
+    public ListFilesCommand(String sessionToken) {
+        super(sessionToken);
     }
 
     /**
@@ -21,7 +23,12 @@ public class ListFilesCommand extends AbstractCommand {
             System.out.println("List: Too many arguments.\nExample: list");
             return false;
         }
-        String response = super.requestGetFromURL(ClientVariables.URL + "/list", client);
+
+        JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
+        // FIXME: this should be in all methods
+        jsonRoot.addProperty("login-token", Integer.valueOf(super.getSessionToken()));
+
+        String response = super.requestPostFromURL(ClientVariables.URL + "/list", jsonRoot, client);
         System.out.print(response);
 
         return true;
