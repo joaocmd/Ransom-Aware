@@ -39,6 +39,10 @@ public class Client {
                 case ("save"):
                     saveFile(args);
                     break;
+                // login
+                case ("login"):
+                    login(args);
+                    break;
                 case ("help"):
                     // TODO: Show commands
                     break;
@@ -49,6 +53,10 @@ public class Client {
         } while (!command.equals("exit"));
     }
 
+    /**
+     * getFile
+     * @param args - for example: ['get','a.txt'] or ['get','masterzeus','a.txt']
+     */
     public static void getFile(String[] args) {
         if (args.length == 1 || args.length > 2) {
             System.out.println("get: Too many arguments.\nExample: get a.txt");
@@ -113,6 +121,32 @@ public class Client {
         }
     }
 
+    /**
+     * login
+     * @param args
+     */
+    public static void login(String[] args) {
+        if (args.length != 1) {
+            System.out.println("login: Too many arguments.\nExample: login");
+            return;
+        }
+
+        Console console = System.console();
+        String user = console.readLine("user: ");
+        String password = new String(console.readPassword("password: "));
+
+        // Create JSON
+        JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
+        jsonRoot.addProperty("user", user);
+        jsonRoot.addProperty("password", password);
+
+        // Send request
+        requestPostFromURL(ClientVariables.URL + "/login", jsonRoot);
+
+    }
+
+    // ----
+
     public static String requestGetFromURL(String url) {
         try {
             // TODO: use custom keystore if desired
@@ -136,6 +170,35 @@ public class Client {
         } catch (Exception e) {
             //FIXME: UGLY
             System.out.println(e.getMessage());
+            System.exit(1);
+        }
+
+        return "";
+    }
+
+    public static String requestPostFromURL(String url, JsonObject jsonObject) {
+        try {
+            // TODO: use custom keystore if desired
+            // System.setProperty("javax.net.ssl.trustStore", ClientVariables.KEYSTORE);
+            // System.setProperty("javax.net.ssl.trustStorePassword", ClientVariables.SSL_STOREPASS);
+            URL myUrl = new URL(url);
+            HttpsURLConnection conn = (HttpsURLConnection) myUrl.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type","application/json");
+            conn.setDoOutput(true);
+
+            DataOutputStream output = new DataOutputStream(conn.getOutputStream());
+
+            // Send Json
+            String jsonData = jsonObject.toString();
+            output.writeBytes(jsonData);
+
+            output.close();
+
+            return output.toString();
+        } catch (Exception e) {
+            //FIXME: UGLY
+            e.printStackTrace();
             System.exit(1);
         }
 

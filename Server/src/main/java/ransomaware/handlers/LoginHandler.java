@@ -17,11 +17,13 @@ public class LoginHandler extends AbstractHandler {
 
     @Override
     public void handle(HttpExchange exchange) {
+        System.out.println("test");
         super.handle(exchange);
         JsonObject body = getBodyAsJSON();
 
         String username = body.get("username").getAsString();
         String password = body.get("password").getAsString();
+        System.out.println(username + " - " + password);
         try {
             int sessionToken = SessionManager.login(username, password);
             sendResponse(HttpURLConnection.HTTP_OK, Integer.toString(sessionToken));
