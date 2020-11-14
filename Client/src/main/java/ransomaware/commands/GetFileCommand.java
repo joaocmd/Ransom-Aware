@@ -1,6 +1,15 @@
 package ransomaware.commands;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import ransomaware.ClientVariables;
+import ransomaware.SecurityUtils;
+
+import java.io.File;
 import java.net.http.HttpClient;
+import java.nio.file.Files;
+import java.nio.file.FileWriter;
+import java.nio.file.Path;
 
 public class GetFileCommand extends AbstractCommand {
 
@@ -26,9 +35,21 @@ public class GetFileCommand extends AbstractCommand {
         else if (file.length == 2) { user = file[0]; filename = file[1]; }
 
         try {
-            // TODO: Send request to get file
-            // TODO: Write file
+            JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
+            jsonRoot.addProperty("user", user);
+            jsonRoot.addProperty("name", filename);
+            //TODO
+            jsonRoot.addProperty("login-token", null);
 
+            String response = requestPostFromURL(ClientVariables.URL + "/get", jsonRoot, client);
+            
+            JsonObject json = JsonParser.parse(response).asJsonObject();
+
+            Path path = new Path(filename);
+            byte[] data = SecurityUtils.decodeBase64(json.get("data").getAsString());
+
+            Files.write(path, data);
+            Files.close();
         } catch (Exception e) {
             // FIXME:
             e.printStackTrace();
