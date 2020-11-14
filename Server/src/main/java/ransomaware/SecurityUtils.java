@@ -14,13 +14,17 @@ public class SecurityUtils {
             digest = MessageDigest.getInstance("SHA-256");
             return digest.digest(text.getBytes());
         } catch (NoSuchAlgorithmException e) {
-            System.err.println("Couldn't get SHA-256 instance.");
+            e.printStackTrace();
             System.exit(1);
-            return new byte[0];
         }
+        return new byte[0];
     }
 
     public static String getBase64(byte[] src) {
         return new String(Base64.getEncoder().encode(src));
+    }
+
+    public static byte[] decodeBase64(String data) {
+        return Base64.getDecoder().decode(data.getBytes());
     }
 }

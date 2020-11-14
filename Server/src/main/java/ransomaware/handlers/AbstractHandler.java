@@ -16,6 +16,7 @@ import ransomaware.exceptions.UnauthorizedException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 
 public abstract class AbstractHandler implements HttpHandler {
 
@@ -24,6 +25,7 @@ public abstract class AbstractHandler implements HttpHandler {
     private final boolean requireAuth;
     private JsonObject body;
     private HttpExchange exchange;
+    private int sessionToken;
 
     public AbstractHandler(RansomAware server, String method, boolean requireAuth) {
         this.server = server;
@@ -39,6 +41,7 @@ public abstract class AbstractHandler implements HttpHandler {
         }
         if (requireAuth) {
             Integer token = getBodyAsJSON().get("login-token").getAsInt();
+            this.sessionToken = token;
             switch (SessionManager.getSessionSate(token)) {
                 case INVALID:
                     throw new UnauthorizedException();
@@ -73,5 +76,9 @@ public abstract class AbstractHandler implements HttpHandler {
         } catch (IOException e) {
             System.err.println("Error on writing response body");
         }
+    }
+
+    protected int getSessionToken() {
+        return this.sessionToken;
     }
 }
