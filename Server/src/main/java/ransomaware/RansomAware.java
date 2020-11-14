@@ -12,6 +12,7 @@ public class RansomAware {
     private final HashMap<String, Set<String>> usersWithAccess = new HashMap<>();
 
     public RansomAware(String path, int port, boolean firstTime) {
+        // TODO: Validate FS and populate database
 //        if (!firstTime) {
 //             validateFS(path);
 //        }
@@ -66,6 +67,9 @@ public class RansomAware {
 
     public Stream<String> listFiles(int sessionToken) {
         String user = SessionManager.getUsername(sessionToken);
+        if (!this.userFiles.containsKey("joao")) {
+            return Stream.empty();
+        }
         return this.userFiles.get(user).stream();
     }
 }

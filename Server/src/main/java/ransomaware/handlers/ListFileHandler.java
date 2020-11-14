@@ -25,6 +25,7 @@ public class ListFileHandler extends AbstractHandler {
         }
 
         JsonArray files = new JsonArray();
+
         server.listFiles(getSessionToken()).forEachOrdered(files::add);
 
         JsonObject response = JsonParser.parseString("{}").getAsJsonObject();
