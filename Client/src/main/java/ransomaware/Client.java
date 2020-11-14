@@ -1,16 +1,23 @@
 package ransomaware;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.time.*;
+import java.net.*;
+import java.net.http.*;
+import java.net.http.HttpClient.*;
+import java.net.http.HttpRequest.*;
+import java.net.http.HttpResponse.*;
 import java.security.cert.Certificate;
 import java.io.*;
 import java.nio.file.*;
 import java.util.Base64;
 import com.google.gson.*;
+import java.util.concurrent.*;
 
 import javax.net.ssl.*;
 
 public class Client {
+    static ExecutorService executor = Executors.newSingleThreadExecutor();
+    static HttpClient client = HttpClient.newBuilder().executor(executor).build();
 
     public static void start() {
         Console console = System.console();
@@ -46,11 +53,18 @@ public class Client {
                 case ("help"):
                     // TODO: Show commands
                     break;
+                case ("exit"):
+                    break;
                 default:
                     System.out.println("Command not found.");
             }
 
         } while (!command.equals("exit"));
+
+        // Shutdown HTTP Client
+        executor.shutdownNow();
+        client = null;
+        System.gc();
     }
 
     /**
@@ -110,11 +124,15 @@ public class Client {
             // Create JSON
             JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
             jsonRoot.addProperty("data", encodedData);
+            JsonObject jsonInfo = JsonParser.parseString("{}").getAsJsonObject();
+            jsonInfo.addProperty("user", user);
+            jsonInfo.addProperty("name", filename);
+            jsonRoot.add("info", jsonInfo);
 
             System.out.println(jsonRoot);
 
-            // Send file
-            // TODO: Send request
+            // Send request
+            requestPostFromURL(ClientVariables.URL + "/save", jsonRoot);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -137,11 +155,12 @@ public class Client {
 
         // Create JSON
         JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
-        jsonRoot.addProperty("user", user);
+        jsonRoot.addProperty("username", user);
         jsonRoot.addProperty("password", password);
 
         // Send request
-        requestPostFromURL(ClientVariables.URL + "/login", jsonRoot);
+        String response = requestPostFromURL(ClientVariables.URL + "/login", jsonRoot);
+        System.out.println("Response: " + response);
 
     }
 
@@ -149,27 +168,17 @@ public class Client {
 
     public static String requestGetFromURL(String url) {
         try {
-            // TODO: use custom keystore if desired
-            // System.setProperty("javax.net.ssl.trustStore", ClientVariables.KEYSTORE);
-            // System.setProperty("javax.net.ssl.trustStorePassword", ClientVariables.SSL_STOREPASS);
-            URL myUrl = new URL(url);
-            HttpsURLConnection conn = (HttpsURLConnection) myUrl.openConnection();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .build();
 
-            BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            HttpResponse<String> response =
+                    client.send(request, BodyHandlers.ofString());
 
-            String inputLine;
-            StringBuilder output = new StringBuilder();
-
-            while ((inputLine = br.readLine()) != null) {
-                output.append(inputLine + '\n');
-            }
-
-            br.close();
-
-            return output.toString();
+            return response.body();
         } catch (Exception e) {
-            //FIXME: UGLY
-            System.out.println(e.getMessage());
+            // FIXME: UGLY
+            e.printStackTrace();
             System.exit(1);
         }
 
@@ -178,26 +187,16 @@ public class Client {
 
     public static String requestPostFromURL(String url, JsonObject jsonObject) {
         try {
-            // TODO: use custom keystore if desired
-            // System.setProperty("javax.net.ssl.trustStore", ClientVariables.KEYSTORE);
-            // System.setProperty("javax.net.ssl.trustStorePassword", ClientVariables.SSL_STOREPASS);
-            URL myUrl = new URL(url);
-            HttpsURLConnection conn = (HttpsURLConnection) myUrl.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Content-Type","application/json");
-            conn.setDoOutput(true);
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .header("Content-Type", "application/json")
+                    .POST(BodyPublishers.ofString(jsonObject.toString()))
+                    .build();
+            HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
 
-            DataOutputStream output = new DataOutputStream(conn.getOutputStream());
-
-            // Send Json
-            String jsonData = jsonObject.toString();
-            output.writeBytes(jsonData);
-
-            output.close();
-
-            return output.toString();
+            return response.body();
         } catch (Exception e) {
-            //FIXME: UGLY
+            // FIXME: UGLY
             e.printStackTrace();
             System.exit(1);
         }
