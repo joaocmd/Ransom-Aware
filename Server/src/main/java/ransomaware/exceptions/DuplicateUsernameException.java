@@ -1,4 +1,4 @@
 package ransomaware.exceptions;
 
-public class DuplicateUsernameException extends RuntimeException {
+public class DuplicateUsernameException extends Exception {
 }

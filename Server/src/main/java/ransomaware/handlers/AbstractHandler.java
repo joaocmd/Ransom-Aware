@@ -1,13 +1,10 @@
 package ransomaware.handlers;
 
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import com.google.gson.JsonObject;
-
-import com.sun.net.httpserver.HttpsExchange;
 import ransomaware.RansomAware;
-import ransomaware.Server;
 import ransomaware.SessionManager;
 import ransomaware.exceptions.InvalidMethodException;
 import ransomaware.exceptions.SessionExpiredException;
@@ -44,8 +41,10 @@ public abstract class AbstractHandler implements HttpHandler {
             this.sessionToken = token;
             switch (SessionManager.getSessionSate(token)) {
                 case INVALID:
+                    sendResponse(HttpURLConnection.HTTP_UNAUTHORIZED, "Invalid session token");
                     throw new UnauthorizedException();
                 case EXPIRED:
+                    sendResponse(HttpURLConnection.HTTP_UNAUTHORIZED, "Session token expired");
                     throw new SessionExpiredException();
                 default:
             }
@@ -64,12 +63,23 @@ public abstract class AbstractHandler implements HttpHandler {
             return bodyJson;
         } catch (IOException e) {
             System.err.println("Error on reading request body");
+            sendResponse(HttpURLConnection.HTTP_BAD_REQUEST, "Malformed request body");
         }
         return null;
     }
 
     protected void sendResponse(int statusCode, String message) {
+        JsonObject responseObj = JsonParser.parseString("{}").getAsJsonObject();
+        responseObj.addProperty("body", message);
+        sendResponse(statusCode, responseObj);
+    }
+
+    protected void sendResponse(int statusCode, JsonObject object) {
         try (OutputStream os = this.exchange.getResponseBody()) {
+            object.addProperty("status", statusCode);
+            String message = object.toString();
+
+            this.exchange.getResponseHeaders().set("Content-Type", "application/json");
             this.exchange.sendResponseHeaders(statusCode, message.length());
             os.write(message.getBytes());
             os.flush();

@@ -1,5 +1,6 @@
 package ransomaware;
 
+import ransomaware.exceptions.NoSuchFileException;
 import ransomaware.exceptions.UnauthorizedException;
 
 import java.util.*;
@@ -27,12 +28,13 @@ public class RansomAware {
     }
 
     public void uploadFile(int sessionToken, String file, byte[] data) {
-        String user = SessionManager.getUsername(sessionToken);
-        uploadFile(user, file, data);
+        String owner = SessionManager.getUsername(sessionToken);
+        uploadFile(sessionToken, owner, file, data);
     }
 
-    public void uploadFile(String user, String file, byte[] data) {
-        String fileName = FileManager.getFileName(user, file);
+    public void uploadFile(int sessionToken, String owner, String file, byte[] data) {
+        String fileName = FileManager.getFileName(owner, file);
+        String user = SessionManager.getUsername(sessionToken);
         if (hasAccessToFile(user, fileName)) {
             FileManager.saveFile(fileName, data);
 
@@ -42,6 +44,19 @@ public class RansomAware {
             // draft for getting the certificates for all users with access later
             usersWithAccess.putIfAbsent(fileName, new HashSet<>());
             usersWithAccess.get(fileName).add(user);
+        } else {
+            throw new UnauthorizedException();
+        }
+    }
+
+    public byte[] getFile(int sessionToken, String owner, String file) {
+        String fileName = FileManager.getFileName(owner, file);
+        String user = SessionManager.getUsername(sessionToken);
+        if (!usersWithAccess.containsKey(fileName)) {
+            throw new NoSuchFileException();
+        }
+        if (hasAccessToFile(user, fileName)) {
+            return FileManager.getFile(fileName);
         } else {
             throw new UnauthorizedException();
         }

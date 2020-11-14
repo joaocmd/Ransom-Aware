@@ -4,6 +4,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
+import ransomaware.exceptions.NoSuchFileException;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,6 +61,16 @@ public class FileManager {
             e.printStackTrace();
             System.err.println("Error writing to file");
             System.exit(1);
+        }
+    }
+
+    public static byte[] getFile(String fileName) {
+        String fileDir = ServerVariables.FILES_PATH + '/' + fileName;
+        Path path = Paths.get(fileDir);
+        try {
+            return Files.readAllBytes(path);
+        } catch (IOException e) {
+            throw new NoSuchFileException();
         }
     }
 
