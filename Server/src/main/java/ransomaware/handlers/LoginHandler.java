@@ -2,7 +2,6 @@ package ransomaware.handlers;
 
 import com.google.gson.JsonObject;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpsExchange;
 import ransomaware.RansomAware;
 import ransomaware.SessionManager;
 import ransomaware.exceptions.UnauthorizedException;
@@ -28,8 +27,8 @@ public class LoginHandler extends AbstractHandler {
         } catch (UnauthorizedException e) {
             super.sendResponse(HttpURLConnection.HTTP_UNAUTHORIZED, "Invalid credentials");
         } catch (Exception e) {
-            // FIXME: Check if mongo is started :(
             e.printStackTrace();
+            sendResponse(HttpURLConnection.HTTP_INTERNAL_ERROR, "Something unexpected happened");
         }
     }
 }

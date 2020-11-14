@@ -1,4 +1,4 @@
 package ransomaware.exceptions;
 
-public class InvalidMethodException extends RuntimeException{
+public class InvalidMethodException extends RuntimeException {
 }
