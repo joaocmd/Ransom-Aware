@@ -14,3 +14,8 @@ To create the keystore from previously generated rsa key pair:
 `openssl pkcs12 -export -name <key_name> -in <server_cert> -inkey <private_key> -out <out.p12>`
 
 The password for generated keystores/keys is `changeme`
+
+## TODO list
+- [ ] Add a create command to client to create a file in the proper folder
+- [ ] Force login on client start
+- [ ] Unknown
