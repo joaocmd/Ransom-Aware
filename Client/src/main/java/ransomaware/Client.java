@@ -18,6 +18,7 @@ import javax.net.ssl.*;
 public class Client {
     static ExecutorService executor = Executors.newSingleThreadExecutor();
     static HttpClient client = HttpClient.newBuilder().executor(executor).build();
+    static int sessionToken;
 
     public static void start() {
         Console console = System.console();
@@ -132,7 +133,9 @@ public class Client {
             System.out.println(jsonRoot);
 
             // Send request
-            requestPostFromURL(ClientVariables.URL + "/save", jsonRoot);
+            String response = requestPostFromURL(ClientVariables.URL + "/save", jsonRoot);
+
+            System.out.println("Response: " + response);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -160,6 +163,8 @@ public class Client {
 
         // Send request
         String response = requestPostFromURL(ClientVariables.URL + "/login", jsonRoot);
+
+        // TODO: Store session token or check if error
         System.out.println("Response: " + response);
 
     }

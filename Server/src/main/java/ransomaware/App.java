@@ -23,13 +23,13 @@ public class App implements Callable<Integer> {
     public Integer call() {
         ServerVariables.init(path, mongoUrl);
         RansomAware ransomAware = new RansomAware(path, port, firstTime);
-        try {
-            SessionManager.register("joao", "pass");
-        } catch (DuplicateUsernameException ignored) { }
-        int token = SessionManager.login("joao", "pass");
-        ransomAware.uploadFile(token, "o_meu_primeiro_ficheiro.txt", "POR FAVOR SO QUERO SER AMADO".getBytes());
-        ransomAware.uploadFile(token, "outro.txt", "Ola colegas".getBytes());
-        ransomAware.uploadFile(token, "o_meu_primeiro_ficheiro.txt", "Apaguei os meus segredos tinha vergonha".getBytes());
+        // try {
+        //     SessionManager.register("joao", "pass");
+        // } catch (DuplicateUsernameException ignored) { }
+        // int token = SessionManager.login("joao", "pass");
+        // ransomAware.uploadFile(token, "o_meu_primeiro_ficheiro.txt", "POR FAVOR SO QUERO SER AMADO".getBytes());
+        // ransomAware.uploadFile(token, "outro.txt", "Ola colegas".getBytes());
+        // ransomAware.uploadFile(token, "o_meu_primeiro_ficheiro.txt", "Apaguei os meus segredos tinha vergonha".getBytes())
         return 0;
     }
 

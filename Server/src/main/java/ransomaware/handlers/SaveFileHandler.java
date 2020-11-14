@@ -28,11 +28,12 @@ public class SaveFileHandler extends AbstractHandler {
         // This is here now just so we can see the files are being sent correctly
         byte[] data = SecurityUtils.decodeBase64(body.get("data").getAsString());
         try {
-            if (username != null) {
+            if (!username.equals("")) {
                 server.uploadFile(username, fileName, data);
             } else {
                 server.uploadFile(this.getSessionToken(), fileName, data);
             }
+            sendResponse(HttpURLConnection.HTTP_OK, "OK");
         } catch (UnauthorizedException e) {
             sendResponse(HttpURLConnection.HTTP_UNAUTHORIZED, "Unauthorized access to resource.");
         }
