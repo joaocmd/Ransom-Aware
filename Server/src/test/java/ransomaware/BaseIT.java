@@ -64,7 +64,9 @@ public class BaseIT {
 
     @AfterAll
     public static void cleanup() {
+        // Comment next line to keep testing data
         mongoClient.dropDatabase(dbName);
+
         mongoClient.getDB(dbName);
         executor.shutdownNow();
         client = null;
