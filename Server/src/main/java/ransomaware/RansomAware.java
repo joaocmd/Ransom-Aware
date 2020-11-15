@@ -59,10 +59,8 @@ public class RansomAware {
         }
 
         String fileName = FileManager.getFileName(owner, file);
-        
 
-
-        if (!userFiles.containsKey(user) || !userFiles.get(user).contains(fileName)) {
+        if (!userFiles.containsKey(owner) || !userFiles.get(owner).contains(fileName)) {
             throw new NoSuchFileException();
         }
         if (hasAccessToFile(user, fileName)) {

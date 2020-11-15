@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import ransomaware.RansomAware;
 import ransomaware.SecurityUtils;
+import ransomaware.SessionManager;
 import ransomaware.exceptions.NoSuchFileException;
 import ransomaware.exceptions.SessionExpiredException;
 import ransomaware.exceptions.UnauthorizedException;
