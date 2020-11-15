@@ -53,9 +53,16 @@ public class RansomAware {
     }
 
     public byte[] getFile(int sessionToken, String owner, String file) {
-        String fileName = FileManager.getFileName(owner, file);
         String user = SessionManager.getUsername(sessionToken);
-        if (!usersWithAccess.containsKey(fileName)) {
+        if (owner.equals("")){
+            owner = user;
+        }
+
+        String fileName = FileManager.getFileName(owner, file);
+        
+
+
+        if (!userFiles.containsKey(user) || !userFiles.get(user).contains(fileName)) {
             throw new NoSuchFileException();
         }
         if (hasAccessToFile(user, fileName)) {
@@ -67,7 +74,7 @@ public class RansomAware {
 
     public Stream<String> listFiles(int sessionToken) {
         String user = SessionManager.getUsername(sessionToken);
-        if (!this.userFiles.containsKey("joao")) {
+        if (!this.userFiles.containsKey(user)) {
             return Stream.empty();
         }
         return this.userFiles.get(user).stream();

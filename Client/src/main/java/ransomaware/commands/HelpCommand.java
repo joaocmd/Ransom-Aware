@@ -25,7 +25,8 @@ public class HelpCommand extends AbstractCommand {
                     "login - \n" +
                     "list - \n" +
                     "get - \n" +
-                    "save - \n";
+                    "save - \n" +
+                    "register - \n";
         }
 
         return true;

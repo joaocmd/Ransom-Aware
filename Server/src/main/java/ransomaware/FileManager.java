@@ -21,14 +21,14 @@ public class FileManager {
         return user + '/' + file;
     }
 
-    private static int getNewFileVersion(String fileName) {
+    private static int getFileVersion(String fileName) {
         MongoClient client = getMongoClient();
         var query = new BasicDBObject("_id", fileName);
         DBObject file = client.getDB(ServerVariables.FS_PATH).getCollection("files").findOne(query);
         client.close();
 
         if (file != null) {
-            return (Integer)file.get("version") + 1;
+            return (Integer)file.get("version");
         } else {
             return 0;
         }
@@ -50,7 +50,7 @@ public class FileManager {
 
         // TODO: validate file here (what verifications though?)
 
-        int newVersion = getNewFileVersion(fileName);
+        int newVersion = getFileVersion(fileName) + 1;
         String filePath = String.format("%s/%d", fileDir, newVersion);
         System.out.println(filePath);
         Path file = Paths.get(filePath);
@@ -65,9 +65,10 @@ public class FileManager {
     }
 
     public static byte[] getFile(String fileName) {
-        String fileDir = ServerVariables.FILES_PATH + '/' + fileName;
+        String fileDir = ServerVariables.FILES_PATH + '/' + fileName + '/' + getFileVersion(fileName);
         Path path = Paths.get(fileDir);
         try {
+            System.out.println(fileDir);
             return Files.readAllBytes(path);
         } catch (IOException e) {
             throw new NoSuchFileException();

@@ -29,7 +29,7 @@ public class ListFilesCommand extends AbstractCommand {
         jsonRoot.addProperty("login-token", Integer.valueOf(super.getSessionToken()));
 
         String response = super.requestPostFromURL(ClientVariables.URL + "/list", jsonRoot, client);
-        System.out.print(response);
+        System.out.println(response);
 
         return true;
     }

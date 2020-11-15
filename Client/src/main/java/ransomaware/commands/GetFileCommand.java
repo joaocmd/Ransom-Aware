@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import ransomaware.ClientVariables;
 import ransomaware.SecurityUtils;
 
+import java.net.HttpURLConnection;
 import java.net.http.HttpClient;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,6 +30,10 @@ public class GetFileCommand extends AbstractCommand {
         String[] file = args[1].split("/");
         String user = "";
         String filename = "";
+        if(file[1].indexOf("/") != -1) {
+            System.out.println("Bad format.");
+            return false;
+        }
         if (file.length == 1) { user = ""; filename = file[0]; }
         else if (file.length == 2) { user = file[0]; filename = file[1]; }
 
@@ -36,16 +41,29 @@ public class GetFileCommand extends AbstractCommand {
             JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
             jsonRoot.addProperty("user", user);
             jsonRoot.addProperty("name", filename);
+            
+            
             // FIXME: this should be in all methods
             jsonRoot.addProperty("login-token", Integer.valueOf(super.getSessionToken()));
 
             String response = requestPostFromURL(ClientVariables.URL + "/files", jsonRoot, client);
-            
             JsonObject json = JsonParser.parseString(response).getAsJsonObject();
 
-            byte[] data = SecurityUtils.decodeBase64(json.get("data").getAsString());
+            switch (json.get("status").getAsInt()) {
+                case HttpURLConnection.HTTP_NOT_FOUND:
+                    System.out.println("No such file.");
+                    break;
+                case HttpURLConnection.HTTP_UNAUTHORIZED:
+                    System.out.println("Access not granted.");
+                    break;
+                default:
+                    System.out.println(json.get("file").getAsString());
 
-            Files.write(Path.of(ClientVariables.FS_PATH + filename), data);
+                    byte[] data = SecurityUtils.decodeBase64(json.get("file").getAsString());
+
+                    Files.write(Path.of(ClientVariables.FS_PATH + '/' + filename), data);
+            }
+
         } catch (Exception e) {
             // FIXME:
             e.printStackTrace();

@@ -9,7 +9,8 @@ import java.net.http.HttpResponse;
 
 public abstract class AbstractCommand {
     String sessionToken;
-
+    public AbstractCommand(){}
+    
     public AbstractCommand(String sessionToken) {
         this.sessionToken = sessionToken;
     }

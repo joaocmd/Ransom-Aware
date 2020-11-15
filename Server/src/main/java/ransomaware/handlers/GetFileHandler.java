@@ -25,13 +25,17 @@ public class GetFileHandler extends AbstractHandler {
             return;
         }
 
-        String path = exchange.getRequestURI().getPath();
+        JsonObject body = getBodyAsJSON();
+
+        String owner = body.get("user").getAsString();
+        String filename = body.get("name").getAsString();
 
         try {
             // FIXME: args
-            byte[] file = server.getFile(getSessionToken(), path, path);
+            String file = SecurityUtils.getBase64(server.getFile(getSessionToken(), owner, filename));
             JsonObject response = JsonParser.parseString("{}").getAsJsonObject();
-            response.addProperty("file", SecurityUtils.getBase64(file));
+            response.addProperty("file", file);
+            System.out.println(response);
             super.sendResponse(HttpURLConnection.HTTP_OK, response);
         } catch (NoSuchFileException e) {
             sendResponse(HttpURLConnection.HTTP_NOT_FOUND, "No such file");

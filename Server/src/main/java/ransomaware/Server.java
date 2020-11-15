@@ -52,7 +52,7 @@ public class Server {
         server.createContext("/register", new RegisterHandler(domain, "POST", false));
         server.createContext("/login", new LoginHandler(domain, "POST", false));
         server.createContext("/list", new ListFileHandler(domain, "POST", true));
-        server.createContext("/files", new GetFileHandler(domain, "GET", false));
+        server.createContext("/files", new GetFileHandler(domain, "POST", true));
         server.createContext("/save", new SaveFileHandler(domain, "POST", true));
 //        server.createContext("/grant", new GrantHandler(domain, "POST", false));
 //        server.createContext("/revoke", new GrantHandler(domain, "POST", false));
