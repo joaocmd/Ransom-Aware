@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import ransomaware.ClientVariables;
 
 import java.io.Console;
+import java.net.HttpURLConnection;
 import java.net.http.HttpClient;
 
 
@@ -27,10 +28,8 @@ public class RegisterCommand extends AbstractCommand{
         String response = super.requestPostFromURL(ClientVariables.URL + "/register", jsonRoot, client);
         
         JsonObject jsonResponse = JsonParser.parseString(response).getAsJsonObject();
-        int status = jsonResponse.get("status").getAsInt();
-        if (status != 200) {
-            // FIXME: Check for unauthorized, etc.
-            System.out.println("Error logging in.");
+        if (jsonResponse.get("status").getAsInt() != HttpURLConnection.HTTP_OK) {
+            handleError(jsonResponse);
             return false;
         }
         return true;

@@ -12,8 +12,11 @@ import java.nio.file.Path;
 
 public class SaveFileCommand extends AbstractCommand {
 
-    public SaveFileCommand(String sessionToken) {
+    private String username;
+
+    public SaveFileCommand(String sessionToken, String username) {
         super(sessionToken);
+        this.username = username;
     }
 
     /**
@@ -23,18 +26,31 @@ public class SaveFileCommand extends AbstractCommand {
      * @return if the commands has succeeded
      */
     public boolean run(String[] args, HttpClient client) {
-        if (args.length == 1 || args.length > 2) {
+        if (args.length != 2) {
             System.out.println("save: Too many arguments.\nExample: save a.txt");
             return false;
         }
+
         String[] givenFile = args[1].split("/");
-        String user = "";
-        String filename = "";
-        if (givenFile.length == 1) { user = ""; filename = givenFile[0]; }
-        else if (givenFile.length == 2) { user = givenFile[0]; filename = givenFile[1]; }
+        String user;
+        String filename;
+
+        if(givenFile.length == 0 || givenFile.length > 2) {
+            System.out.println("bad file-name: expected <user>/<file> or simply <file>.");
+            return false;
+        }
+
+        if (givenFile.length == 1) {
+            user = this.username;
+            filename = givenFile[0];
+        } else {
+            user = givenFile[0];
+            filename = givenFile[1];
+        }
 
         try {
             String filePath = ClientVariables.FS_PATH + '/' + user + '/' + filename;
+            System.out.println(filePath);
 
             // Check if file exists
             File file = new File(filePath);
@@ -47,7 +63,7 @@ public class SaveFileCommand extends AbstractCommand {
             byte[] data = Files.readAllBytes(Path.of(filePath));
 
             // Pass string file to base64
-            String encodedData = SecurityUtils.getBase64(data);;
+            String encodedData = SecurityUtils.getBase64(data);
 
             // Create JSON
             JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();

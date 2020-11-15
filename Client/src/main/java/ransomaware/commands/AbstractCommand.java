@@ -8,9 +8,11 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 public abstract class AbstractCommand {
+
     String sessionToken;
-    public AbstractCommand(){}
-    
+
+    public AbstractCommand() { }
+
     public AbstractCommand(String sessionToken) {
         this.sessionToken = sessionToken;
     }
@@ -20,26 +22,6 @@ public abstract class AbstractCommand {
     public String getSessionToken() {
         return sessionToken;
     }
-
-    String requestGetFromURL(String url, HttpClient client) {
-        try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .build();
-
-            HttpResponse<String> response =
-                    client.send(request, HttpResponse.BodyHandlers.ofString());
-
-            return response.body();
-        } catch (Exception e) {
-            // FIXME: UGLY
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        return "";
-    }
-
     String requestPostFromURL(String url, JsonObject jsonObject, HttpClient client) {
         try {
             HttpRequest request = HttpRequest.newBuilder()
@@ -58,5 +40,9 @@ public abstract class AbstractCommand {
         }
 
         return "";
+    }
+
+    protected static void handleError(JsonObject err) {
+        System.err.println(err.get("status").getAsString() + ": " + err.get("body").getAsString());
     }
 }

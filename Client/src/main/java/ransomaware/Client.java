@@ -3,54 +3,53 @@ package ransomaware;
 import ransomaware.commands.*;
 
 import java.io.Console;
-import java.net.CookieHandler;
 import java.net.http.HttpClient;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Client {
-    ExecutorService executor = Executors.newSingleThreadExecutor();
-    HttpClient client = HttpClient.newBuilder().executor(executor).build();
-    String sessionToken;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private HttpClient client = HttpClient.newBuilder().executor(executor).build();
+    private String sessionToken;
+    private String username = null;
 
     public void start() {
         Console console = System.console();
         String command;
 
+        register();
+        login();
+
         do {
             command = console.readLine("> ");
             String[] args = command.split(" ");
 
-            // FIXME: Check if logged in
             switch (args[0]) {
-                // list
-                case ("list"):
+                case "register":
+                    AbstractCommand register = new RegisterCommand();
+                    register.run(args, client);
+                    break;
+                case "list":
                     AbstractCommand list = new ListFilesCommand(sessionToken);
                     list.run(args, client);
                     break;
-                // get user/file.txt
-                case ("get"):
-                    AbstractCommand get = new GetFileCommand(sessionToken);
+                case "get":
+                    AbstractCommand get = new GetFileCommand(sessionToken, username);
                     get.run(args, client);
                     break;
-                // send file.txt
-                case ("save"):
-                    AbstractCommand save = new SaveFileCommand(sessionToken);
+                case "save":
+                    AbstractCommand save = new SaveFileCommand(sessionToken, username);
                     save.run(args, client);
-                    // saveFile(args);
                     break;
-                // login
-                case ("login"):
-                    AbstractCommand login = new LoginCommand();
-                    login.run(args, client);
-                    sessionToken = login.getSessionToken();
-                    System.out.println(sessionToken);
+                case "login":
+                    // FIXME: handle logout and session expired
+                    System.err.println("Already logged in");
                     break;
-                case ("help"):
+                case "help":
                     AbstractCommand help = new HelpCommand();
                     help.run(args, client);
                     break;
-                case ("exit"):
+                case "exit":
                     break;
                 default:
                     System.out.println("Command not found.");
@@ -62,5 +61,30 @@ public class Client {
         executor.shutdownNow();
         client = null;
         System.gc();
+    }
+
+    private void register() {
+        System.out.println("Register? [Yy]");
+        Console console = System.console();
+        String answer = console.readLine();
+        if (answer.toLowerCase().startsWith("y")) {
+            RegisterCommand register = new RegisterCommand();
+            boolean success = false;
+            while (!success) {
+                success = register.run(new String[]{"register"}, client);
+            }
+        }
+    }
+
+    private void login() {
+        System.out.println("Login:");
+        LoginCommand login = new LoginCommand();
+        while (username == null) {
+            boolean success = login.run(new String[]{"login"}, client);
+            if (success) {
+                 username = login.getUsername();
+                 sessionToken = login.getSessionToken();
+            }
+        }
     }
 }

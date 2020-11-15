@@ -27,6 +27,7 @@ public class HelpCommand extends AbstractCommand {
                     "get - \n" +
                     "save - \n" +
                     "register - \n";
+            System.out.println(help);
         }
 
         return true;

@@ -12,6 +12,6 @@ public class ClientVariables {
     public  static void init(String path, String url) {
         FS_PATH = path;
         KEYSTORE = String.format("%s/server.keystore", FS_PATH);
-        URL = "https://" + url;
+        URL = url;
     }
 }

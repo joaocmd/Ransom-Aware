@@ -5,10 +5,11 @@ import com.google.gson.JsonParser;
 import ransomaware.ClientVariables;
 
 import java.io.Console;
+import java.net.HttpURLConnection;
 import java.net.http.HttpClient;
 
 public class LoginCommand extends AbstractCommand {
-    String sessionToken;
+    private String username;
 
     public LoginCommand() {
         super("");
@@ -28,33 +29,30 @@ public class LoginCommand extends AbstractCommand {
         }
 
         Console console = System.console();
-        String user = console.readLine("user: ");
+        username = console.readLine("user: ");
         String password = new String(console.readPassword("password: "));
 
         // Create JSON
         JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
-        jsonRoot.addProperty("username", user);
+        jsonRoot.addProperty("username", username);
         jsonRoot.addProperty("password", password);
 
         // Send request
         String response = super.requestPostFromURL(ClientVariables.URL + "/login", jsonRoot, client);
 
         // TODO: Store session token or check if error
-        // Check if error
         JsonObject jsonResponse = JsonParser.parseString(response).getAsJsonObject();
-        int status = jsonResponse.get("status").getAsInt();
-        if (status != 200) {
-            // FIXME: Check for unauthorized, etc.
-            System.out.println("Error logging in.");
-            return false;
+        switch (jsonResponse.get("status").getAsInt()) {
+            case HttpURLConnection.HTTP_OK:
+                sessionToken = jsonResponse.get("login-token").getAsString();
+                return true;
+            default:
+                handleError(jsonResponse);
+                return false;
         }
-        sessionToken = jsonResponse.get("login-token").getAsString();
-        System.out.println("Login successful!");
-        return true;
     }
 
-    @Override
-    public String getSessionToken() {
-        return sessionToken;
+    public String getUsername() {
+        return username;
     }
 }
