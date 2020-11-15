@@ -5,6 +5,7 @@ import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import ransomaware.exceptions.DuplicateUsernameException;
+import ransomaware.exceptions.InvalidUserNameException;
 import ransomaware.exceptions.UnauthorizedException;
 
 import java.net.UnknownHostException;
@@ -48,6 +49,11 @@ public class SessionManager {
         var query = new BasicDBObject("_id", username);
         var collection = client.getDB(ServerVariables.FS_PATH).getCollection("users");
         var user = collection.findOne(query);
+
+        if(username.contains("/")){ 
+            throw new InvalidUserNameException();
+        }
+
         if (user == null) {
             String passwordDigest = SecurityUtils.getBase64(SecurityUtils.getDigest(password));
             var obj = new BasicDBObject("_id", username)
