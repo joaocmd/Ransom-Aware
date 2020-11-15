@@ -82,6 +82,12 @@ public class SessionManager {
         throw new UnauthorizedException();
     }
 
+    public static void logout(int sessionToken) {
+        try {
+            sessions.remove(sessionToken);
+        } catch (NullPointerException ignored) { }
+    }
+
     private static MongoClient getMongoClient() {
         MongoClient client = null;
         try {

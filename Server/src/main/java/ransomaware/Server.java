@@ -51,6 +51,7 @@ public class Server {
     private static void registerEndpoints(RansomAware domain, HttpServer server) {
         server.createContext("/register", new RegisterHandler(domain, "POST", false));
         server.createContext("/login", new LoginHandler(domain, "POST", false));
+        server.createContext("/logout", new LogoutHandler(domain, "POST", true));
         server.createContext("/list", new ListFileHandler(domain, "POST", true));
         server.createContext("/files", new GetFileHandler(domain, "POST", true));
         server.createContext("/save", new SaveFileHandler(domain, "POST", true));

@@ -41,10 +41,10 @@ public class Utils {
     }
 
     public static String getFilePath(String owner, String filename) {
-        return ClientVariables.FS_PATH + '/' + owner + '/' + filename;
+        return ClientVariables.WORKSPACE + '/' + owner + '/' + filename;
     }
 
     public static String getUserDirectory(String user) {
-        return ClientVariables.FS_PATH + '/' + user;
+        return ClientVariables.WORKSPACE + '/' + user;
     }
 }

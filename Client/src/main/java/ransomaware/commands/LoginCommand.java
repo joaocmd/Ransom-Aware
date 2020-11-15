@@ -34,6 +34,7 @@ public class LoginCommand extends AbstractCommand {
             int sessionToken = response.get("login-token").getAsInt();
             info.setSessionToken(sessionToken);
             info.setUsername(username);
+            info.setLogged(true);
         } else {
             Utils.handleError(response);
         }

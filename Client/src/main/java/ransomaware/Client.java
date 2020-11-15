@@ -22,10 +22,11 @@ public class Client {
     private void populateParsers() {
         parsers.put("register", this::parseRegister);
         parsers.put("login", this::parseLogin);
+        parsers.put("logout", this::parseLogout);
         parsers.put("get", this::parseGet);
         parsers.put("save", this::parseSave);
         parsers.put("list", this::parseList);
-        parsers.put("exit", this::ignore);
+        parsers.put("exit", this::parseExit);
     }
 
     public void start() {
@@ -95,7 +96,27 @@ public class Client {
             showUsage.run();
             return Optional.empty();
         }
+        if (sessionInfo.isLogged())  {
+            System.err.println("Already logged in");
+            return  Optional.empty();
+        }
+
         return Optional.of(new LoginCommand(sessionInfo));
+    }
+
+    private Optional<AbstractCommand> parseLogout(String[] args) {
+        Runnable showUsage = () -> System.err.println("logout usage: no args");
+
+        if (args.length != 1) {
+            showUsage.run();
+            return Optional.empty();
+        }
+        if (!sessionInfo.isLogged()) {
+            System.err.println("Not currently logged in");
+            return Optional.empty();
+        }
+
+        return Optional.of(new LogoutCommand(sessionInfo));
     }
 
     private String[] parseFileName(String name) {
@@ -165,7 +186,10 @@ public class Client {
         return Optional.of(new ListFilesCommand(sessionInfo.getSessionToken()));
     }
 
-    private Optional<AbstractCommand> ignore(String[] args) {
+    private Optional<AbstractCommand> parseExit(String[] args) {
+        if (sessionInfo.isLogged()) {
+            return  Optional.of(new LogoutCommand(sessionInfo));
+        }
         return Optional.empty();
     }
 }

@@ -35,9 +35,9 @@ public class GetFileCommand extends AbstractCommand {
             JsonObject response = Utils.requestPostFromURL(ClientVariables.URL + "/files", jsonRoot, client);
             if (response.get("status").getAsInt() == HttpURLConnection.HTTP_OK) {
                 byte[] data = SecurityUtils.decodeBase64(response.get("file").getAsString());
-                File dir = new File(ClientVariables.FS_PATH + '/' + owner);
+                File dir = new File(ClientVariables.WORKSPACE + '/' + owner);
                 dir.mkdirs();
-                Files.write(Path.of(ClientVariables.FS_PATH + '/' + owner + '/' + filename), data);
+                Files.write(Path.of(ClientVariables.WORKSPACE + '/' + owner + '/' + filename), data);
             } else {
                 Utils.handleError(response);
             }

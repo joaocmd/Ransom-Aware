@@ -3,15 +3,15 @@ package ransomaware;
 import ransomaware.exceptions.NoSuchFileException;
 import ransomaware.exceptions.UnauthorizedException;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 public class RansomAware {
 
-    private final HashMap<String, Set<String>> userFiles = new HashMap<>();
-    private final HashMap<String, Set<String>> usersWithAccess = new HashMap<>();
+    private final ConcurrentHashMap<String, Set<String>> userFiles = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Set<String>> usersWithAccess = new ConcurrentHashMap<>();
 
     public RansomAware(String path, int port, boolean firstTime) {
         // TODO: Validate FS and populate database
@@ -69,5 +69,9 @@ public class RansomAware {
             return Stream.empty();
         }
         return this.userFiles.get(user).stream();
+    }
+
+    public void logout(int sessionToken) {
+        SessionManager.logout(sessionToken);
     }
 }
