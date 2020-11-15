@@ -17,6 +17,11 @@ public class RegisterCommand extends AbstractCommand{
         String user = console.readLine("user: ");
         String password = new String(console.readPassword("password: "));
 
+        if(user.indexOf('/') != -1) {
+            System.err.println("Illegal character: usernames must be alfanumeric.");
+            return;
+        }
+
         JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
         jsonRoot.addProperty("username", user);
         jsonRoot.addProperty("password", password);
