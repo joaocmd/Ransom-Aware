@@ -3,9 +3,11 @@ package ransomaware.commands;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import ransomaware.Client;
 import ransomaware.ClientVariables;
 import ransomaware.SecurityUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.http.HttpClient;
@@ -65,6 +67,8 @@ public class GetFileCommand extends AbstractCommand {
             switch (json.get("status").getAsInt()) {
                 case HttpURLConnection.HTTP_OK:
                     byte[] data = SecurityUtils.decodeBase64(json.get("file").getAsString());
+                    File dir = new File(ClientVariables.FS_PATH + '/' + user);
+                    dir.mkdirs();
                     Files.write(Path.of(ClientVariables.FS_PATH + '/' + user + '/' + filename), data);
                     return true;
                 default:
