@@ -2,8 +2,6 @@ package ransomaware.commands;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
-import ransomaware.Client;
 import ransomaware.ClientVariables;
 import ransomaware.SecurityUtils;
 
@@ -16,68 +14,35 @@ import java.nio.file.Path;
 
 public class GetFileCommand extends AbstractCommand {
 
-    private String username;
+    private final String owner;
+    private final String filename;
+    private final int sessionToken;
 
-    public GetFileCommand(String sessionToken, String username) {
-        super(sessionToken);
-        this.username = username;
+    public GetFileCommand(int sessionToken, String owner, String filename) {
+        this.owner = owner;
+        this.filename = filename;
+        this.sessionToken = sessionToken;
     }
 
-    /**
-     * run
-     * @param args - for example: ['get','a.txt'] or ['get','masterzeus','a.txt']
-     * @param client - the HttpClient
-     * @return if the commands has succeeded
-     */
-    public boolean run(String[] args, HttpClient client) {
-        if (args.length != 2) {
-            System.out.println("get: Too many arguments.\nExample: get a.txt");
-            return false;
-        }
-        String[] file = args[1].split("/");
-        String user;
-        String filename;
-
-        if(file.length == 0 || file.length > 2) {
-            System.out.println("bad file-name: expected <user>/<file> or simply <file>.");
-            return false;
-        }
-
-        if (file.length == 1) {
-            user = this.username;
-            filename = file[0];
-        } else {
-            user = file[0];
-            filename = file[1];
-        }
-
+    @Override
+    public void run(HttpClient client) {
         try {
             JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
-            jsonRoot.addProperty("user", user);
+            jsonRoot.addProperty("user", owner);
             jsonRoot.addProperty("name", filename);
+            Utils.addLoginToken(jsonRoot, sessionToken);
 
-
-            // FIXME: this should be in all methods
-            jsonRoot.addProperty("login-token", Integer.valueOf(super.getSessionToken()));
-
-            String response = requestPostFromURL(ClientVariables.URL + "/files", jsonRoot, client);
-
-            JsonObject json =  JsonParser.parseString(response).getAsJsonObject();
-
-            switch (json.get("status").getAsInt()) {
-                case HttpURLConnection.HTTP_OK:
-                    byte[] data = SecurityUtils.decodeBase64(json.get("file").getAsString());
-                    File dir = new File(ClientVariables.FS_PATH + '/' + user);
-                    dir.mkdirs();
-                    Files.write(Path.of(ClientVariables.FS_PATH + '/' + user + '/' + filename), data);
-                    return true;
-                default:
-                    handleError(json);
-                    return false;
+            JsonObject response = Utils.requestPostFromURL(ClientVariables.URL + "/files", jsonRoot, client);
+            if (response.get("status").getAsInt() == HttpURLConnection.HTTP_OK) {
+                byte[] data = SecurityUtils.decodeBase64(response.get("file").getAsString());
+                File dir = new File(ClientVariables.FS_PATH + '/' + owner);
+                dir.mkdirs();
+                Files.write(Path.of(ClientVariables.FS_PATH + '/' + owner + '/' + filename), data);
+            } else {
+                Utils.handleError(response);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return  false;
     }
 }

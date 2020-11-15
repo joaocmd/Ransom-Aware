@@ -2,60 +2,50 @@ package ransomaware;
 
 import ransomaware.commands.*;
 
+import javax.swing.text.html.Option;
 import java.io.Console;
 import java.net.http.HttpClient;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 
 public class Client {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private HttpClient client = HttpClient.newBuilder().executor(executor).build();
-    private String sessionToken;
-    private String username = null;
+    private SessionInfo sessionInfo = new SessionInfo();
+
+    private final Map<String, Function<String[], Optional<AbstractCommand>>> parsers = new HashMap<>();
+
+    private void populateParsers() {
+        parsers.put("register", this::parseRegister);
+        parsers.put("login", this::parseLogin);
+        parsers.put("get", this::parseGet);
+        parsers.put("save", this::parseSave);
+        parsers.put("list", this::parseList);
+        parsers.put("exit", this::ignore);
+    }
 
     public void start() {
+        this.populateParsers();
         Console console = System.console();
-        String command;
+        String input;
 
-        register();
-        login();
+//        register();
+//        login();
 
         do {
-            command = console.readLine("> ");
-            String[] args = command.split(" ");
+            input = console.readLine("> ");
+            String[] args = input.split(" ");
 
-            switch (args[0]) {
-                case "register":
-                    AbstractCommand register = new RegisterCommand();
-                    register.run(args, client);
-                    break;
-                case "list":
-                    AbstractCommand list = new ListFilesCommand(sessionToken);
-                    list.run(args, client);
-                    break;
-                case "get":
-                    AbstractCommand get = new GetFileCommand(sessionToken, username);
-                    get.run(args, client);
-                    break;
-                case "save":
-                    AbstractCommand save = new SaveFileCommand(sessionToken, username);
-                    save.run(args, client);
-                    break;
-                case "login":
-                    // FIXME: handle logout and session expired
-                    System.err.println("Already logged in");
-                    break;
-                case "help":
-                    AbstractCommand help = new HelpCommand();
-                    help.run(args, client);
-                    break;
-                case "exit":
-                    break;
-                default:
-                    System.out.println("Command not found.");
+            if (parsers.containsKey(args[0])) {
+                parsers.get(args[0]).apply(args).ifPresent(c -> c.run(client));
+            } else {
+                System.err.println("Command not found, use 'help'");
             }
-
-        } while (!command.equals("exit"));
+        } while (!input.equals("exit"));
 
         // Shutdown HTTP Client
         executor.shutdownNow();
@@ -63,28 +53,119 @@ public class Client {
         System.gc();
     }
 
-    private void register() {
-        System.out.println("Register? [Yy]");
-        Console console = System.console();
-        String answer = console.readLine();
-        if (answer.toLowerCase().startsWith("y")) {
-            RegisterCommand register = new RegisterCommand();
-            boolean success = false;
-            while (!success) {
-                success = register.run(new String[]{"register"}, client);
-            }
+//    private void register() {
+//        System.out.println("Register? [Yy]");
+//        Console console = System.console();
+//        String answer = console.readLine();
+//        if (answer.toLowerCase().startsWith("y")) {
+//            RegisterCommand register = new RegisterCommand();
+//            boolean success = false;
+//            while (!success) {
+//                success = register.run(new String[]{"register"}, client);
+//            }
+//        }
+//    }
+
+//    private void login() {
+//        System.out.println("Login:");
+//        LoginCommand login = new LoginCommand();
+//        while (username == null) {
+//            boolean success = login.run(new String[]{"login"}, client);
+//            if (success) {
+//                 username = login.getUsername();
+//                 sessionToken = login.getSessionToken();
+//            }
+//        }
+//    }
+
+    private Optional<AbstractCommand> parseRegister(String[] args) {
+        Runnable showUsage = () -> System.err.println("register usage: no args");
+
+        if (args.length != 1) {
+            showUsage.run();
+            return Optional.empty();
         }
+        return Optional.of(new RegisterCommand());
     }
 
-    private void login() {
-        System.out.println("Login:");
-        LoginCommand login = new LoginCommand();
-        while (username == null) {
-            boolean success = login.run(new String[]{"login"}, client);
-            if (success) {
-                 username = login.getUsername();
-                 sessionToken = login.getSessionToken();
-            }
+    private Optional<AbstractCommand> parseLogin(String[] args) {
+        Runnable showUsage = () -> System.err.println("login usage: no args");
+
+        if (args.length != 1) {
+            showUsage.run();
+            return Optional.empty();
         }
+        return Optional.of(new LoginCommand(sessionInfo));
+    }
+
+    private String[] parseFileName(String name) {
+        String[] parts = name.split("/");
+        if (parts.length > 2) {
+            return null;
+        }
+
+        String user;
+        String file;
+        if (parts.length == 1) {
+            user = sessionInfo.getUsername();
+            file = parts[0];
+        } else {
+            user = parts[0];
+            file = parts[1];
+        }
+
+        return new String[]{user, file};
+    }
+
+    private Optional<AbstractCommand> parseGet(String[] args) {
+        Runnable showUsage = () -> {
+            System.err.println("get <file> usage:");
+            System.err.println("    file: file name, can be user/file or just file");
+        };
+        if (args.length != 2) {
+            showUsage.run();
+            return Optional.empty();
+        }
+
+        String[] file = parseFileName(args[1]);
+        if (file == null) {
+            showUsage.run();
+            return Optional.empty();
+        }
+
+        return Optional.of(new GetFileCommand(sessionInfo.getSessionToken(), file[0], file[1]));
+    }
+
+    private Optional<AbstractCommand> parseSave(String[] args) {
+        Runnable showUsage = () -> {
+            System.err.println("save <file> usage:");
+            System.err.println("    file: file name, can be user/file or just file");
+        };
+        if (args.length != 2) {
+            showUsage.run();
+            return Optional.empty();
+        }
+
+        String[] file = parseFileName(args[1]);
+        if (file == null) {
+            showUsage.run();
+            return  Optional.empty();
+        }
+
+        return Optional.of(new SaveFileCommand(sessionInfo.getSessionToken(), file[0], file[1]));
+    }
+
+    private Optional<AbstractCommand> parseList(String[] args) {
+        Runnable showUsage = () -> System.err.println("login usage: no args");
+
+        if (args.length != 1) {
+            showUsage.run();
+            return Optional.empty();
+        }
+        return Optional.of(new ListFilesCommand(sessionInfo.getSessionToken()));
+    }
+
+    private Optional<AbstractCommand> ignore(String[] args) {
+        return Optional.empty();
     }
 }

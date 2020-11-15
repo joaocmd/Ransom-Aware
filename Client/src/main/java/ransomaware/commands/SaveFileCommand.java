@@ -6,85 +6,51 @@ import ransomaware.ClientVariables;
 import ransomaware.SecurityUtils;
 
 import java.io.File;
+import java.net.HttpURLConnection;
 import java.net.http.HttpClient;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class SaveFileCommand extends AbstractCommand {
 
-    private String username;
+    private final int sessionToken;
+    private final String owner;
+    private final String filename;
 
-    public SaveFileCommand(String sessionToken, String username) {
-        super(sessionToken);
-        this.username = username;
+    public SaveFileCommand(int sessionToken, String owner, String filename) {
+        this.sessionToken = sessionToken;
+        this.owner = owner;
+        this.filename = filename;
     }
 
-    /**
-     * run
-     * @param args - for example: ['save','a.txt'] or ['save','masterzeus','a.txt']
-     * @param client - the HttpClient
-     * @return if the commands has succeeded
-     */
-    public boolean run(String[] args, HttpClient client) {
-        if (args.length != 2) {
-            System.out.println("save: Too many arguments.\nExample: save a.txt");
-            return false;
-        }
-
-        String[] givenFile = args[1].split("/");
-        String user;
-        String filename;
-
-        if(givenFile.length == 0 || givenFile.length > 2) {
-            System.out.println("bad file-name: expected <user>/<file> or simply <file>.");
-            return false;
-        }
-
-        if (givenFile.length == 1) {
-            user = this.username;
-            filename = givenFile[0];
-        } else {
-            user = givenFile[0];
-            filename = givenFile[1];
-        }
-
+    @Override
+    public void run(HttpClient client) {
         try {
-            String filePath = ClientVariables.FS_PATH + '/' + user + '/' + filename;
-            System.out.println(filePath);
+            String filePath = Utils.getFilePath(owner, filename);
 
-            // Check if file exists
             File file = new File(filePath);
             if (!file.exists()) {
-                System.out.println("File not found.");
-                return false;
+                System.err.println("File not found locally.");
+                return;
             }
 
-            // Read file to bytes
             byte[] data = Files.readAllBytes(Path.of(filePath));
-
-            // Pass string file to base64
             String encodedData = SecurityUtils.getBase64(data);
 
-            // Create JSON
             JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
             jsonRoot.addProperty("data", encodedData);
             JsonObject jsonInfo = JsonParser.parseString("{}").getAsJsonObject();
-            jsonInfo.addProperty("user", user);
+            jsonInfo.addProperty("user", owner);
             jsonInfo.addProperty("name", filename);
             jsonRoot.add("info", jsonInfo);
-            // FIXME: this should be in all methods
-            jsonRoot.addProperty("login-token", Integer.valueOf(super.getSessionToken()));
+            Utils.addLoginToken(jsonRoot, sessionToken);
 
-            System.out.println(jsonRoot);
-
-            // Send request
-            String response = super.requestPostFromURL(ClientVariables.URL + "/save", jsonRoot, client);
-
-            System.out.println("Response: " + response);
-
+            JsonObject response = Utils.requestPostFromURL(ClientVariables.URL + "/save", jsonRoot, client);
+            if (response.get("status").getAsInt() != HttpURLConnection.HTTP_OK) {
+                Utils.handleError(response);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return true;
     }
 }

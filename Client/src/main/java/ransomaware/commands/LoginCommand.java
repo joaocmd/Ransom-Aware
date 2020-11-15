@@ -3,33 +3,24 @@ package ransomaware.commands;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import ransomaware.ClientVariables;
+import ransomaware.SessionInfo;
 
 import java.io.Console;
 import java.net.HttpURLConnection;
 import java.net.http.HttpClient;
 
 public class LoginCommand extends AbstractCommand {
-    private String username;
 
-    public LoginCommand() {
-        super("");
+    private final SessionInfo info;
+
+    public LoginCommand(SessionInfo info) {
+        this.info = info;
     }
 
-    /**
-     * run
-     * @param args - ['login'] at most
-     * @param client - the Http Client
-     * @return if the commands has succeeded
-     */
-
-    public boolean run(String[] args, HttpClient client) {
-        if (args.length != 1) {
-            System.out.println("login: Too many arguments.\nExample: login");
-            return false;
-        }
-
+    @Override
+    public void run(HttpClient client) {
         Console console = System.console();
-        username = console.readLine("user: ");
+        String username = console.readLine("username: ");
         String password = new String(console.readPassword("password: "));
 
         // Create JSON
@@ -38,21 +29,13 @@ public class LoginCommand extends AbstractCommand {
         jsonRoot.addProperty("password", password);
 
         // Send request
-        String response = super.requestPostFromURL(ClientVariables.URL + "/login", jsonRoot, client);
-
-        // TODO: Store session token or check if error
-        JsonObject jsonResponse = JsonParser.parseString(response).getAsJsonObject();
-        switch (jsonResponse.get("status").getAsInt()) {
-            case HttpURLConnection.HTTP_OK:
-                sessionToken = jsonResponse.get("login-token").getAsString();
-                return true;
-            default:
-                handleError(jsonResponse);
-                return false;
+        JsonObject response = Utils.requestPostFromURL(ClientVariables.URL + "/login", jsonRoot, client);
+        if (response.get("status").getAsInt() == HttpURLConnection.HTTP_OK) {
+            int sessionToken = response.get("login-token").getAsInt();
+            info.setSessionToken(sessionToken);
+            info.setUsername(username);
+        } else {
+            Utils.handleError(response);
         }
-    }
-
-    public String getUsername() {
-        return username;
     }
 }
