@@ -32,11 +32,9 @@ public class GetFileHandler extends AbstractHandler {
         String filename = body.get("name").getAsString();
 
         try {
-            // FIXME: args
             String file = SecurityUtils.getBase64(server.getFile(getSessionToken(), owner, filename));
             JsonObject response = JsonParser.parseString("{}").getAsJsonObject();
             response.addProperty("file", file);
-            System.out.println(response);
             super.sendResponse(HttpURLConnection.HTTP_OK, response);
         } catch (NoSuchFileException e) {
             sendResponse(HttpURLConnection.HTTP_NOT_FOUND, "No such file");
