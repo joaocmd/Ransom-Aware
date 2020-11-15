@@ -24,6 +24,7 @@ public class BaseIT {
     private static final String TEST_PROP_FILE = "/test.properties";
     protected static Properties testProps;
     private static MongoClient mongoClient;
+    private static String dbName;
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
     private static HttpClient client = HttpClient.newBuilder().executor(executor).build();
     static String baseUrl;
@@ -43,7 +44,7 @@ public class BaseIT {
         try {
             String dbHost = testProps.getProperty("db.host");
             String dbPort = testProps.getProperty("db.port");
-            String dbName = testProps.getProperty("db.name");
+            dbName = testProps.getProperty("db.name");
             mongoClient = new MongoClient(new MongoClientURI("mongodb://" + dbHost + ":" + dbPort));
             List<String> databases = mongoClient.getDatabaseNames();
             if (databases.contains(dbName)) {
@@ -63,6 +64,8 @@ public class BaseIT {
 
     @AfterAll
     public static void cleanup() {
+        mongoClient.dropDatabase(dbName);
+        mongoClient.getDB(dbName);
         executor.shutdownNow();
         client = null;
         System.gc();
