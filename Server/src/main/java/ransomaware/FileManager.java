@@ -34,7 +34,7 @@ public class FileManager {
         }
     }
 
-    private static void saveNewFileVersion(String fileName, int version) {
+    public static void saveNewFileVersion(String fileName, int version) {
         MongoClient client = getMongoClient();
         var query = new BasicDBObject("_id", fileName);
         var update = new BasicDBObject("version", version);

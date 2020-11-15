@@ -6,6 +6,7 @@ import ransomaware.exceptions.UnauthorizedException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.io.File;
 import java.util.stream.Stream;
 
 public class RansomAware {
@@ -20,6 +21,7 @@ public class RansomAware {
 //        }
 
         Server.start(this, port);
+        spinUp();
     }
 
     private boolean isOwner(String user, String fileName) {
@@ -73,5 +75,32 @@ public class RansomAware {
 
     public void logout(int sessionToken) {
         SessionManager.logout(sessionToken);
+    }
+    
+    private void spinUp(){
+        File folder = new File(ServerVariables.FILES_PATH);
+        File[] users =  folder.listFiles(File::isDirectory);
+
+        for(File user : users) {
+            userFiles.putIfAbsent(user.getName(), new HashSet<>());
+
+            File[] files = user.listFiles(File::isDirectory);
+
+            for(File file : files) {
+                String fileName = FileManager.getFileName(user.getName(), file.getName());
+                
+                userFiles.get(user.getName()).add(fileName);
+                usersWithAccess.putIfAbsent(fileName, new HashSet<>());
+                usersWithAccess.get(fileName).add(user.getName());
+
+
+                File[] versions = file.listFiles();
+                int mostRecent = versions.length;
+            
+                FileManager.saveNewFileVersion(fileName, mostRecent);
+            }
+        }
+        System.out.println(usersWithAccess);
+        System.out.println(userFiles);
     }
 }

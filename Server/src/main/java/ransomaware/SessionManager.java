@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SessionManager {
 
     private static final ConcurrentHashMap<Integer, SessionObject> sessions = new ConcurrentHashMap<>();
-
+    
     public enum SessionState {
         VALID,
         INVALID,
