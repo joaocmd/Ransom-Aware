@@ -32,6 +32,7 @@ public class Client {
         parsers.put("exit", this::parseExit);
     }
 
+
     public void start() {
         this.populateParsers();
         Console console = System.console();
@@ -46,6 +47,7 @@ public class Client {
 
             if (parsers.containsKey(args[0])) {
                 parsers.get(args[0]).apply(args).ifPresent(c -> c.run(client));
+
             } else {
                 System.err.println("Command not found, use 'help'");
             }

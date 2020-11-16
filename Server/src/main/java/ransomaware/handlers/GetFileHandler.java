@@ -27,13 +27,13 @@ public class GetFileHandler extends AbstractHandler {
         }
 
         String[] parts = exchange.getRequestURI().getPath().split("/");
-        if (parts.length != 3) {
+        if (parts.length != 4) {
             sendResponse(HttpURLConnection.HTTP_BAD_REQUEST, "Invalid file path");
             return;
         }
 
-        String owner = parts[1];
-        String filename = parts[2];
+        String owner = parts[2];
+        String filename = parts[3];
 
         try {
             String file = SecurityUtils.getBase64(server.getFile(getSessionToken(), owner, filename));

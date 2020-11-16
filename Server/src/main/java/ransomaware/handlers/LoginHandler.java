@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 
-import ransomaware.CookieManager;
 import ransomaware.RansomAware;
 import ransomaware.SessionManager;
 import ransomaware.exceptions.UnauthorizedException;
@@ -28,8 +27,7 @@ public class LoginHandler extends AbstractHandler {
 
         try {
             int sessionToken = SessionManager.login(username, password);
-            HttpCookie cookie = CookieManager.createCookie("login-token", Integer.toString(sessionToken));
-
+            HttpCookie cookie = new HttpCookie("login-token", Integer.toString(sessionToken));
             JsonObject resp = JsonParser.parseString("{}").getAsJsonObject();
             resp.addProperty("status", Integer.toString(sessionToken));
 

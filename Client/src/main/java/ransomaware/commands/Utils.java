@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import ransomaware.ClientVariables;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -54,6 +55,16 @@ public class Utils {
 
     public static String getFilePath(String owner, String filename) {
         return ClientVariables.WORKSPACE + '/' + owner + '/' + filename;
+    }
+
+    public static void clearWorkspace(File dir) {
+        File[] files = dir.listFiles();
+        if(files != null) {
+            for (File file : files) {
+                clearWorkspace(file);
+            }
+        }
+        dir.delete();
     }
 
     public static String getUserDirectory(String user) {

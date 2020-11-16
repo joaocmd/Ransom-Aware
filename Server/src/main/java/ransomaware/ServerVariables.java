@@ -6,7 +6,7 @@ public class ServerVariables {
     public static String FS_PATH;
     public static String FILES_PATH;
 
-    public static final long SESSION_DURATION = 60*20;
+    public static final long SESSION_DURATION = 20;
     public static String SSL_KEYSTORE;
     public static final String SSL_STOREPASS = "changeme";
     public static final String SSL_KEYPASS = "changeme";

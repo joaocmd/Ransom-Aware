@@ -18,9 +18,12 @@ public class LogoutCommand extends AbstractCommand {
 
     @Override
     public void run(HttpClient client) {
+        if(info.isLogged()) {
+            Utils.clearWorkspace(new File(ClientVariables.WORKSPACE + '/' + info.getUsername()));
+        }
         JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
 
-        Utils.requestPostFromURL(ClientVariables.URL + "/login", jsonRoot, client);
+        Utils.requestPostFromURL(ClientVariables.URL + "/logout", jsonRoot, client);
         info.setUsername(null);
         info.setLogged(false);
 

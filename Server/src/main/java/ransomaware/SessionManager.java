@@ -27,13 +27,15 @@ public class SessionManager {
     public static SessionState getSessionSate(HttpCookie cookie) {
         int sessionToken = Integer.valueOf(cookie.getValue());
 
-        if (cookie.hasExpired()) {
-            return SessionState.EXPIRED;
+        if (sessions.containsKey(sessionToken)) {
+            if (sessions.get(sessionToken).expirationMoment.isAfter(Instant.now())) {
+                return SessionState.VALID;
+            } else {
+                sessions.remove(sessionToken);
+                return SessionState.EXPIRED;
+            }
         }
-        if (!sessions.containsKey(sessionToken)) {
-            return SessionState.INVALID;
-        }
-        return SessionState.VALID;
+        return SessionState.INVALID;
     }
 
     public static String getUsername(Integer sessionToken) {
@@ -62,7 +64,7 @@ public class SessionManager {
 //                    .append("key", userKey);
             collection.insert(obj);
             client.close();
-            // FIXME: don't allow weird usernames ('joao/david/')
+            System.out.println("Registered: " + username);
         } else {
             client.close();
             throw new DuplicateUsernameException();
@@ -83,6 +85,7 @@ public class SessionManager {
                 SecureRandom rand = new SecureRandom();
                 int token = rand.nextInt();
                 sessions.put(token, new SessionObject(username, Instant.now().plusSeconds(ServerVariables.SESSION_DURATION)));
+                System.out.println("Logged in: " + username);
                 return token;
             }
         }
@@ -91,7 +94,8 @@ public class SessionManager {
 
     public static void logout(int sessionToken) {
         try {
-            sessions.remove(sessionToken);
+            String username = sessions.remove(sessionToken).username;
+            System.out.println("Logged out: " + username);
         } catch (NullPointerException ignored) { }
     }
 

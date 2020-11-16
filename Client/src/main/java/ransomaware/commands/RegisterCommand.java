@@ -14,7 +14,7 @@ public class RegisterCommand extends AbstractCommand{
     @Override
     public void run(HttpClient client) {
         Console console = System.console();
-        String user = console.readLine("user: ");
+        String user = console.readLine("username: ");
         String password = new String(console.readPassword("password: "));
 
         JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();

@@ -52,7 +52,6 @@ public class FileManager {
 
         int newVersion = getFileVersion(fileName) + 1;
         String filePath = String.format("%s/%d", fileDir, newVersion);
-        System.out.println(filePath);
         Path file = Paths.get(filePath);
         try {
             Files.write(file, data);

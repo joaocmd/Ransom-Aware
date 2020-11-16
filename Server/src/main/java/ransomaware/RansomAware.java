@@ -25,8 +25,6 @@ public class RansomAware {
     }
 
     private boolean isOwner(String user, String fileName) {
-        System.out.println(user);
-        System.out.println(fileName);
         return user.equals(fileName.split("/")[0]);
     }
 

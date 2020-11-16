@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import ransomaware.CookieManager;
 import ransomaware.RansomAware;
 import ransomaware.SessionManager;
 import ransomaware.exceptions.InvalidMethodException;
@@ -54,7 +53,7 @@ public abstract class AbstractHandler implements HttpHandler {
             }
 
             HttpCookie cookie = HttpCookie.parse(loginCookie.get()).get(0);
-            int tokenVal = Integer.valueOf(cookie.getValue());
+            int tokenVal = Integer.parseInt(cookie.getValue());
 
             this.sessionToken = tokenVal;
             switch (SessionManager.getSessionSate(cookie)) {
