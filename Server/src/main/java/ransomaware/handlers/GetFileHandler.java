@@ -43,7 +43,7 @@ public class GetFileHandler extends AbstractHandler {
         } catch (NoSuchFileException e) {
             sendResponse(HttpURLConnection.HTTP_NOT_FOUND, "No such file");
         } catch (UnauthorizedException e) {
-            sendResponse(HttpURLConnection.HTTP_UNAUTHORIZED, "You don't have permission to see this file");
+            sendResponse(HttpURLConnection.HTTP_FORBIDDEN, "You don't have permission to see this file");
         } catch (Exception e) {
             e.printStackTrace();
             sendResponse(HttpURLConnection.HTTP_INTERNAL_ERROR, "Something unexpected happened");

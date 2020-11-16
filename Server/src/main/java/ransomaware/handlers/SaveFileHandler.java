@@ -34,7 +34,7 @@ public class SaveFileHandler extends AbstractHandler {
             server.uploadFile(this.getSessionToken(), username, fileName, data);
             sendResponse(HttpURLConnection.HTTP_OK, "OK");
         } catch (UnauthorizedException e) {
-            sendResponse(HttpURLConnection.HTTP_UNAUTHORIZED, "Unauthorized access to resource.");
+            sendResponse(HttpURLConnection.HTTP_FORBIDDEN, "Unauthorized access to resource");
         } catch (Exception e) {
             e.printStackTrace();
             sendResponse(HttpURLConnection.HTTP_INTERNAL_ERROR, "Something unexpected happened");
