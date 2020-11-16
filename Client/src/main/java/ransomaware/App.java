@@ -8,13 +8,10 @@ import java.util.concurrent.Callable;
 public class App implements Callable<Integer> {
 
     @Option(names = {"-p", "--path"}, required = false, description = "Instance path.")
-    private String path = "workspace";
-
-    @Option(names = {"-s", "--set-up"}, negatable = true, description = "Run first time setup if specified.")
-    private boolean firstTime;
+    private String path = "ransom-aware";
 
     @Option(names = {"-u", "--url"}, description = "Server url to connect to. P.e.: localhost:8843")
-    private String url = "localhost:8443";
+    private String url = "https://localhost:8443";
 
     public Integer call() throws Exception {
         ClientVariables.init(path, url);

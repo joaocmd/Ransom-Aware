@@ -14,6 +14,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.HttpCookie;
+import java.util.List;
+import java.util.Optional;
 
 public abstract class AbstractHandler implements HttpHandler {
 
@@ -36,11 +39,22 @@ public abstract class AbstractHandler implements HttpHandler {
         if (!exchange.getRequestMethod().equalsIgnoreCase(method)) {
             throw new InvalidMethodException();
         }
-        convertBodyToJSON();
+
+        if(exchange.getRequestMethod().equals("POST")){
+            convertBodyToJSON();
+        }
+
         if (requireAuth) {
-            Integer token = getBodyAsJSON().get("login-token").getAsInt();
-            this.sessionToken = token;
-            switch (SessionManager.getSessionSate(token)) {
+            Optional<String> loginCookie = exchange.getRequestHeaders().get("Cookie").stream().filter(s -> s.startsWith("login-token")).findFirst();
+
+            if (!loginCookie.isPresent()) {
+                sendResponse(HttpURLConnection.HTTP_UNAUTHORIZED, "No session token given");
+                return;
+            }
+
+            HttpCookie cookie = HttpCookie.parse(loginCookie.get()).get(0);
+            this.sessionToken = Integer.parseInt(cookie.getValue());
+            switch (SessionManager.getSessionSate(this.sessionToken)) {
                 case INVALID:
                     sendResponse(HttpURLConnection.HTTP_UNAUTHORIZED, "Invalid session token");
                     throw new UnauthorizedException();
@@ -51,6 +65,7 @@ public abstract class AbstractHandler implements HttpHandler {
             }
         }
     }
+
 
     protected void convertBodyToJSON() {
         try (InputStream is = exchange.getRequestBody()) {
@@ -69,18 +84,34 @@ public abstract class AbstractHandler implements HttpHandler {
     }
 
     protected void sendResponse(int statusCode, String message) {
-        JsonObject responseObj = JsonParser.parseString("{}").getAsJsonObject();
-        responseObj.addProperty("body", message);
-        sendResponse(statusCode, responseObj);
+        sendResponse(statusCode, message, null);
     }
 
     protected void sendResponse(int statusCode, JsonObject object) {
-        try (OutputStream os = this.exchange.getResponseBody()) {
-            object.addProperty("status", statusCode);
-            String message = object.toString();
+        sendResponse(statusCode, object, null);
+    }
 
-            this.exchange.getResponseHeaders().set("Content-Type", "application/json");
+    protected void sendResponse(int statusCode, String message, HttpCookie cookie) {
+        JsonObject responseObj = JsonParser.parseString("{}").getAsJsonObject();
+        responseObj.addProperty("body", message);
+        sendResponse(statusCode, responseObj, cookie);
+    }
+
+    protected void sendResponse(int statusCode, JsonObject object, HttpCookie cookie) {
+        this.exchange.getResponseHeaders().set("Content-Type", "application/json");
+        if (cookie != null) {
+            this.exchange.getResponseHeaders().set("Set-Cookie", cookie.toString());
+        }
+
+        object.addProperty("status", statusCode);
+        String message = object.toString();
+        try {
             this.exchange.sendResponseHeaders(statusCode, message.length());
+        } catch (IOException e) {
+            System.err.println("Error on writing response headers");
+            return;
+        }
+        try (OutputStream os = this.exchange.getResponseBody()) {
             os.write(message.getBytes());
             os.flush();
         } catch (IOException e) {
