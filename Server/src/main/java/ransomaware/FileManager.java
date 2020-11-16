@@ -34,6 +34,12 @@ public class FileManager {
         }
     }
 
+    public static void dropDB(){
+        MongoClient client = getMongoClient();
+        client.getDB(ServerVariables.FS_PATH).getCollection("files").drop();
+        client.close();
+    }
+
     public static void saveNewFileVersion(String fileName, int version) {
         MongoClient client = getMongoClient();
         var query = new BasicDBObject("_id", fileName);

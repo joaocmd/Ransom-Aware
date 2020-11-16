@@ -15,13 +15,11 @@ public class RansomAware {
     private final ConcurrentHashMap<String, Set<String>> usersWithAccess = new ConcurrentHashMap<>();
 
     public RansomAware(String path, int port, boolean firstTime) {
-        // TODO: Validate FS and populate database
-//        if (!firstTime) {
-//             validateFS(path);
-//        }
+        if (!firstTime) {
+            spinUp();
+        }
 
         Server.start(this, port);
-        spinUp();
     }
 
     private boolean isOwner(String user, String fileName) {
@@ -76,6 +74,8 @@ public class RansomAware {
     }
     
     private void spinUp(){
+        FileManager.dropDB();
+
         File folder = new File(ServerVariables.FILES_PATH);
         File[] users =  folder.listFiles(File::isDirectory);
 

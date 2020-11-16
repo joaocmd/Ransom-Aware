@@ -19,7 +19,7 @@ public class Server {
         try {
             server = HttpsServer.create(new InetSocketAddress(port), 0);
             context = SSLContext.getInstance("TLS");
-            KeyStore ks = KeyStore.getInstance("JKS");
+            KeyStore ks = KeyStore.getInstance("pkcs12");
             FileInputStream fis = new FileInputStream(ServerVariables.SSL_KEYSTORE);
             ks.load(fis, ServerVariables.SSL_STOREPASS.toCharArray());
 
