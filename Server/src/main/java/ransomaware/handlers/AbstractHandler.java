@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import ransomaware.CookieManager;
 import ransomaware.RansomAware;
 import ransomaware.SessionManager;
 import ransomaware.exceptions.InvalidMethodException;
@@ -14,6 +15,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.HttpCookie;
+import java.util.List;
+import java.util.Optional;
 
 public abstract class AbstractHandler implements HttpHandler {
 
@@ -36,11 +40,24 @@ public abstract class AbstractHandler implements HttpHandler {
         if (!exchange.getRequestMethod().equalsIgnoreCase(method)) {
             throw new InvalidMethodException();
         }
-        convertBodyToJSON();
+
+        if(exchange.getRequestMethod().equals("POST")){
+            convertBodyToJSON();
+        }
+
         if (requireAuth) {
-            Integer token = getBodyAsJSON().get("login-token").getAsInt();
-            this.sessionToken = token;
-            switch (SessionManager.getSessionSate(token)) {
+            Optional<String> loginCookie = exchange.getRequestHeaders().get("Cookie").stream().filter(s -> s.startsWith("login-token")).findFirst();
+
+            if (!loginCookie.isPresent()) {
+                sendResponse(HttpURLConnection.HTTP_UNAUTHORIZED, "Invalid session token");
+                return;
+            }
+
+            HttpCookie cookie = HttpCookie.parse(loginCookie.get()).get(0);
+            int tokenVal = Integer.valueOf(cookie.getValue());
+
+            this.sessionToken = tokenVal;
+            switch (SessionManager.getSessionSate(cookie)) {
                 case INVALID:
                     sendResponse(HttpURLConnection.HTTP_UNAUTHORIZED, "Invalid session token");
                     throw new UnauthorizedException();
@@ -51,6 +68,7 @@ public abstract class AbstractHandler implements HttpHandler {
             }
         }
     }
+
 
     protected void convertBodyToJSON() {
         try (InputStream is = exchange.getRequestBody()) {
@@ -80,6 +98,27 @@ public abstract class AbstractHandler implements HttpHandler {
             String message = object.toString();
 
             this.exchange.getResponseHeaders().set("Content-Type", "application/json");
+            this.exchange.sendResponseHeaders(statusCode, message.length());
+            os.write(message.getBytes());
+            os.flush();
+        } catch (IOException e) {
+            System.err.println("Error on writing response body");
+        }
+    }
+
+    protected void sendResponse(int statusCode, String message, HttpCookie cookie) {
+        JsonObject responseObj = JsonParser.parseString("{}").getAsJsonObject();
+        responseObj.addProperty("body", message);
+        sendResponse(statusCode, responseObj, cookie);
+    }
+
+    protected void sendResponse(int statusCode, JsonObject object, HttpCookie cookie) {
+        try (OutputStream os = this.exchange.getResponseBody()) {
+            object.addProperty("status", statusCode);
+            String message = object.toString();
+
+            this.exchange.getResponseHeaders().set("Content-Type", "application/json");
+            this.exchange.getResponseHeaders().set("Set-Cookie", cookie.toString());
             this.exchange.sendResponseHeaders(statusCode, message.length());
             os.write(message.getBytes());
             os.flush();

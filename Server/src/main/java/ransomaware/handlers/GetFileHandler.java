@@ -26,16 +26,20 @@ public class GetFileHandler extends AbstractHandler {
             return;
         }
 
-        JsonObject body = getBodyAsJSON();
+        String[] parts = exchange.getRequestURI().getPath().split("/");
+        if (parts.length != 3) {
+            sendResponse(HttpURLConnection.HTTP_BAD_REQUEST, "Invalid file path");
+            return;
+        }
 
-        String owner = body.get("user").getAsString();
-        String filename = body.get("name").getAsString();
+        String owner = parts[1];
+        String filename = parts[2];
 
         try {
             String file = SecurityUtils.getBase64(server.getFile(getSessionToken(), owner, filename));
             JsonObject response = JsonParser.parseString("{}").getAsJsonObject();
             response.addProperty("file", file);
-            super.sendResponse(HttpURLConnection.HTTP_OK, response);
+            sendResponse(HttpURLConnection.HTTP_OK, response);
         } catch (NoSuchFileException e) {
             sendResponse(HttpURLConnection.HTTP_NOT_FOUND, "No such file");
         } catch (UnauthorizedException e) {

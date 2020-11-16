@@ -2,12 +2,7 @@ package ransomaware;
 
 public class SessionInfo {
     private String username;
-    private int sessionToken;
     private boolean isLogged = false;
-
-    public void setSessionToken(int sessionToken) {
-                                                this.sessionToken = sessionToken;
-                                                                                 }
 
     public void setUsername(String username) {
                                            this.username = username;
@@ -17,10 +12,6 @@ public class SessionInfo {
                               return username;
                                               }
 
-    public int getSessionToken() {
-                               return sessionToken;
-                                                   }
-
     public boolean isLogged() {
                             return isLogged;
                                             }
@@ -28,4 +19,9 @@ public class SessionInfo {
     public void setLogged(boolean logged) {
             isLogged = logged;
         }
+
+    public void logOff(){
+        setLogged(false);
+        setUsername("");
+    }
 }

@@ -19,7 +19,6 @@ public class LogoutCommand extends AbstractCommand {
     @Override
     public void run(HttpClient client) {
         JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
-        Utils.addLoginToken(jsonRoot, info.getSessionToken());
 
         Utils.requestPostFromURL(ClientVariables.URL + "/login", jsonRoot, client);
         info.setUsername(null);

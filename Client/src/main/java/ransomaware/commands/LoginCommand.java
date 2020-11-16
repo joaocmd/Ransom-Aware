@@ -31,8 +31,6 @@ public class LoginCommand extends AbstractCommand {
         // Send request
         JsonObject response = Utils.requestPostFromURL(ClientVariables.URL + "/login", jsonRoot, client);
         if (response.get("status").getAsInt() == HttpURLConnection.HTTP_OK) {
-            int sessionToken = response.get("login-token").getAsInt();
-            info.setSessionToken(sessionToken);
             info.setUsername(username);
             info.setLogged(true);
         } else {

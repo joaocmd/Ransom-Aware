@@ -8,6 +8,7 @@ import ransomaware.exceptions.DuplicateUsernameException;
 import ransomaware.exceptions.InvalidUserNameException;
 import ransomaware.exceptions.UnauthorizedException;
 
+import java.net.HttpCookie;
 import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.time.Instant;
@@ -23,16 +24,16 @@ public class SessionManager {
         EXPIRED
     }
 
-    public static SessionState getSessionSate(Integer sessionToken) {
-        if (sessions.containsKey(sessionToken)) {
-            if (sessions.get(sessionToken).expirationMoment.isAfter(Instant.now())) {
-                return SessionState.VALID;
-            } else {
-                sessions.remove(sessionToken);
-                return SessionState.EXPIRED;
-            }
+    public static SessionState getSessionSate(HttpCookie cookie) {
+        int sessionToken = Integer.valueOf(cookie.getValue());
+
+        if (cookie.hasExpired()) {
+            return SessionState.EXPIRED;
         }
-        return SessionState.INVALID;
+        if (!sessions.containsKey(sessionToken)) {
+            return SessionState.INVALID;
+        }
+        return SessionState.VALID;
     }
 
     public static String getUsername(Integer sessionToken) {

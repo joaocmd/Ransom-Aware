@@ -16,23 +16,17 @@ public class GetFileCommand extends AbstractCommand {
 
     private final String owner;
     private final String filename;
-    private final int sessionToken;
 
-    public GetFileCommand(int sessionToken, String owner, String filename) {
+    public GetFileCommand(String owner, String filename) {
         this.owner = owner;
         this.filename = filename;
-        this.sessionToken = sessionToken;
     }
 
     @Override
     public void run(HttpClient client) {
         try {
-            JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
-            jsonRoot.addProperty("user", owner);
-            jsonRoot.addProperty("name", filename);
-            Utils.addLoginToken(jsonRoot, sessionToken);
 
-            JsonObject response = Utils.requestPostFromURL(ClientVariables.URL + "/files", jsonRoot, client);
+            JsonObject response = Utils.requestGetFromURL(ClientVariables.URL + "/files" + '/' + owner + '/' + filename, client);
             if (response.get("status").getAsInt() == HttpURLConnection.HTTP_OK) {
                 byte[] data = SecurityUtils.decodeBase64(response.get("file").getAsString());
                 File dir = new File(ClientVariables.WORKSPACE + '/' + owner);

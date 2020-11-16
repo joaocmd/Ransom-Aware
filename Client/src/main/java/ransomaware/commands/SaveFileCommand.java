@@ -13,12 +13,10 @@ import java.nio.file.Path;
 
 public class SaveFileCommand extends AbstractCommand {
 
-    private final int sessionToken;
     private final String owner;
     private final String filename;
 
-    public SaveFileCommand(int sessionToken, String owner, String filename) {
-        this.sessionToken = sessionToken;
+    public SaveFileCommand(String owner, String filename) {
         this.owner = owner;
         this.filename = filename;
     }
@@ -43,7 +41,6 @@ public class SaveFileCommand extends AbstractCommand {
             jsonInfo.addProperty("user", owner);
             jsonInfo.addProperty("name", filename);
             jsonRoot.add("info", jsonInfo);
-            Utils.addLoginToken(jsonRoot, sessionToken);
 
             JsonObject response = Utils.requestPostFromURL(ClientVariables.URL + "/save", jsonRoot, client);
             if (response.get("status").getAsInt() != HttpURLConnection.HTTP_OK) {

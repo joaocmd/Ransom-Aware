@@ -8,18 +8,12 @@ import java.net.http.HttpClient;
 
 public class ListFilesCommand extends AbstractCommand {
 
-    private final int sessionToken;
-
-    public ListFilesCommand(int sessionToken) {
-        this.sessionToken = sessionToken;
+    public ListFilesCommand() {
     }
 
     @Override
     public void run(HttpClient client) {
-        JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
-        Utils.addLoginToken(jsonRoot, sessionToken);
-
-        JsonObject response = Utils.requestPostFromURL(ClientVariables.URL + "/list", jsonRoot, client);
+        JsonObject response = Utils.requestGetFromURL(ClientVariables.URL + "/list", client);
         System.out.println(response.toString());
     }
 }

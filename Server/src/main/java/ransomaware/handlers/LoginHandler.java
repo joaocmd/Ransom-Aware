@@ -3,10 +3,13 @@ package ransomaware.handlers;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
+
+import ransomaware.CookieManager;
 import ransomaware.RansomAware;
 import ransomaware.SessionManager;
 import ransomaware.exceptions.UnauthorizedException;
 
+import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 
 public class LoginHandler extends AbstractHandler {
@@ -22,11 +25,15 @@ public class LoginHandler extends AbstractHandler {
 
         String username = body.get("username").getAsString();
         String password = body.get("password").getAsString();
+
         try {
             int sessionToken = SessionManager.login(username, password);
+            HttpCookie cookie = CookieManager.createCookie("login-token", Integer.toString(sessionToken));
+
             JsonObject resp = JsonParser.parseString("{}").getAsJsonObject();
-            resp.addProperty("login-token", Integer.toString(sessionToken));
-            sendResponse(HttpURLConnection.HTTP_OK, resp);
+            resp.addProperty("status", Integer.toString(sessionToken));
+
+            sendResponse(HttpURLConnection.HTTP_OK, "Successful login", cookie);
         } catch (UnauthorizedException e) {
             super.sendResponse(HttpURLConnection.HTTP_UNAUTHORIZED, "Invalid credentials");
         } catch (Exception e) {

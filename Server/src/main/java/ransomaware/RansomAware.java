@@ -100,7 +100,5 @@ public class RansomAware {
                 FileManager.saveNewFileVersion(fileName, mostRecent);
             }
         }
-        System.out.println(usersWithAccess);
-        System.out.println(userFiles);
     }
 }

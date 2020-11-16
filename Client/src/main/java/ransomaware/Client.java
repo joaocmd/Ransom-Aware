@@ -4,6 +4,8 @@ import ransomaware.commands.*;
 
 import javax.swing.text.html.Option;
 import java.io.Console;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
 import java.net.http.HttpClient;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +16,8 @@ import java.util.function.Function;
 
 public class Client {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
-    private HttpClient client = HttpClient.newBuilder().executor(executor).build();
+    private CookieManager cm = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
+    private HttpClient client = HttpClient.newBuilder().cookieHandler(cm).executor(executor).build();
     private SessionInfo sessionInfo = new SessionInfo();
 
     private final Map<String, Function<String[], Optional<AbstractCommand>>> parsers = new HashMap<>();
@@ -154,7 +157,7 @@ public class Client {
             return Optional.empty();
         }
 
-        return Optional.of(new GetFileCommand(sessionInfo.getSessionToken(), file[0], file[1]));
+        return Optional.of(new GetFileCommand(file[0], file[1]));
     }
 
     private Optional<AbstractCommand> parseSave(String[] args) {
@@ -173,7 +176,7 @@ public class Client {
             return  Optional.empty();
         }
 
-        return Optional.of(new SaveFileCommand(sessionInfo.getSessionToken(), file[0], file[1]));
+        return Optional.of(new SaveFileCommand(file[0], file[1]));
     }
 
     private Optional<AbstractCommand> parseList(String[] args) {
@@ -183,7 +186,7 @@ public class Client {
             showUsage.run();
             return Optional.empty();
         }
-        return Optional.of(new ListFilesCommand(sessionInfo.getSessionToken()));
+        return Optional.of(new ListFilesCommand());
     }
 
     private Optional<AbstractCommand> parseExit(String[] args) {

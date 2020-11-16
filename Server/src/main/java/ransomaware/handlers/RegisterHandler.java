@@ -28,7 +28,7 @@ public class RegisterHandler extends AbstractHandler {
         } catch (DuplicateUsernameException e) {
             sendResponse(HttpURLConnection.HTTP_CONFLICT, "Username already registered");
         } catch(InvalidUserNameException e) {
-            sendResponse(HttpURLConnection.HTTP_BAD_REQUEST, "Bad format: Username must be alfanumeric.");
+            sendResponse(HttpURLConnection.HTTP_BAD_REQUEST, "Username must be alfanumeric");
         } catch (Exception e) {
             e.printStackTrace();
             sendResponse(HttpURLConnection.HTTP_INTERNAL_ERROR, "Something unexpected happened");
