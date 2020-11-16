@@ -58,6 +58,8 @@ public class Utils {
     }
 
     public static void clearWorkspace(File dir) {
+        if(dir == null)
+            return;
         File[] files = dir.listFiles();
         if(files != null) {
             for (File file : files) {

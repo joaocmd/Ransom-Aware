@@ -30,6 +30,7 @@ public class Client {
         parsers.put("save", this::parseSave);
         parsers.put("list", this::parseList);
         parsers.put("exit", this::parseExit);
+        parsers.put("clear", this::parseClear);
     }
 
 
@@ -196,5 +197,16 @@ public class Client {
             return  Optional.of(new LogoutCommand(sessionInfo));
         }
         return Optional.empty();
+    }
+
+    private Optional<AbstractCommand> parseClear(String[] args) {
+        Runnable showUsage = () -> System.err.println("clear usage: no args");
+
+        if(args.length != 1) {
+            showUsage.run();
+            return Optional.empty();
+        }
+
+        return Optional.of(new ClearCommand());
     }
 }
