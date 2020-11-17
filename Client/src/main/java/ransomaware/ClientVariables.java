@@ -1,6 +1,7 @@
 package ransomaware;
 
 public class ClientVariables {
+    public static String WORKSPACE;
     public static String FS_PATH;
     public static String URL;
 
@@ -11,7 +12,8 @@ public class ClientVariables {
 
     public  static void init(String path, String url) {
         FS_PATH = path;
+        WORKSPACE = path + "/workspace";
         KEYSTORE = String.format("%s/server.keystore", FS_PATH);
-        URL = "https://" + url;
+        URL = url;
     }
 }

@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpExchange;
 import ransomaware.RansomAware;
 import ransomaware.SessionManager;
 import ransomaware.exceptions.DuplicateUsernameException;
+import ransomaware.exceptions.InvalidUserNameException;
 
 import java.net.HttpURLConnection;
 
@@ -23,9 +24,11 @@ public class RegisterHandler extends AbstractHandler {
         String password = body.get("password").getAsString();
         try {
             SessionManager.register(username, password);
-            sendResponse(HttpURLConnection.HTTP_OK, "Successfully registered");
+            sendResponse(HttpURLConnection.HTTP_OK, "OK");
         } catch (DuplicateUsernameException e) {
             sendResponse(HttpURLConnection.HTTP_CONFLICT, "Username already registered");
+        } catch(InvalidUserNameException e) {
+            sendResponse(HttpURLConnection.HTTP_BAD_REQUEST, "Username must be alphanumeric");
         } catch (Exception e) {
             e.printStackTrace();
             sendResponse(HttpURLConnection.HTTP_INTERNAL_ERROR, "Something unexpected happened");
