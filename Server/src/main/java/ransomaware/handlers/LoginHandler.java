@@ -27,7 +27,7 @@ public class LoginHandler extends AbstractHandler {
 
         try {
             int sessionToken = SessionManager.login(username, password);
-            HttpCookie cookie = new HttpCookie("login-token", Integer.toString(sessionToken));
+            String cookie = SessionManager.createSessionCookie(sessionToken);
             JsonObject resp = JsonParser.parseString("{}").getAsJsonObject();
             resp.addProperty("status", Integer.toString(sessionToken));
 

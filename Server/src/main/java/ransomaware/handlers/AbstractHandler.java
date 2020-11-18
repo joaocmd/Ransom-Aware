@@ -15,8 +15,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.HttpCookie;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public abstract class AbstractHandler implements HttpHandler {
 
@@ -45,23 +47,31 @@ public abstract class AbstractHandler implements HttpHandler {
         }
 
         if (requireAuth) {
-            Optional<String> loginCookie = exchange.getRequestHeaders().get("Cookie").stream().filter(s -> s.startsWith("login-token")).findFirst();
+            try {
+                Optional<String> loginCookie = Stream.of(exchange.getRequestHeaders().get("Cookie").get(0).split(";"))
+                        .map(String::trim)
+                        .filter(s -> s.startsWith("login-token"))
+                        .findFirst();
 
-            if (!loginCookie.isPresent()) {
+                if (!loginCookie.isPresent()) {
+                    sendResponse(HttpURLConnection.HTTP_UNAUTHORIZED, "No session token given");
+                    return;
+                }
+
+                HttpCookie cookie = HttpCookie.parse(loginCookie.get()).get(0);
+                this.sessionToken = Integer.parseInt(cookie.getValue());
+                switch (SessionManager.getSessionSate(this.sessionToken)) {
+                    case INVALID:
+                        sendResponse(HttpURLConnection.HTTP_UNAUTHORIZED, "Invalid session token");
+                        throw new UnauthorizedException();
+                    case EXPIRED:
+                        sendResponse(HttpURLConnection.HTTP_UNAUTHORIZED, "Session token expired");
+                        throw new SessionExpiredException();
+                    default:
+                }
+            }catch(NullPointerException e) {
                 sendResponse(HttpURLConnection.HTTP_UNAUTHORIZED, "No session token given");
-                return;
-            }
-
-            HttpCookie cookie = HttpCookie.parse(loginCookie.get()).get(0);
-            this.sessionToken = Integer.parseInt(cookie.getValue());
-            switch (SessionManager.getSessionSate(this.sessionToken)) {
-                case INVALID:
-                    sendResponse(HttpURLConnection.HTTP_UNAUTHORIZED, "Invalid session token");
-                    throw new UnauthorizedException();
-                case EXPIRED:
-                    sendResponse(HttpURLConnection.HTTP_UNAUTHORIZED, "Session token expired");
-                    throw new SessionExpiredException();
-                default:
+                throw new SessionExpiredException();
             }
         }
     }
@@ -91,16 +101,16 @@ public abstract class AbstractHandler implements HttpHandler {
         sendResponse(statusCode, object, null);
     }
 
-    protected void sendResponse(int statusCode, String message, HttpCookie cookie) {
+    protected void sendResponse(int statusCode, String message, String cookie) {
         JsonObject responseObj = JsonParser.parseString("{}").getAsJsonObject();
         responseObj.addProperty("body", message);
         sendResponse(statusCode, responseObj, cookie);
     }
 
-    protected void sendResponse(int statusCode, JsonObject object, HttpCookie cookie) {
+    protected void sendResponse(int statusCode, JsonObject object, String cookie) {
         this.exchange.getResponseHeaders().set("Content-Type", "application/json");
         if (cookie != null) {
-            this.exchange.getResponseHeaders().set("Set-Cookie", cookie.toString());
+            this.exchange.getResponseHeaders().set("Set-Cookie", cookie);
         }
 
         object.addProperty("status", statusCode);
@@ -109,6 +119,7 @@ public abstract class AbstractHandler implements HttpHandler {
             this.exchange.sendResponseHeaders(statusCode, message.length());
         } catch (IOException e) {
             System.err.println("Error on writing response headers");
+            e.printStackTrace();
             return;
         }
         try (OutputStream os = this.exchange.getResponseBody()) {

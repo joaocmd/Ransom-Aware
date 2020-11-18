@@ -11,7 +11,8 @@ public class HelpCommand extends AbstractCommand {
                 "list - \n" +
                 "get - \n" +
                 "save - \n" +
-                "register - \n";
+                "register - \n" +
+                "clear - \n";
 
         System.out.println(help);
     }

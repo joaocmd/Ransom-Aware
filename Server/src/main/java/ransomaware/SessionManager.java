@@ -116,4 +116,13 @@ public class SessionManager {
             this.expirationMoment = expirationMoment;
         }
     }
+
+    public static String createSessionCookie(int token) {
+        StringBuilder c = new StringBuilder()
+                .append("login-token=")
+                .append(Integer.toString(token))
+                .append("; HttpOnly; Secure; Version=1; max-age=")
+                .append(Long.toString(ServerVariables.SESSION_DURATION));
+        return c.toString();
+    }
 }

@@ -7,7 +7,11 @@ import ransomaware.SessionInfo;
 
 import java.io.Console;
 import java.io.File;
+import java.net.CookieHandler;
+import java.net.CookieManager;
+import java.net.CookieStore;
 import java.net.http.HttpClient;
+import java.util.Optional;
 
 public class LogoutCommand extends AbstractCommand {
 
@@ -29,5 +33,11 @@ public class LogoutCommand extends AbstractCommand {
 
         Utils.requestPostFromURL(ClientVariables.URL + "/logout", jsonRoot, client);
         info.logOff();
+
+        Optional<CookieHandler> ch = client.cookieHandler();
+        if(ch.isPresent()) {
+            CookieManager cm = (CookieManager) ch.get();
+            cm.getCookieStore().removeAll();
+        }
     }
 }
