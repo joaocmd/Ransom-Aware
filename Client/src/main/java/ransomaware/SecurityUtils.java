@@ -8,11 +8,12 @@ import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.*;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.Optional;
 
@@ -82,12 +83,12 @@ public class SecurityUtils {
         }
     }
 
-    public static Optional<byte[]> getCertificateToSend(String path) {
+    public static byte[] getCertificateToSend(String path) {
         try {
             BufferedInputStream buf = new BufferedInputStream(new FileInputStream(path));
-            return Optional.of(buf.readAllBytes());
+            return buf.readAllBytes();
         } catch (IOException e) {
-            return Optional.empty();
+            throw new CertificateNotFoundException();
         }
     }
 }

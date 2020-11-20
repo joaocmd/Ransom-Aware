@@ -23,10 +23,12 @@ public class RegisterCommand extends AbstractCommand{
 
         // Get user's certificate
         String certificatePath = ClientVariables.FS_PATH + "/" + user + ".pem";
-        Optional<byte[]> cert = SecurityUtils.getCertificateToSend(certificatePath);
+        byte[] cert;
 
         // Check if certificate is given to user
         try {
+            cert = SecurityUtils.getCertificateToSend(certificatePath);
+
             if (!SecurityUtils.checkCertificateUser(certificatePath, user)) {
                 System.err.println("Certificate does not correspond to the user.");
                 return;
@@ -42,9 +44,7 @@ public class RegisterCommand extends AbstractCommand{
         JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
         jsonRoot.addProperty("username", user);
         jsonRoot.addProperty("password", password);
-        jsonRoot.addProperty("certificate", SecurityUtils.getBase64(cert.get()));
-
-        System.out.println(jsonRoot.toString());
+        jsonRoot.addProperty("certificate", SecurityUtils.getBase64(cert));
 
         JsonObject response = Utils.requestPostFromURL(ClientVariables.URL + "/register", jsonRoot, client);
         if (response.get("status").getAsInt() != HttpURLConnection.HTTP_OK) {

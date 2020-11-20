@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpExchange;
 import ransomaware.RansomAware;
 import ransomaware.SecurityUtils;
 import ransomaware.SessionManager;
+import ransomaware.exceptions.CertificateInvalidException;
 import ransomaware.exceptions.DuplicateUsernameException;
 import ransomaware.exceptions.InvalidUserNameException;
 
@@ -25,20 +26,28 @@ public class RegisterHandler extends AbstractHandler {
 
         String username = body.get("username").getAsString();
         String password = body.get("password").getAsString();
-        String certificateRaw = body.get("certificate").getAsString();
-        Optional<X509Certificate> cert = SecurityUtils.getCertificate(SecurityUtils.decodeBase64(certificateRaw));
+        String certificateBase64 = body.get("certificate").getAsString();
+        Optional<X509Certificate> cert = SecurityUtils.getCertificate(SecurityUtils.decodeBase64(certificateBase64));
         if (cert.isEmpty()) {
             System.err.println("Certificate could not be read.");
             sendResponse(HttpURLConnection.HTTP_BAD_REQUEST, "Certificate could not be read.");
             return;
         }
 
-        // FIXME: Check if certificate is from user
-
-        // TODO: Store certificate
+        try {
+            if (!SecurityUtils.isCertificateOfUser(cert.get(), username)) {
+                System.err.println("Certificate is not of user registered.");
+                sendResponse(HttpURLConnection.HTTP_FORBIDDEN, "Certificate is not of user registered.");
+                return;
+            }
+        } catch (CertificateInvalidException e) {
+            System.err.println("Certificate is invalid.");
+            sendResponse(HttpURLConnection.HTTP_BAD_REQUEST, "Certificate is invalid.");
+            return;
+        }
 
         try {
-            SessionManager.register(username, password);
+            SessionManager.register(username, password, certificateBase64);
             sendResponse(HttpURLConnection.HTTP_OK, "OK");
         } catch (DuplicateUsernameException e) {
             sendResponse(HttpURLConnection.HTTP_CONFLICT, "Username already registered");

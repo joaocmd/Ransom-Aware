@@ -10,6 +10,7 @@ import ransomaware.exceptions.UnauthorizedException;
 
 import java.net.UnknownHostException;
 import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -43,7 +44,7 @@ public class SessionManager {
         return null;
     }
 
-    public static void register(String username, String password) {
+    public static void register(String username, String password, String encryptCert) {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("_id", username);
@@ -57,8 +58,8 @@ public class SessionManager {
         if (user == null) {
             String passwordDigest = SecurityUtils.getBase64(SecurityUtils.getDigest(password));
             var obj = new BasicDBObject("_id", username)
-                    .append("password", passwordDigest);
-//                    .append("key", userKey);
+                    .append("password", passwordDigest)
+                    .append("encryptCert", encryptCert);
             collection.insert(obj);
             client.close();
             System.out.println("Registered: " + username);

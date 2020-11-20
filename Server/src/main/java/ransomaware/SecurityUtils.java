@@ -1,5 +1,10 @@
 package ransomaware;
 
+import ransomaware.exceptions.CertificateInvalidException;
+
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
+import javax.naming.ldap.Rdn;
 import java.io.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -44,6 +49,24 @@ public class SecurityUtils {
         } catch (CertificateException e) {
             e.printStackTrace();
             return Optional.empty();
+        }
+    }
+
+    public static boolean isCertificateOfUser(X509Certificate certificate, String username) {
+        try {
+            String dn = certificate.getSubjectDN().getName();
+            LdapName ln = new LdapName(dn);
+            String cn = "";
+
+            for (Rdn rdn : ln.getRdns()) {
+                if (rdn.getType().equalsIgnoreCase("CN")) {
+                    cn = (String) rdn.getValue();
+                    break;
+                }
+            }
+            return cn.equals(username);
+        } catch (InvalidNameException e) {
+            throw new CertificateInvalidException();
         }
     }
 
