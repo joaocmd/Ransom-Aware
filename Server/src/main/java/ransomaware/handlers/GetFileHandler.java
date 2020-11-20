@@ -6,6 +6,7 @@ import com.sun.net.httpserver.HttpExchange;
 import ransomaware.RansomAware;
 import ransomaware.SecurityUtils;
 import ransomaware.SessionManager;
+import ransomaware.domain.StoredFile;
 import ransomaware.exceptions.NoSuchFileException;
 import ransomaware.exceptions.SessionExpiredException;
 import ransomaware.exceptions.UnauthorizedException;
@@ -48,9 +49,9 @@ public class GetFileHandler extends AbstractHandler {
         LOGGER.info(String.format("user %s requested file %s/%s", user, owner,filename));
 
         try {
-            String file = SecurityUtils.getBase64(server.getFile(user, owner, filename));
+            StoredFile file = server.getFile(user, new StoredFile(owner, filename));
             JsonObject response = JsonParser.parseString("{}").getAsJsonObject();
-            response.addProperty("file", file);
+            response.add("file", file.getAsJsonObject());
             sendResponse(HttpURLConnection.HTTP_OK, response);
         } catch (NoSuchFileException e) {
             sendResponse(HttpURLConnection.HTTP_NOT_FOUND, "No such file");

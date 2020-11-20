@@ -5,6 +5,9 @@ import com.google.gson.JsonParser;
 import ransomaware.ClientVariables;
 import ransomaware.SecurityUtils;
 
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
 import java.io.File;
 import java.net.HttpURLConnection;
 import java.net.http.HttpClient;
@@ -32,15 +35,28 @@ public class SaveFileCommand extends AbstractCommand {
                 return;
             }
 
+            SecretKey key = SecurityUtils.generateAesKey();
+            IvParameterSpec iv = SecurityUtils.generateIV();
             byte[] data = Files.readAllBytes(Path.of(filePath));
-            String encodedData = SecurityUtils.getBase64(data);
+            byte[] encryptedData = SecurityUtils.AesCipher(Cipher.ENCRYPT_MODE, data, key, iv);
+
+            String encodedData = SecurityUtils.getBase64(encryptedData);
 
             JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
-            jsonRoot.addProperty("data", encodedData);
-            JsonObject jsonInfo = JsonParser.parseString("{}").getAsJsonObject();
-            jsonInfo.addProperty("user", owner);
-            jsonInfo.addProperty("name", filename);
-            jsonRoot.add("info", jsonInfo);
+
+            JsonObject jsonFile = JsonParser.parseString("{}").getAsJsonObject();
+            jsonFile.addProperty("data", encodedData);
+
+            JsonObject fileInfo = JsonParser.parseString("{}").getAsJsonObject();
+            fileInfo.addProperty("key", SecurityUtils.getBase64(key.getEncoded()));
+            fileInfo.addProperty("iv", SecurityUtils.getBase64(iv.getIV()));
+            jsonFile.add("info", fileInfo);
+            jsonRoot.add("file", jsonFile);
+
+            JsonObject requestInfo = JsonParser.parseString("{}").getAsJsonObject();
+            requestInfo.addProperty("user", owner);
+            requestInfo.addProperty("name", filename);
+            jsonRoot.add("info", requestInfo);
 
             JsonObject response = Utils.requestPostFromURL(ClientVariables.URL + "/save", jsonRoot, client);
             if (response.get("status").getAsInt() != HttpURLConnection.HTTP_OK) {
