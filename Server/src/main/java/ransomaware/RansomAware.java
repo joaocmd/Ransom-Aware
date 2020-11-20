@@ -1,8 +1,7 @@
 package ransomaware;
 
 import ransomaware.domain.StoredFile;
-import ransomaware.exceptions.NoSuchFileException;
-import ransomaware.exceptions.UnauthorizedException;
+import ransomaware.exceptions.*;
 
 import java.io.File;
 import java.util.HashMap;
@@ -31,7 +30,8 @@ public class RansomAware {
 
     private boolean hasAccessToFile(String user, StoredFile file) {
         // isOwner is used because we don't have permissions yet
-        return isOwner(user, file);
+        boolean hasBeenGranted = userFiles.containsKey(user) && userFiles.get(user).contains(file.getFileName());
+        return isOwner(user, file) || hasBeenGranted;
     }
 
     public void uploadFile(String user, StoredFile file) {
@@ -81,6 +81,36 @@ public class RansomAware {
             return Stream.empty();
         }
         return this.userFiles.get(user).stream();
+    }
+
+    public void grantPermission(String userGranting, String userToGrant, StoredFile file) {
+        String filename = file.getFileName();
+
+        // Check if user exists
+        SessionManager.hasUser(userToGrant);
+
+        // Check if file exists
+        if (!(userFiles.containsKey(userGranting) && userFiles.get(userGranting).contains(filename))) {
+            throw new NoSuchFileException();
+        }
+
+        // Check if it is owner to grant permissions
+        if (!isOwner(userGranting, file)) {
+            throw new UnauthorizedException();
+        }
+
+        // Check if already has permissions
+        if (hasAccessToFile(userToGrant, file)) {
+            throw new AlreadyGrantedException();
+        }
+
+        // Add permissions to user file list and users with access list
+        userFiles.putIfAbsent(userToGrant, new HashSet<>());
+        userFiles.get(userToGrant).add(filename);
+
+        usersWithAccess.putIfAbsent(filename, new HashSet<>());
+        usersWithAccess.get(filename).add(userToGrant);
+
     }
 
     public void logout(int sessionToken) {

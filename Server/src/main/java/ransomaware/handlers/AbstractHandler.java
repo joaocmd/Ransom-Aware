@@ -1,5 +1,6 @@
 package ransomaware.handlers;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
@@ -77,11 +78,13 @@ public abstract class AbstractHandler implements HttpHandler {
 
 
     protected void convertBodyToJSON() {
-        // FIXME: i.e. in logout, if no body is sent, it crashes
         try (InputStream is = exchange.getRequestBody()) {
             String bodyString = new String(is.readAllBytes());
-            JsonObject bodyJson = JsonParser.parseString(bodyString).getAsJsonObject();
-            this.body = bodyJson;
+            JsonElement jsonParsed = JsonParser.parseString(bodyString);
+            if (!jsonParsed.isJsonNull()) {
+                JsonObject bodyJson = jsonParsed.getAsJsonObject();
+                this.body = bodyJson;
+            }
         } catch (IOException e) {
             e.printStackTrace();
             System.err.println("Error on reading request body");

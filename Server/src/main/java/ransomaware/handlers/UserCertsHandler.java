@@ -6,6 +6,7 @@ import com.sun.net.httpserver.HttpExchange;
 import ransomaware.RansomAware;
 import ransomaware.SessionManager;
 import ransomaware.exceptions.NoSuchFileException;
+import ransomaware.exceptions.NoSuchUserException;
 import ransomaware.exceptions.SessionExpiredException;
 import ransomaware.exceptions.UnauthorizedException;
 
@@ -41,7 +42,7 @@ public class UserCertsHandler extends AbstractHandler {
 
         try {
             // Get user's encrypt certificate
-            String encryptCert = SessionManager.getEncryptCertificate(user);
+            String encryptCert = SessionManager.getEncryptCertificate(userToFetch);
 
             JsonObject jsonCerts = JsonParser.parseString("{}").getAsJsonObject();
             jsonCerts.addProperty("encrypt", encryptCert);
@@ -55,6 +56,8 @@ public class UserCertsHandler extends AbstractHandler {
             sendResponse(HttpURLConnection.HTTP_NOT_FOUND, "No such file");
         } catch (UnauthorizedException e) {
             sendResponse(HttpURLConnection.HTTP_FORBIDDEN, "You don't have permission to see this file");
+        } catch (NoSuchUserException e) {
+            sendResponse(HttpURLConnection.HTTP_NOT_FOUND, "User does not exist");
         } catch (Exception e) {
             e.printStackTrace();
             sendResponse(HttpURLConnection.HTTP_INTERNAL_ERROR, "Something unexpected happened");

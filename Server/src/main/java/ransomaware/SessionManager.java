@@ -57,6 +57,19 @@ public class SessionManager {
         throw new NoSuchUserException();
     }
 
+    public static void hasUser(String username) {
+        MongoClient client = getMongoClient();
+
+        var query = new BasicDBObject("_id", username);
+        DBObject userQuery = client.getDB(ServerVariables.FS_PATH).getCollection("users").findOne(query);
+        client.close();
+
+        if (userQuery != null) {
+            return;
+        }
+        throw new NoSuchUserException();
+    }
+
     public static void register(String username, String password, String encryptCert) {
         MongoClient client = getMongoClient();
 

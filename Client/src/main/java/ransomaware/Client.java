@@ -2,7 +2,6 @@ package ransomaware;
 
 import ransomaware.commands.*;
 
-import javax.swing.text.html.Option;
 import java.io.Console;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
@@ -28,6 +27,7 @@ public class Client {
         parsers.put("logout", this::parseLogout);
         parsers.put("get", this::parseGet);
         parsers.put("save", this::parseSave);
+        parsers.put("grant", this::parseGrant);
         parsers.put("list", this::parseList);
         parsers.put("exit", this::parseExit);
         parsers.put("clear", this::parseClear);
@@ -180,6 +180,26 @@ public class Client {
         }
 
         return Optional.of(new SaveFileCommand(file[0], file[1]));
+    }
+
+    private Optional<AbstractCommand> parseGrant(String[] args) {
+        Runnable showUsage = () -> {
+            System.err.println("grant <file> <user> usage:");
+            System.err.println("    file: file name, can be user/file or just file");
+            System.err.println("    user: user name, to grant permissions");
+        };
+        if (args.length != 3) {
+            showUsage.run();
+            return Optional.empty();
+        }
+
+        String[] file = parseFileName(args[1]);
+        if (file == null) {
+            showUsage.run();
+            return  Optional.empty();
+        }
+
+        return Optional.of(new GrantCommand(file[0], file[1], args[2]));
     }
 
     private Optional<AbstractCommand> parseList(String[] args) {
