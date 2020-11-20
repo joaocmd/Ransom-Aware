@@ -45,6 +45,8 @@ public class SecurityUtils {
                             .generateCertificate(new ByteArrayInputStream(certificateRaw));
 
             certificate.checkValidity();
+            // TODO: Also verify the root certificate
+            
             return Optional.of(certificate);
         } catch (CertificateException e) {
             e.printStackTrace();
