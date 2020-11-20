@@ -37,26 +37,30 @@ public class SaveFileCommand extends AbstractCommand {
 
             SecretKey key = SecurityUtils.generateAesKey();
             IvParameterSpec iv = SecurityUtils.generateIV();
-            byte[] data = Files.readAllBytes(Path.of(filePath));
-            byte[] encryptedData = SecurityUtils.AesCipher(Cipher.ENCRYPT_MODE, data, key, iv);
 
-            String encodedData = SecurityUtils.getBase64(encryptedData);
+            byte[] data = Files.readAllBytes(Path.of(filePath));
+            String encodedData = SecurityUtils.getBase64(data);
 
             JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
 
+            JsonObject info = JsonParser.parseString("{}").getAsJsonObject();
+            info.addProperty("key", SecurityUtils.getBase64(key.getEncoded()));
+            info.addProperty("iv", SecurityUtils.getBase64(iv.getIV()));
+
             JsonObject jsonFile = JsonParser.parseString("{}").getAsJsonObject();
             jsonFile.addProperty("data", encodedData);
+            jsonFile.add("info", info);
 
-            JsonObject fileInfo = JsonParser.parseString("{}").getAsJsonObject();
-            fileInfo.addProperty("key", SecurityUtils.getBase64(key.getEncoded()));
-            fileInfo.addProperty("iv", SecurityUtils.getBase64(iv.getIV()));
-            jsonFile.add("info", fileInfo);
-            jsonRoot.add("file", jsonFile);
+
+            byte[] encryptedData = SecurityUtils.AesCipher(Cipher.ENCRYPT_MODE, jsonFile.toString().getBytes(), key, iv);
+            String decodedEncryptedData = SecurityUtils.getBase64(encryptedData);
+            jsonRoot.addProperty("file", decodedEncryptedData);
+            jsonRoot.add("info", info);
 
             JsonObject requestInfo = JsonParser.parseString("{}").getAsJsonObject();
             requestInfo.addProperty("user", owner);
             requestInfo.addProperty("name", filename);
-            jsonRoot.add("info", requestInfo);
+            jsonRoot.add("requestInfo", requestInfo);
 
             JsonObject response = Utils.requestPostFromURL(ClientVariables.URL + "/save", jsonRoot, client);
             if (response.get("status").getAsInt() != HttpURLConnection.HTTP_OK) {
