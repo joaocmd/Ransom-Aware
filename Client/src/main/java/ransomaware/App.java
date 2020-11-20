@@ -13,6 +13,8 @@ public class App implements Callable<Integer> {
     @Option(names = {"-u", "--url"}, description = "Server url to connect to. P.e.: localhost:8843")
     private String url = "https://localhost:8443";
 
+    // FIXME: Get private key and certificate paths
+
     public Integer call() throws Exception {
         ClientVariables.init(path, url);
         Client client = new Client();

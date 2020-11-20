@@ -1,13 +1,25 @@
 package ransomaware;
 
+import ransomaware.exceptions.CertificateInvalidException;
+import ransomaware.exceptions.CertificateNotFoundException;
+
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
+import javax.naming.ldap.Rdn;
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.Base64;
 
 public class SecurityUtils {
@@ -65,5 +77,42 @@ public class SecurityUtils {
             System.exit(1);
         }
         return null;
+    }
+
+    public static boolean checkCertificateUser(String path, String username) {
+        try {
+            BufferedInputStream buf = new BufferedInputStream(new FileInputStream(path));
+            X509Certificate certificate = (X509Certificate)
+                    CertificateFactory.getInstance("X.509").generateCertificate(buf);
+
+            certificate.checkValidity();
+            buf.close();
+
+            String dn = certificate.getSubjectDN().getName();
+            LdapName ln = new LdapName(dn);
+            String cn = "";
+
+            for (Rdn rdn : ln.getRdns()) {
+                if (rdn.getType().equalsIgnoreCase("CN")) {
+                    cn = (String) rdn.getValue();
+                    break;
+                }
+            }
+
+            return cn.equals(username);
+        } catch (InvalidNameException | CertificateException e) {
+            throw new CertificateInvalidException();
+        } catch (IOException e) {
+            throw new CertificateNotFoundException();
+        }
+    }
+
+    public static byte[] getCertificateToSend(String path) {
+        try {
+            BufferedInputStream buf = new BufferedInputStream(new FileInputStream(path));
+            return buf.readAllBytes();
+        } catch (IOException e) {
+            throw new CertificateNotFoundException();
+        }
     }
 }

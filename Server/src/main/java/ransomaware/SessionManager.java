@@ -6,6 +6,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import ransomaware.exceptions.DuplicateUsernameException;
 import ransomaware.exceptions.InvalidUserNameException;
+import ransomaware.exceptions.NoSuchUserException;
 import ransomaware.exceptions.UnauthorizedException;
 
 import java.net.UnknownHostException;
@@ -43,7 +44,20 @@ public class SessionManager {
         return null;
     }
 
-    public static void register(String username, String password) {
+    public static String getEncryptCertificate(String username) {
+        MongoClient client = getMongoClient();
+
+        var query = new BasicDBObject("_id", username);
+        DBObject userQuery = client.getDB(ServerVariables.FS_PATH).getCollection("users").findOne(query);
+        client.close();
+
+        if (userQuery != null) {
+            return (String) userQuery.get("encryptCert");
+        }
+        throw new NoSuchUserException();
+    }
+
+    public static void register(String username, String password, String encryptCert) {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("_id", username);
@@ -62,8 +76,8 @@ public class SessionManager {
 
             String passwordDigest = SecurityUtils.getBase64(SecurityUtils.getDigest(password + new String(salt)));
             var obj = new BasicDBObject("_id", username)
-                    .append("password", passwordDigest);
-//                    .append("key", userKey);
+                    .append("password", passwordDigest)
+                    .append("encryptCert", encryptCert);
             users.insert(obj);
             obj = new BasicDBObject("_id", username)
                     .append("salt", SecurityUtils.getBase64(salt));

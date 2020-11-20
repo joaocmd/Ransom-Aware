@@ -37,6 +37,7 @@ public abstract class AbstractHandler implements HttpHandler {
     public void handle(HttpExchange exchange) {
         this.exchange = exchange;
         if (!exchange.getRequestMethod().equalsIgnoreCase(method)) {
+            sendResponse(HttpURLConnection.HTTP_BAD_METHOD, "Bad method");
             throw new InvalidMethodException();
         }
 
