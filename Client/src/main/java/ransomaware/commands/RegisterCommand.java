@@ -4,16 +4,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import ransomaware.ClientVariables;
 import ransomaware.SecurityUtils;
+import ransomaware.exceptions.CertificateInvalidException;
+import ransomaware.exceptions.CertificateNotFoundException;
 
-import java.io.ByteArrayInputStream;
 import java.io.Console;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.http.HttpClient;
-import java.nio.charset.StandardCharsets;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.util.Optional;
 
 
@@ -27,16 +23,19 @@ public class RegisterCommand extends AbstractCommand{
 
         // Get user's certificate
         String certificatePath = ClientVariables.FS_PATH + "/" + user + ".pem";
-        Optional<X509Certificate> certificate = SecurityUtils.getCertificate(certificatePath);
         Optional<byte[]> cert = SecurityUtils.getCertificateToSend(certificatePath);
-        if (certificate.isEmpty() || cert.isEmpty()) {
-            System.err.println("Certificate could not be read");
-            return;
-        }
 
         // Check if certificate is given to user
-        if (!SecurityUtils.checkCertificateUser(certificate.get(), user)) {
-            System.err.println("Certificate doesn't correspond to user.");
+        try {
+            if (!SecurityUtils.checkCertificateUser(certificatePath, user)) {
+                System.err.println("Certificate does not correspond to the user.");
+                return;
+            }
+        } catch (CertificateNotFoundException e) {
+            System.err.println("Certificate cannot be found.");
+            return;
+        } catch (CertificateInvalidException e) {
+            System.err.println("Certificate is invalid.");
             return;
         }
 

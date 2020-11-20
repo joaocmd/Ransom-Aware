@@ -1,16 +1,18 @@
 package ransomaware;
 
+import ransomaware.exceptions.CertificateInvalidException;
+import ransomaware.exceptions.CertificateNotFoundException;
+
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
+import java.security.cert.*;
 import java.util.Base64;
 import java.util.Optional;
 
@@ -52,9 +54,16 @@ public class SecurityUtils {
         }
     }
 
-    public static boolean checkCertificateUser(X509Certificate cert, String username) {
+    public static boolean checkCertificateUser(String path, String username) {
         try {
-            String dn = cert.getSubjectDN().getName();
+            BufferedInputStream buf = new BufferedInputStream(new FileInputStream(path));
+            X509Certificate certificate = (X509Certificate)
+                    CertificateFactory.getInstance("X.509").generateCertificate(buf);
+
+            certificate.checkValidity();
+            buf.close();
+
+            String dn = certificate.getSubjectDN().getName();
             LdapName ln = new LdapName(dn);
             String cn = "";
 
@@ -66,9 +75,10 @@ public class SecurityUtils {
             }
 
             return cn.equals(username);
-        } catch (InvalidNameException e) {
-            System.err.println("Certificate has bad format.");
-            return false;
+        } catch (InvalidNameException | CertificateException e) {
+            throw new CertificateInvalidException();
+        } catch (IOException e) {
+            throw new CertificateNotFoundException();
         }
     }
 
@@ -77,8 +87,6 @@ public class SecurityUtils {
             BufferedInputStream buf = new BufferedInputStream(new FileInputStream(path));
             return Optional.of(buf.readAllBytes());
         } catch (IOException e) {
-            System.err.println("Certificate could not be read.");
-
             return Optional.empty();
         }
     }
