@@ -2,7 +2,6 @@ package ransomaware;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
-import ransomaware.exceptions.DuplicateUsernameException;
 
 import java.util.concurrent.Callable;
 
