@@ -2,7 +2,6 @@ package ransomaware;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
-import ransomaware.exceptions.DuplicateUsernameException;
 
 import java.util.concurrent.Callable;
 
@@ -22,7 +21,7 @@ public class App implements Callable<Integer> {
 
     public Integer call() {
         ServerVariables.init(path, mongoUrl);
-        RansomAware ransomAware = new RansomAware(path, port, firstTime);
+        RansomAware ransomAware = new RansomAware(port, firstTime);
 //        try {
 //            SessionManager.register("joao", "pass");
 //        } catch (DuplicateUsernameException ignored) { }

@@ -4,6 +4,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
+import ransomaware.domain.StoredFile;
 import ransomaware.exceptions.NoSuchFileException;
 
 import java.io.File;
@@ -48,19 +49,19 @@ public class FileManager {
         client.close();
     }
 
-    public static void saveFile(String fileName, byte[] data) {
+    public static void saveFile(StoredFile file) {
+        String fileName = file.getFileName();
         String fileDir = ServerVariables.FILES_PATH + '/' + fileName;
         var dir = new File(fileDir);
 
         dir.mkdirs();
 
-        // TODO: validate file here (what verifications though?)
-
         int newVersion = getFileVersion(fileName) + 1;
         String filePath = String.format("%s/%d", fileDir, newVersion);
-        Path file = Paths.get(filePath);
+
         try {
-            Files.write(file, data);
+            Path path = Paths.get(filePath);
+            Files.write(path, file.toString().getBytes());
             saveNewFileVersion(fileName, newVersion);
         } catch (IOException e) {
             e.printStackTrace();
@@ -69,12 +70,12 @@ public class FileManager {
         }
     }
 
-    public static byte[] getFile(String fileName) {
+    public static StoredFile getFile(StoredFile file) {
+        String fileName = file.getFileName();
         String fileDir = ServerVariables.FILES_PATH + '/' + fileName + '/' + getFileVersion(fileName);
         Path path = Paths.get(fileDir);
         try {
-            System.out.println(fileDir);
-            return Files.readAllBytes(path);
+            return new StoredFile(file, new String(Files.readAllBytes(path)));
         } catch (IOException e) {
             throw new NoSuchFileException();
         }
