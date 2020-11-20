@@ -34,13 +34,14 @@ public class SaveFileHandler extends AbstractHandler {
         String owner = body.getAsJsonObject("info").get("user").getAsString();
         String fileName = body.getAsJsonObject("info").get("name").getAsString();
         String data = body.getAsJsonObject("file").get("data").getAsString();
+        String signature = body.getAsJsonObject("file").get("signature").getAsString();
         JsonObject fileInfo = body.getAsJsonObject("file").getAsJsonObject("info");
         String key = fileInfo.get("key").getAsString();
         String iv = fileInfo.get("iv").getAsString();
 
         LOGGER.info(String.format("user %s uploading file %s/%s", user, owner, fileName));
         try {
-            StoredFile file = new StoredFile(owner, fileName, data, key, iv);
+            StoredFile file = new StoredFile(owner, fileName, data, signature, key, iv);
             server.uploadFile(user, file);
             sendResponse(HttpURLConnection.HTTP_OK, "OK");
         } catch (UnauthorizedException e) {

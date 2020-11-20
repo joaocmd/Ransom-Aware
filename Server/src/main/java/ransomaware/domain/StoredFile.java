@@ -4,16 +4,19 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 public class StoredFile {
+    //FIXME check with johnny; Signature
     private final String owner;
     private final String name;
     private String data = null;
+    private String signature = null;
     private String key = null;
     private String iv = null;
 
-    public StoredFile(String owner, String name, String data, String key, String iv) {
+    public StoredFile(String owner, String name, String data, String signature, String key, String iv) {
         this.owner = owner;
         this.name = name;
         this.data = data;
+        this.signature = signature;
         this.key = key;
         this.iv = iv;
     }
@@ -30,6 +33,7 @@ public class StoredFile {
         JsonObject obj = JsonParser.parseString(data).getAsJsonObject();
         JsonObject info = obj.getAsJsonObject("info");
         this.data = obj.get("data").getAsString();
+        this.signature = obj.get("signature").getAsString();
         this.key = info.get("key").getAsString();
         this.iv = info.get("iv").getAsString();
     }
@@ -65,6 +69,7 @@ public class StoredFile {
         JsonObject info = JsonParser.parseString("{}").getAsJsonObject();
         info.addProperty("key", key);
         info.addProperty("iv", iv);
+        info.addProperty("signature", signature);
         root.add("info", info);
 
         return root;

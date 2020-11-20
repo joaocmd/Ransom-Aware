@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import ransomaware.ClientVariables;
 import ransomaware.SecurityUtils;
+import ransomaware.SessionInfo;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -18,6 +19,7 @@ public class SaveFileCommand extends AbstractCommand {
 
     private final String owner;
     private final String filename;
+    private final SessionInfo info;
 
     public SaveFileCommand(String owner, String filename) {
         this.owner = owner;
@@ -41,11 +43,13 @@ public class SaveFileCommand extends AbstractCommand {
             byte[] encryptedData = SecurityUtils.AesCipher(Cipher.ENCRYPT_MODE, data, key, iv);
 
             String encodedData = SecurityUtils.getBase64(encryptedData);
+            String signature = SecurityUtils.signFile(info.getPrivateKeyPath(), encryptedData);
 
             JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
 
             JsonObject jsonFile = JsonParser.parseString("{}").getAsJsonObject();
             jsonFile.addProperty("data", encodedData);
+            jsonFile.addProperty("signature", signature);
 
             JsonObject fileInfo = JsonParser.parseString("{}").getAsJsonObject();
             fileInfo.addProperty("key", SecurityUtils.getBase64(key.getEncoded()));
