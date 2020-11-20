@@ -6,11 +6,11 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import ransomaware.exceptions.DuplicateUsernameException;
 import ransomaware.exceptions.InvalidUserNameException;
+import ransomaware.exceptions.NoSuchUserException;
 import ransomaware.exceptions.UnauthorizedException;
 
 import java.net.UnknownHostException;
 import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -42,6 +42,19 @@ public class SessionManager {
         }
         // TODO: else should never happen but should still be checked
         return null;
+    }
+
+    public static String getEncryptCertificate(String username) {
+        MongoClient client = getMongoClient();
+
+        var query = new BasicDBObject("_id", username);
+        DBObject userQuery = client.getDB(ServerVariables.FS_PATH).getCollection("users").findOne(query);
+        client.close();
+
+        if (userQuery != null) {
+            return (String) userQuery.get("encryptCert");
+        }
+        throw new NoSuchUserException();
     }
 
     public static void register(String username, String password, String encryptCert) {

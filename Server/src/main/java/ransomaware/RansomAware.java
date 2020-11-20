@@ -4,10 +4,12 @@ import ransomaware.domain.StoredFile;
 import ransomaware.exceptions.NoSuchFileException;
 import ransomaware.exceptions.UnauthorizedException;
 
+import java.io.File;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.io.File;
 import java.util.stream.Stream;
 
 public class RansomAware {
@@ -28,6 +30,7 @@ public class RansomAware {
     }
 
     private boolean hasAccessToFile(String user, StoredFile file) {
+        // isOwner is used because we don't have permissions yet
         return isOwner(user, file);
     }
 
@@ -62,6 +65,17 @@ public class RansomAware {
         }
     }
 
+    public Map<String, String> getEncryptCertificates(StoredFile file) {
+        // As we don't have permissions, only the owner's certificate is sent
+        String owner = file.getOwner();
+        String ownerEncryptCert = SessionManager.getEncryptCertificate(owner);
+
+        Map<String, String> certs = new HashMap<>();
+        certs.put(owner, ownerEncryptCert);
+
+        return certs;
+    }
+
     public Stream<String> listFiles(String user) {
         if (!this.userFiles.containsKey(user)) {
             return Stream.empty();
@@ -76,6 +90,7 @@ public class RansomAware {
     private void spinUp(){
         FileManager.dropDB();
 
+        // FIXME: If the folder does not exist, it crashes
         File folder = new File(ServerVariables.FILES_PATH);
         File[] users =  folder.listFiles(File::isDirectory);
 

@@ -1,13 +1,13 @@
 package ransomaware;
 
+import ransomaware.exceptions.CertificateInvalidException;
+import ransomaware.exceptions.CertificateNotFoundException;
+
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import ransomaware.exceptions.CertificateInvalidException;
-import ransomaware.exceptions.CertificateNotFoundException;
-
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
@@ -21,7 +21,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
-import java.util.Optional;
 
 public class SecurityUtils {
     public static byte[] getDigest(String text) {
@@ -78,22 +77,6 @@ public class SecurityUtils {
             System.exit(1);
         }
         return null;
-    }
-
-    public static Optional<X509Certificate> getCertificate(String path) {
-        try {
-            BufferedInputStream buf = new BufferedInputStream(new FileInputStream(path));
-            X509Certificate certificate = (X509Certificate)
-                    CertificateFactory.getInstance("X.509").generateCertificate(buf);
-
-            certificate.checkValidity();
-            buf.close();
-            return Optional.of(certificate);
-        } catch (CertificateException | IOException e) {
-            System.err.println("Certificate could not be read.");
-
-            return Optional.empty();
-        }
     }
 
     public static boolean checkCertificateUser(String path, String username) {

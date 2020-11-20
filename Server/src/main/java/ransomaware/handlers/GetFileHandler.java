@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import ransomaware.RansomAware;
-import ransomaware.SecurityUtils;
 import ransomaware.SessionManager;
 import ransomaware.domain.StoredFile;
 import ransomaware.exceptions.NoSuchFileException;
@@ -16,7 +15,7 @@ import java.util.logging.Logger;
 
 public class GetFileHandler extends AbstractHandler {
 
-    private static final Logger LOGGER = Logger.getLogger(GetFileHandler.class.getName() );
+    private static final Logger LOGGER = Logger.getLogger(GetFileHandler.class.getName());
 
     public GetFileHandler(RansomAware server, String method, boolean requireAuth) {
         super(server, method, requireAuth);
