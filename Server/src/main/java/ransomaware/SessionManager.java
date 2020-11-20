@@ -92,7 +92,6 @@ public class SessionManager {
                 SecureRandom rand = new SecureRandom();
                 int token = rand.nextInt();
                 sessions.put(token, new SessionObject(username, Instant.now().plusSeconds(ServerVariables.SESSION_DURATION)));
-                System.out.println("Logged in: " + username);
                 return token;
             }
         }
@@ -101,9 +100,10 @@ public class SessionManager {
 
     public static void logout(int sessionToken) {
         try {
-            String username = sessions.remove(sessionToken).username;
-            System.out.println("Logged out: " + username);
-        } catch (NullPointerException ignored) { }
+            sessions.remove(sessionToken);
+        } catch (NullPointerException ignored) {
+            //ignored
+        }
     }
 
     private static MongoClient getMongoClient() {

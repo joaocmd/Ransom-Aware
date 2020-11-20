@@ -5,12 +5,16 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import ransomaware.RansomAware;
+import ransomaware.SessionManager;
 import ransomaware.exceptions.SessionExpiredException;
 import ransomaware.exceptions.UnauthorizedException;
 
 import java.net.HttpURLConnection;
+import java.util.logging.Logger;
 
 public class ListFileHandler extends AbstractHandler {
+
+    private static final Logger LOGGER = Logger.getLogger(ListFileHandler.class.getName());
 
     public ListFileHandler(RansomAware server, String method, boolean requireAuth) {
         super(server, method, requireAuth);
@@ -26,7 +30,10 @@ public class ListFileHandler extends AbstractHandler {
 
         JsonArray files = new JsonArray();
 
-        server.listFiles(getSessionToken()).forEachOrdered(files::add);
+        String user = SessionManager.getUsername(this.getSessionToken());
+        LOGGER.info(String.format("list request: %s", user));
+
+        server.listFiles(user).forEachOrdered(files::add);
 
         JsonObject response = JsonParser.parseString("{}").getAsJsonObject();
         response.add("files", files);

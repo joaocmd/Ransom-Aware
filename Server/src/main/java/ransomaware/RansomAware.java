@@ -14,7 +14,7 @@ public class RansomAware {
     private final ConcurrentHashMap<String, Set<String>> userFiles = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Set<String>> usersWithAccess = new ConcurrentHashMap<>();
 
-    public RansomAware(String path, int port, boolean firstTime) {
+    public RansomAware(int port, boolean firstTime) {
         if (!firstTime) {
             spinUp();
         }
@@ -30,9 +30,8 @@ public class RansomAware {
         return isOwner(user, fileName);
     }
 
-    public void uploadFile(int sessionToken, String owner, String file, byte[] data) {
+    public void uploadFile(String user, String owner, String file, byte[] data) {
         String fileName = FileManager.getFileName(owner, file);
-        String user = SessionManager.getUsername(sessionToken);
         if (hasAccessToFile(user, fileName)) {
             FileManager.saveFile(fileName, data);
 
@@ -47,8 +46,7 @@ public class RansomAware {
         }
     }
 
-    public byte[] getFile(int sessionToken, String owner, String file) {
-        String user = SessionManager.getUsername(sessionToken);
+    public byte[] getFile(String user, String owner, String file) {
         String fileName = FileManager.getFileName(owner, file);
 
         if (!(userFiles.containsKey(owner) && userFiles.get(owner).contains(fileName))) {
@@ -61,8 +59,7 @@ public class RansomAware {
         }
     }
 
-    public Stream<String> listFiles(int sessionToken) {
-        String user = SessionManager.getUsername(sessionToken);
+    public Stream<String> listFiles(String user) {
         if (!this.userFiles.containsKey(user)) {
             return Stream.empty();
         }
