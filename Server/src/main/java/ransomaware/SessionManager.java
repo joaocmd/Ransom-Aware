@@ -51,7 +51,7 @@ public class SessionManager {
         var salts = client.getDB(ServerVariables.FS_PATH).getCollection("salts");
         var user = users.findOne(query);
 
-        if(username.contains("/") || username.contains("..")) {
+        if(username.contains("/") || username.startsWith(".")) {
             throw new InvalidUserNameException();
         }
 

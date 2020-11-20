@@ -32,6 +32,7 @@ public class RansomAware {
     }
 
     public void uploadFile(String user, StoredFile file) {
+        // TODO: validate file name (dont allow .. and /)
         String fileName = file.getFileName();
         if (hasAccessToFile(user, file)) {
             FileManager.saveFile(file);
