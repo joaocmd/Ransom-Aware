@@ -53,8 +53,9 @@ public class Server {
         server.createContext("/login", new LoginHandler(domain, "POST", false));
         server.createContext("/logout", new LogoutHandler(domain, "POST", true));
         server.createContext("/list", new ListFileHandler(domain, "GET", true));
+        server.createContext("/users/certs/", new UserCertsHandler(domain, "GET", true));
         server.createContext("/files", new GetFileHandler(domain, "GET", true));
-        server.createContext("/files/certs", new CertsHandler(domain, "GET", true));
+        server.createContext("/files/certs", new FileCertsHandler(domain, "GET", true));
         server.createContext("/save", new SaveFileHandler(domain, "POST", true));
 //        server.createContext("/grant", new GrantHandler(domain, "POST", false));
 //        server.createContext("/revoke", new GrantHandler(domain, "POST", false));

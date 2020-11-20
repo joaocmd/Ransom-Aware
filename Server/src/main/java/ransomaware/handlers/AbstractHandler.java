@@ -77,6 +77,7 @@ public abstract class AbstractHandler implements HttpHandler {
 
 
     protected void convertBodyToJSON() {
+        // FIXME: i.e. in logout, if no body is sent, it crashes
         try (InputStream is = exchange.getRequestBody()) {
             String bodyString = new String(is.readAllBytes());
             JsonObject bodyJson = JsonParser.parseString(bodyString).getAsJsonObject();
