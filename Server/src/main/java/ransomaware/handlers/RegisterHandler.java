@@ -10,10 +10,13 @@ import ransomaware.exceptions.DuplicateUsernameException;
 import ransomaware.exceptions.InvalidUserNameException;
 
 import java.net.HttpURLConnection;
+import java.util.logging.Logger;
 import java.security.cert.X509Certificate;
 import java.util.Optional;
 
 public class RegisterHandler extends AbstractHandler {
+
+    private static final Logger LOGGER = Logger.getLogger(RegisterHandler.class.getName());
 
     public RegisterHandler(RansomAware server, String method, boolean requireAuth) {
         super(server, method, requireAuth);
@@ -27,21 +30,24 @@ public class RegisterHandler extends AbstractHandler {
         String username = body.get("username").getAsString();
         String password = body.get("password").getAsString();
         String certificateBase64 = body.get("certificate").getAsString();
+
+        LOGGER.info(String.format("register request: %s password: [REDACTED]", username));
+
         Optional<X509Certificate> cert = SecurityUtils.getCertificate(SecurityUtils.decodeBase64(certificateBase64));
         if (cert.isEmpty()) {
-            System.err.println("Certificate could not be read.");
+            LOGGER.info("Certificate could not be read.");
             sendResponse(HttpURLConnection.HTTP_BAD_REQUEST, "Certificate could not be read.");
             return;
         }
 
         try {
             if (!SecurityUtils.isCertificateOfUser(cert.get(), username)) {
-                System.err.println("Certificate is not of user registered.");
+                LOGGER.info("Certificate is not of user registered.");
                 sendResponse(HttpURLConnection.HTTP_FORBIDDEN, "Certificate is not of user registered.");
                 return;
             }
         } catch (CertificateInvalidException e) {
-            System.err.println("Certificate is invalid.");
+            LOGGER.info("Certificate is invalid.");
             sendResponse(HttpURLConnection.HTTP_BAD_REQUEST, "Certificate is invalid.");
             return;
         }
@@ -54,6 +60,7 @@ public class RegisterHandler extends AbstractHandler {
         } catch(InvalidUserNameException e) {
             sendResponse(HttpURLConnection.HTTP_BAD_REQUEST, "Username must be alphanumeric");
         } catch (Exception e) {
+            LOGGER.severe(e.getMessage());
             e.printStackTrace();
             sendResponse(HttpURLConnection.HTTP_INTERNAL_ERROR, "Something unexpected happened");
         }

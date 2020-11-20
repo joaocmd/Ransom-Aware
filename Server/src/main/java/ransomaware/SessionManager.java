@@ -48,19 +48,27 @@ public class SessionManager {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("_id", username);
-        var collection = client.getDB(ServerVariables.FS_PATH).getCollection("users");
-        var user = collection.findOne(query);
+        var users = client.getDB(ServerVariables.FS_PATH).getCollection("users");
+        var salts = client.getDB(ServerVariables.FS_PATH).getCollection("salts");
+        var user = users.findOne(query);
 
-        if(username.contains("/")){ 
+        if(username.contains("/") || username.startsWith(".")) {
             throw new InvalidUserNameException();
         }
 
         if (user == null) {
-            String passwordDigest = SecurityUtils.getBase64(SecurityUtils.getDigest(password));
+            SecureRandom rand = new SecureRandom();
+            byte[] salt = new byte[64];
+            rand.nextBytes(salt);
+
+            String passwordDigest = SecurityUtils.getBase64(SecurityUtils.getDigest(password + new String(salt)));
             var obj = new BasicDBObject("_id", username)
                     .append("password", passwordDigest)
                     .append("encryptCert", encryptCert);
-            collection.insert(obj);
+            users.insert(obj);
+            obj = new BasicDBObject("_id", username)
+                    .append("salt", SecurityUtils.getBase64(salt));
+            salts.insert(obj);
             client.close();
             System.out.println("Registered: " + username);
         } else {
@@ -74,16 +82,17 @@ public class SessionManager {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("_id", username);
-        DBObject user = client.getDB(ServerVariables.FS_PATH).getCollection("users").findOne(query);
+        DBObject userQuery = client.getDB(ServerVariables.FS_PATH).getCollection("users").findOne(query);
+        DBObject saltQuery = client.getDB(ServerVariables.FS_PATH).getCollection("salts").findOne(query);
         client.close();
 
-        if (user != null) {
-            String passwordDigest = SecurityUtils.getBase64(SecurityUtils.getDigest(password));
-            if (user.get("password").equals(passwordDigest)) {
+        if (userQuery != null) {
+            byte[] salt = SecurityUtils.decodeBase64((String)saltQuery.get("salt"));
+            String digest = SecurityUtils.getBase64(SecurityUtils.getDigest(password + new String(salt)));
+            if (userQuery.get("password").equals(digest)) {
                 SecureRandom rand = new SecureRandom();
                 int token = rand.nextInt();
                 sessions.put(token, new SessionObject(username, Instant.now().plusSeconds(ServerVariables.SESSION_DURATION)));
-                System.out.println("Logged in: " + username);
                 return token;
             }
         }
@@ -92,9 +101,10 @@ public class SessionManager {
 
     public static void logout(int sessionToken) {
         try {
-            String username = sessions.remove(sessionToken).username;
-            System.out.println("Logged out: " + username);
-        } catch (NullPointerException ignored) { }
+            sessions.remove(sessionToken);
+        } catch (NullPointerException ignored) {
+            //ignored
+        }
     }
 
     private static MongoClient getMongoClient() {
