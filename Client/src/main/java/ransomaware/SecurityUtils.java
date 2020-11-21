@@ -124,7 +124,7 @@ public class SecurityUtils {
         }
     }
 
-    public static String signFile(String user, byte[] data) {
+    public static byte[] signFile(String user, byte[] data) {
         try {
             //FIXME should private key's location be static or should it's path be input
             String keyPath = ClientVariables.FS_PATH + "/daniel/sign.key";
@@ -134,16 +134,12 @@ public class SecurityUtils {
             sign.initSign(privKey);
             sign.update(data);
 
-            byte[] signature = sign.sign();
-
-            // FIXME: this should return byte[]
-            return getBase64(signature);
-
+            return sign.sign();
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             e.printStackTrace();
             System.exit(1);
-            return "";
         }
+        return new byte[0];
     }
 
     public static boolean validSignature(String signature, byte[] data, byte[] certificate) {
