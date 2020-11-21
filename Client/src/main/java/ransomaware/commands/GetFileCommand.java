@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import ransomaware.ClientVariables;
 import ransomaware.SecurityUtils;
+import ransomaware.SessionInfo;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -14,23 +15,27 @@ import java.net.HttpURLConnection;
 import java.net.http.HttpClient;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.PrivateKey;
+import java.util.Optional;
 
 public class GetFileCommand extends AbstractCommand {
 
+    private final SessionInfo sessionInfo;
     private final String owner;
     private final String filename;
     private final String outputPath;
     private boolean success;
 
-    public GetFileCommand(String owner, String filename, String outputPath) {
+    public GetFileCommand(SessionInfo sessionInfo, String owner, String filename, String outputPath) {
+        this.sessionInfo = sessionInfo;
         this.owner = owner;
         this.filename = filename;
         this.outputPath = outputPath;
         this.success = false;
     }
 
-    public GetFileCommand(String owner, String filename) {
-        this(owner, filename, ClientVariables.WORKSPACE);
+    public GetFileCommand(SessionInfo sessionInfo, String owner, String filename) {
+        this(sessionInfo, owner, filename, ClientVariables.WORKSPACE);
     }
 
     @Override
@@ -46,21 +51,24 @@ public class GetFileCommand extends AbstractCommand {
             byte[] encryptedFile = SecurityUtils.decodeBase64(file.get("data").getAsString());
 
             JsonObject info = file.getAsJsonObject("info");
-            String signature = file.get("signature").getAsString();
-            byte[] certificate = SecurityUtils.decodeBase64(response.get("certificate").getAsString());
+//            String signature = file.get("signature").getAsString();
+//            byte[] certificate = SecurityUtils.decodeBase64(response.get("certificate").getAsString());
 
-            byte[] keyBytes = SecurityUtils.decodeBase64(info.get("key").getAsString());
-            SecretKey key = SecurityUtils.getKeyFromBytes(keyBytes);
+            byte[] keyBytes = getCorrectKey(info.getAsJsonObject("keys"));
+            PrivateKey privKey = SecurityUtils.readPrivateKey(sessionInfo.getEncryptKeyPath());
+            SecretKey key = SecurityUtils.getKeyFromBytes(SecurityUtils.rsaCipher(Cipher.DECRYPT_MODE, keyBytes, privKey));
             byte[] iv = SecurityUtils.decodeBase64(info.get("iv").getAsString());
 
-            byte[] unencryptedData = SecurityUtils.AesCipher(Cipher.DECRYPT_MODE, encryptedFile, key, new IvParameterSpec(iv));
+            byte[] unencryptedData = SecurityUtils.aesCipher(Cipher.DECRYPT_MODE, encryptedFile, key, new IvParameterSpec(iv));
             JsonObject fileJson = JsonParser.parseString(new String(unencryptedData)).getAsJsonObject();
-            if(!SecurityUtils.validSignature(signature, unencryptedData, certificate)) {
-                System.err.println("Bad signature");
-                return;
-            }
+//            if(!SecurityUtils.validSignature(signature, unencryptedData, certificate)) {
+//                System.err.println("Bad signature");
+//                return;
+//            }
 
             if (!fileJson.getAsJsonObject("info").equals(info)) {
+                System.out.println(fileJson.getAsJsonObject("info").toString());
+                System.out.println(info.toString());
                 System.out.println("WARNING: Signed info did not match public info");
                 // TODO: prompt continue
             }
@@ -74,6 +82,19 @@ public class GetFileCommand extends AbstractCommand {
             this.success = true;
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private byte[] getCorrectKey(JsonObject keys) {
+        Optional<String> encodedKey = keys.entrySet().stream()
+                .filter(e -> e.getKey().equals(sessionInfo.getUsername()))
+                .map(e -> e.getValue().getAsString())
+                .findFirst();
+        if (encodedKey.isPresent()) {
+            return SecurityUtils.decodeBase64(encodedKey.get());
+        } else {
+            System.err.println("This should not have happened.");
+            return new byte[0];
         }
     }
 

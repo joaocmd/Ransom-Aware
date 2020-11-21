@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import ransomaware.ClientVariables;
 import ransomaware.SecurityUtils;
+import ransomaware.SessionInfo;
 import ransomaware.exceptions.CertificateInvalidException;
 import ransomaware.exceptions.CertificateNotFoundException;
 
@@ -14,6 +15,12 @@ import java.util.Optional;
 
 
 public class RegisterCommand extends AbstractCommand{
+
+    private SessionInfo sessionInfo;
+
+    public RegisterCommand(SessionInfo sessionInfo) {
+        this.sessionInfo = sessionInfo;
+    }
 
     @Override
     public void run(HttpClient client) {

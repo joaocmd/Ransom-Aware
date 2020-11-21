@@ -96,7 +96,6 @@ public class SessionManager {
                     .append("salt", SecurityUtils.getBase64(salt));
             salts.insert(obj);
             client.close();
-            System.out.println("Registered: " + username);
         } else {
             client.close();
             throw new DuplicateUsernameException();

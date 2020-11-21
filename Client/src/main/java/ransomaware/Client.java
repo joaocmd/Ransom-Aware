@@ -15,15 +15,14 @@ import java.util.function.Function;
 
 public class Client {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
-    private CookieManager cm = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
+    private final CookieManager cm = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
     private HttpClient client = HttpClient.newBuilder().cookieHandler(cm).executor(executor).build();
-    private SessionInfo sessionInfo = new SessionInfo();
+    private final SessionInfo sessionInfo = new SessionInfo();
 
     private final Map<String, Function<String[], Optional<AbstractCommand>>> parsers = new HashMap<>();
 
     private void populateParsers() {
-        parsers.put("register", this::parseRegister);
-        parsers.put("login", this::parseLogin);
+        parsers.put("logout", this::parseLogout);
         parsers.put("logout", this::parseLogout);
         parsers.put("get", this::parseGet);
         parsers.put("save", this::parseSave);
@@ -40,7 +39,7 @@ public class Client {
         String input;
 
 //        register();
-//        login();
+        login();
 
         do {
             input = console.readLine("> ");
@@ -60,54 +59,25 @@ public class Client {
         System.gc();
     }
 
-//    private void register() {
-//        System.out.println("Register? [Yy]");
-//        Console console = System.console();
-//        String answer = console.readLine();
-//        if (answer.toLowerCase().startsWith("y")) {
-//            RegisterCommand register = new RegisterCommand();
-//            boolean success = false;
-//            while (!success) {
-//                success = register.run(new String[]{"register"}, client);
-//            }
-//        }
-//    }
-
-//    private void login() {
-//        System.out.println("Login:");
-//        LoginCommand login = new LoginCommand();
-//        while (username == null) {
-//            boolean success = login.run(new String[]{"login"}, client);
-//            if (success) {
-//                 username = login.getUsername();
-//                 sessionToken = login.getSessionToken();
-//            }
-//        }
-//    }
-
-    private Optional<AbstractCommand> parseRegister(String[] args) {
-        Runnable showUsage = () -> System.err.println("register usage: no args");
-
-        if (args.length != 1) {
-            showUsage.run();
-            return Optional.empty();
+    private void register() {
+        System.out.println("Register? [Yy]");
+        Console console = System.console();
+        String answer = console.readLine();
+        if (answer.toLowerCase().startsWith("y")) {
+            RegisterCommand register = new RegisterCommand(sessionInfo);
+            while (!sessionInfo.isLogged()) {
+                register.run(client);
+            }
         }
-        return Optional.of(new RegisterCommand());
     }
 
-    private Optional<AbstractCommand> parseLogin(String[] args) {
-        Runnable showUsage = () -> System.err.println("login usage: no args");
-
-        if (args.length != 1) {
-            showUsage.run();
-            return Optional.empty();
+    private void login() {
+        if (!sessionInfo.isLogged()) {
+            LoginCommand login = new LoginCommand(sessionInfo);
+            while (!sessionInfo.isLogged()) {
+                login.run(client);
+            }
         }
-        if (sessionInfo.isLogged())  {
-            System.err.println("Already logged in");
-            return  Optional.empty();
-        }
-
-        return Optional.of(new LoginCommand(sessionInfo));
     }
 
     private Optional<AbstractCommand> parseLogout(String[] args) {
@@ -160,7 +130,7 @@ public class Client {
             return Optional.empty();
         }
 
-        return Optional.of(new GetFileCommand(file[0], file[1]));
+        return Optional.of(new GetFileCommand(sessionInfo, file[0], file[1]));
     }
 
     private Optional<AbstractCommand> parseSave(String[] args) {
@@ -179,7 +149,7 @@ public class Client {
             return  Optional.empty();
         }
 
-        return Optional.of(new SaveFileCommand(file[0], file[1], sessionInfo));
+        return Optional.of(new SaveFileCommand(sessionInfo, file[0], file[1]));
     }
 
     private Optional<AbstractCommand> parseGrant(String[] args) {
@@ -199,7 +169,7 @@ public class Client {
             return  Optional.empty();
         }
 
-        return Optional.of(new GrantCommand(file[0], file[1], args[2]));
+        return Optional.of(new GrantCommand(sessionInfo, file[1], args[2]));
     }
 
     private Optional<AbstractCommand> parseList(String[] args) {

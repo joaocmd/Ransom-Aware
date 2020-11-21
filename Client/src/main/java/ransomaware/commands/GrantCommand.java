@@ -3,6 +3,7 @@ package ransomaware.commands;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import ransomaware.ClientVariables;
+import ransomaware.SessionInfo;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -13,21 +14,21 @@ import java.nio.file.Paths;
 
 public class GrantCommand extends AbstractCommand {
 
-    private final String owner;
+    private final SessionInfo sessionInfo;
     private final String filename;
     private final String userToGrant;
 
-    public GrantCommand(String owner, String filename, String userToGrant) {
-        this.owner = owner;
+    public GrantCommand(SessionInfo sessionInfo, String filename, String userToGrant) {
+        this.sessionInfo = sessionInfo;
         this.filename = filename;
         this.userToGrant = userToGrant;
     }
 
     @Override
     public void run(HttpClient client) {
-
-        // Verify if logged in
-        if (owner == null) {
+        String owner = sessionInfo.getUsername();
+        // Verify if logged in // FIXME this will be general and will be done in the parser
+        if (!sessionInfo.isLogged()) {
             System.err.println("Login first.");
             return;
         }
@@ -39,7 +40,7 @@ public class GrantCommand extends AbstractCommand {
         }
 
         // Get file to temporary folder
-        GetFileCommand getCommand = new GetFileCommand(owner, filename, ClientVariables.TMP_PATH);
+        GetFileCommand getCommand = new GetFileCommand(sessionInfo, owner, filename, ClientVariables.TMP_PATH);
         getCommand.run(client);
         if (!getCommand.hasSuccess()) {
             return;

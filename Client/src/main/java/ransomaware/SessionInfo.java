@@ -3,12 +3,7 @@ package ransomaware;
 public class SessionInfo {
     private String username;
     private boolean isLogged = false;
-    private String privateKeyPath;
-
-    public void setUsername(String username) {
-        this.username = username;
-        privateKeyPath = ClientVariables.FS_PATH + "/" + username + ".key";
-    }
+    private String encryptKeyPath;
 
     public String getUsername() {
                               return username;
@@ -18,16 +13,18 @@ public class SessionInfo {
                             return isLogged;
                                             }
 
-    public void setLogged(boolean logged) {
-            isLogged = logged;
-        }
-
-    public void logOff(){
-        setLogged(false);
-        setUsername("");
+    public void login(String username) {
+        isLogged = true;
+        this.username = username;
+        encryptKeyPath = ClientVariables.FS_PATH + '/' + username + '/' + username + ".pkcs8";
     }
 
-    public String getPrivateKeyPath() {
-        return privateKeyPath;
+    public void logOff(){
+        isLogged = false;
+        username = "";
+    }
+
+    public String getEncryptKeyPath() {
+        return encryptKeyPath;
     }
 }

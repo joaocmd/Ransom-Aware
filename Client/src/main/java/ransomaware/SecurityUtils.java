@@ -3,17 +3,13 @@ package ransomaware;
 import ransomaware.exceptions.CertificateInvalidException;
 import ransomaware.exceptions.CertificateNotFoundException;
 
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
+import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -59,7 +55,6 @@ public class SecurityUtils {
             keyGenerator.init(256);
             return keyGenerator.generateKey();
         } catch (NoSuchAlgorithmException e) {
-            System.err.println("Could not get AES key generator.");
             e.printStackTrace();
             System.exit(1);
         }
@@ -70,7 +65,7 @@ public class SecurityUtils {
         return new SecretKeySpec(bytes, 0, bytes.length, "AES");
     }
 
-    public static byte[] AesCipher(int opmode, byte[] data, SecretKey key, IvParameterSpec iv) {
+    public static byte[] aesCipher(int opmode, byte[] data, SecretKey key, IvParameterSpec iv) {
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             cipher.init(opmode, key, iv);
@@ -79,17 +74,27 @@ public class SecurityUtils {
             e.printStackTrace();
             System.exit(1);
         }
-        return null;
+        return new byte[0];
+    }
+
+    public static byte[] rsaCipher(int opmode, byte[] data, Key key) {
+        try {
+            Cipher cipher = Cipher.getInstance("RSA");
+            cipher.init(opmode, key);
+            return cipher.doFinal(data);
+        } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        return new byte[0];
     }
 
     public static boolean checkCertificateUser(String path, String username) {
-        try {
-            BufferedInputStream buf = new BufferedInputStream(new FileInputStream(path));
+        try (BufferedInputStream buf = new BufferedInputStream(new FileInputStream(path))) {
             X509Certificate certificate = (X509Certificate)
                     CertificateFactory.getInstance("X.509").generateCertificate(buf);
 
             certificate.checkValidity();
-            buf.close();
 
             String dn = certificate.getSubjectDN().getName();
             LdapName ln = new LdapName(dn);
@@ -111,10 +116,10 @@ public class SecurityUtils {
     }
 
     public static byte[] getCertificateToSend(String path) {
-        try {
-            BufferedInputStream buf = new BufferedInputStream(new FileInputStream(path));
+        try (BufferedInputStream buf = new BufferedInputStream(new FileInputStream(path))) {
             return buf.readAllBytes();
         } catch (IOException e) {
+            // TODO: this is not always the case
             throw new CertificateNotFoundException();
         }
     }
@@ -123,7 +128,7 @@ public class SecurityUtils {
         try {
             //FIXME should private key's location be static or should it's path be input
             String keyPath = ClientVariables.FS_PATH + "/daniel/sign.key";
-            RSAPrivateKey privKey = readPrivateKey(keyPath);
+            PrivateKey privKey = readPrivateKey(keyPath);
             Signature sign =  Signature.getInstance("SHA256withRSA");
 
             sign.initSign(privKey);
@@ -131,10 +136,10 @@ public class SecurityUtils {
 
             byte[] signature = sign.sign();
 
+            // FIXME: this should return byte[]
             return getBase64(signature);
 
-        } catch (NoSuchAlgorithmException | IOException
-                | InvalidKeyException | SignatureException | InvalidKeySpecException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             e.printStackTrace();
             System.exit(1);
             return "";
@@ -143,7 +148,7 @@ public class SecurityUtils {
 
     public static boolean validSignature(String signature, byte[] data, byte[] certificate) {
         try {
-            X509Certificate cert = convertToCertificate(certificate);
+            X509Certificate cert = getCertFromBytes(certificate);
             PublicKey pubKey = cert.getPublicKey();
 
             Signature sign = Signature.getInstance("SHA256withRSA");
@@ -151,41 +156,54 @@ public class SecurityUtils {
             sign.initVerify(pubKey);
             sign.update(data);
             return sign.verify(decodeBase64(signature));
-        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | CertificateException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             e.printStackTrace();
             System.exit(1);
-            return false;
         }
+        return false;
     }
 
-    private static RSAPrivateKey readPrivateKey(String path) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        FileInputStream privateFIS = new FileInputStream(path);
-        byte[] keyBytes = new byte[privateFIS.available()];
-        privateFIS.read(keyBytes);
-        privateFIS.close();
+    public static PrivateKey readPrivateKey(String path) {
+        try (FileInputStream fis = new FileInputStream(path)) {
+            byte[] keyBytes = fis.readAllBytes();
 
-        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
+            PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
 
-        KeyFactory kf = KeyFactory.getInstance("RSA");
-        return (RSAPrivateKey) kf.generatePrivate(spec);
-
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            return kf.generatePrivate(spec);
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        return null;
     }
 
-    private static X509Certificate convertToCertificate(byte[] cert) throws CertificateException {
-        InputStream in = new ByteArrayInputStream(cert);
-        CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
-        return (X509Certificate) certFactory.generateCertificate(in);
+    public static X509Certificate getCertFromBytes(byte[] cert) {
+        try (InputStream in = new ByteArrayInputStream(cert)) {
+            CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+            return (X509Certificate) certFactory.generateCertificate(in);
+        } catch (IOException | CertificateException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        return null;
     }
 
     //FIXME: may not be needed
-    private static RSAPublicKey readPublicKey(String path) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        FileInputStream publicFIS = new FileInputStream(path);
-        byte[] keyBytes = new byte[publicFIS.available()];
-        publicFIS.read(keyBytes);
-        publicFIS.close();
+    private static RSAPublicKey readPublicKey(String path) {
+        try (FileInputStream fis = new FileInputStream(path)) {
+            byte[] keyBytes = fis.readAllBytes();
+            X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            return (RSAPublicKey) kf.generatePublic(spec);
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        return null;
+    }
 
-        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
-        KeyFactory kf =  KeyFactory.getInstance("RSA");
-        return (RSAPublicKey) kf.generatePublic(spec);
+    public static PublicKey getKeyFromCert(X509Certificate cert) {
+        return cert.getPublicKey();
     }
 }

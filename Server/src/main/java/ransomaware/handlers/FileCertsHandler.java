@@ -47,18 +47,13 @@ public class FileCertsHandler extends AbstractHandler {
             // TODO: Get certs from all users with permissions
 
             // For now, the only certificate sent is the owner's
-            StoredFile file = server.getFile(user, new StoredFile(owner, filename));
+//            StoredFile file = server.getFile(user, new StoredFile(owner, filename));
 
-            Map<String, String> certs = server.getEncryptCertificates(file);
+            Map<String, String> certs = server.getEncryptCertificates(new StoredFile(owner, filename));
             JsonObject response = JsonParser.parseString("{}").getAsJsonObject();
 
-            JsonArray jsonCerts = new JsonArray();
-
-            certs.forEach((key, value) -> {
-                JsonObject obj = JsonParser.parseString("{}").getAsJsonObject();
-                obj.addProperty(key, value);
-                jsonCerts.add(obj);
-            });
+            JsonObject jsonCerts = JsonParser.parseString("{}").getAsJsonObject();
+            certs.forEach(jsonCerts::addProperty);
 
             response.add("certs", jsonCerts);
 

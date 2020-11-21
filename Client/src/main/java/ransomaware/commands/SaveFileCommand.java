@@ -14,14 +14,15 @@ import java.net.HttpURLConnection;
 import java.net.http.HttpClient;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.PublicKey;
 
 public class SaveFileCommand extends AbstractCommand {
 
     private final String owner;
     private final String filename;
-    private SessionInfo sessionInfo;
+    private final SessionInfo sessionInfo;
 
-    public SaveFileCommand(String owner, String filename, SessionInfo sessionInfo) {
+    public SaveFileCommand(SessionInfo sessionInfo, String owner, String filename) {
         this.owner = owner;
         this.filename = filename;
         this.sessionInfo = sessionInfo;
@@ -47,18 +48,21 @@ public class SaveFileCommand extends AbstractCommand {
             JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
 
             JsonObject info = JsonParser.parseString("{}").getAsJsonObject();
-            info.addProperty("key", SecurityUtils.getBase64(key.getEncoded()));
+
+            JsonObject keys = getFileKeys(client, key.getEncoded());
+
+            info.add("keys", keys);
             info.addProperty("iv", SecurityUtils.getBase64(iv.getIV()));
             info.addProperty("author", sessionInfo.getUsername());
 
             JsonObject jsonFile = JsonParser.parseString("{}").getAsJsonObject();
             jsonFile.addProperty("data", encodedData);
             jsonFile.add("info", info);
-            String signature = SecurityUtils.signFile(sessionInfo.getPrivateKeyPath(), jsonFile.toString().getBytes());
-            jsonRoot.addProperty("fileSignature", signature);
+//            String signature = SecurityUtils.signFile(sessionInfo.getPrivateKeyPath(), jsonFile.toString().getBytes());
+//            jsonRoot.addProperty("fileSignature", signature);
 
 
-            byte[] encryptedData = SecurityUtils.AesCipher(Cipher.ENCRYPT_MODE, jsonFile.toString().getBytes(), key, iv);
+            byte[] encryptedData = SecurityUtils.aesCipher(Cipher.ENCRYPT_MODE, jsonFile.toString().getBytes(), key, iv);
             String decodedEncryptedData = SecurityUtils.getBase64(encryptedData);
             jsonRoot.addProperty("file", decodedEncryptedData);
             jsonRoot.add("info", info);
@@ -75,5 +79,21 @@ public class SaveFileCommand extends AbstractCommand {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private JsonObject getFileKeys(HttpClient client, byte[] secretKey) {
+        JsonObject response = Utils.requestGetFromURL(ClientVariables.URL + "/files/certs/" + owner + '/' + filename, client);
+
+        JsonObject result = JsonParser.parseString("{}").getAsJsonObject();
+
+        response.getAsJsonObject("certs").entrySet().forEach(entry -> {
+                byte[] decodedCert = SecurityUtils.decodeBase64(entry.getValue().getAsString());
+                PublicKey userKey = SecurityUtils.getKeyFromCert(SecurityUtils.getCertFromBytes(decodedCert));
+                String encryptedKey = SecurityUtils.getBase64(SecurityUtils.rsaCipher(Cipher.ENCRYPT_MODE, secretKey, userKey));
+
+                result.addProperty(entry.getKey(), encryptedKey);
+            });
+
+        return result;
     }
 }
