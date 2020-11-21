@@ -14,7 +14,6 @@ import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -119,22 +118,17 @@ public class SecurityUtils {
         try (BufferedInputStream buf = new BufferedInputStream(new FileInputStream(path))) {
             return buf.readAllBytes();
         } catch (IOException e) {
-            // TODO: this is not always the case
             throw new CertificateNotFoundException();
         }
     }
 
-    public static byte[] signFile(String user, byte[] data) {
+    public static byte[] sign(PrivateKey key, byte[] data) {
         try {
-            //FIXME should private key's location be static or should it's path be input
-            String keyPath = ClientVariables.FS_PATH + "/daniel/sign.key";
-            PrivateKey privKey = readPrivateKey(keyPath);
-            Signature sign =  Signature.getInstance("SHA256withRSA");
+            Signature signature =  Signature.getInstance("SHA256withRSA");
+            signature.initSign(key);
 
-            sign.initSign(privKey);
-            sign.update(data);
-
-            return sign.sign();
+            signature.update(data);
+            return signature.sign();
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             e.printStackTrace();
             System.exit(1);
@@ -142,16 +136,14 @@ public class SecurityUtils {
         return new byte[0];
     }
 
-    public static boolean validSignature(String signature, byte[] data, byte[] certificate) {
+    public static boolean verifySignature(byte[] signature, byte[] data, X509Certificate cert) {
         try {
-            X509Certificate cert = getCertFromBytes(certificate);
             PublicKey pubKey = cert.getPublicKey();
-
             Signature sign = Signature.getInstance("SHA256withRSA");
 
             sign.initVerify(pubKey);
             sign.update(data);
-            return sign.verify(decodeBase64(signature));
+            return sign.verify(signature);
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             e.printStackTrace();
             System.exit(1);

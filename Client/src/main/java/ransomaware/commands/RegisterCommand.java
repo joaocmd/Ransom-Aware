@@ -16,7 +16,7 @@ import java.util.Optional;
 
 public class RegisterCommand extends AbstractCommand{
 
-    private SessionInfo sessionInfo;
+    private final SessionInfo sessionInfo;
 
     public RegisterCommand(SessionInfo sessionInfo) {
         this.sessionInfo = sessionInfo;
@@ -29,6 +29,7 @@ public class RegisterCommand extends AbstractCommand{
         String password = new String(console.readPassword("password: "));
 
         // Get user's certificate
+        // TODO: proper path
         String certificatePath = ClientVariables.FS_PATH + "/" + user + ".pem";
         byte[] cert;
 
@@ -55,6 +56,15 @@ public class RegisterCommand extends AbstractCommand{
 
         JsonObject response = Utils.requestPostFromURL(ClientVariables.URL + "/register", jsonRoot, client);
         if (response.get("status").getAsInt() != HttpURLConnection.HTTP_OK) {
+            Utils.handleError(response);
+            return;
+        }
+
+        response = Utils.requestPostFromURL(ClientVariables.URL + "/login", jsonRoot, client);
+        jsonRoot.remove("certificate");
+        if (response.get("status").getAsInt() == HttpURLConnection.HTTP_OK) {
+            sessionInfo.login(user);
+        } else {
             Utils.handleError(response);
         }
     }

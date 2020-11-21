@@ -16,6 +16,7 @@ import java.net.http.HttpClient;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 import java.util.Optional;
 
 public class GetFileCommand extends AbstractCommand {
@@ -51,8 +52,6 @@ public class GetFileCommand extends AbstractCommand {
             byte[] encryptedFile = SecurityUtils.decodeBase64(file.get("data").getAsString());
 
             JsonObject info = file.getAsJsonObject("info");
-//            String signature = file.get("signature").getAsString();
-//            byte[] certificate = SecurityUtils.decodeBase64(response.get("certificate").getAsString());
 
             byte[] keyBytes = getCorrectKey(info.getAsJsonObject("keys"));
             PrivateKey privKey = SecurityUtils.readPrivateKey(sessionInfo.getEncryptKeyPath());
@@ -61,16 +60,25 @@ public class GetFileCommand extends AbstractCommand {
 
             byte[] unencryptedData = SecurityUtils.aesCipher(Cipher.DECRYPT_MODE, encryptedFile, key, new IvParameterSpec(iv));
             JsonObject fileJson = JsonParser.parseString(new String(unencryptedData)).getAsJsonObject();
-//            if(!SecurityUtils.validSignature(signature, unencryptedData, certificate)) {
-//                System.err.println("Bad signature");
-//                return;
-//            }
+
+            String encodedSignature = fileJson.get("signature").getAsString();
+            fileJson.remove("signature");
 
             if (!fileJson.getAsJsonObject("info").equals(info)) {
                 System.out.println(fileJson.getAsJsonObject("info").toString());
                 System.out.println(info.toString());
                 System.out.println("WARNING: Signed info did not match public info");
-                // TODO: prompt continue
+                return;
+            }
+
+            X509Certificate cert = getUserCert(fileJson.getAsJsonObject("info").get("author").getAsString(), client);
+            if (cert == null) {
+                System.err.println("Could not get certificate for author");
+                return;
+            }
+            if(!SecurityUtils.verifySignature(SecurityUtils.decodeBase64(encodedSignature), fileJson.toString().getBytes(), cert)) {
+                System.err.println("WARNING: File contains bad signature");
+                return;
             }
 
             byte[] fileData = SecurityUtils.decodeBase64(fileJson.get("data").getAsString());
@@ -96,6 +104,18 @@ public class GetFileCommand extends AbstractCommand {
             System.err.println("This should not have happened.");
             return new byte[0];
         }
+    }
+
+    private X509Certificate getUserCert(String user, HttpClient client) {
+        // FIXME: should be signing cert and not encrypt
+        JsonObject response = Utils.requestGetFromURL(ClientVariables.URL + "/users/certs/" + user, client);
+        if (response.get("status").getAsInt() == HttpURLConnection.HTTP_OK) {
+            byte[] cert =  SecurityUtils.decodeBase64(response.getAsJsonObject("certs").get("encrypt").getAsString());
+            return SecurityUtils.getCertFromBytes(cert);
+        } else {
+            Utils.handleError(response);
+        }
+        return null;
     }
 
     String getOutputFilePath() {

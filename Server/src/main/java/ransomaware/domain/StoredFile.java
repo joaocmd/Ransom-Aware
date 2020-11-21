@@ -16,14 +16,11 @@ public class StoredFile {
     private Map<String, String> keys = null;
     private String iv = null;
     private String author = null;
-    private String signature = null;
 
-    public StoredFile(String owner, String name, String data, String signature, JsonObject info) {
+    public StoredFile(String owner, String name, String data, JsonObject info) {
         this.owner = owner;
         this.name = name;
         this.data = data;
-
-        this.signature = signature;
 
         this.keys = new HashMap<>();
         info.getAsJsonObject("keys").entrySet().forEach(e -> this.keys.put(e.getKey(), e.getValue().getAsString()));
@@ -44,8 +41,6 @@ public class StoredFile {
         JsonObject info = obj.getAsJsonObject("info");
         this.data = obj.get("data").getAsString();
 
-//        this.signature = info.get("signature").getAsString();
-
         JsonObject keysJson = info.getAsJsonObject("keys");
         this.keys = new HashMap<>();
         keysJson.entrySet().forEach(e -> this.keys.put(e.getKey(), e.getValue().getAsString()));
@@ -65,18 +60,6 @@ public class StoredFile {
         return name;
     }
 
-    public Map<String, String> getKeys() {
-        return keys;
-    }
-
-    public String getIV() {
-        return iv;
-    }
-
-    public String getData() {
-        return data;
-    }
-
     public JsonObject getAsJsonObject() {
         JsonObject root = JsonParser.parseString("{}").getAsJsonObject();
         root.addProperty("data", data);
@@ -84,10 +67,10 @@ public class StoredFile {
         JsonObject info = JsonParser.parseString("{}").getAsJsonObject();
         JsonObject keys = JsonParser.parseString("{}").getAsJsonObject();
         this.keys.forEach(keys::addProperty);
+        info.add("keys", keys);
         info.addProperty("iv", iv);
         info.addProperty("author", author);
-        info.add("keys", keys);
-//        info.addProperty("signature", signature);
+
         root.add("info", info);
 
         return root;

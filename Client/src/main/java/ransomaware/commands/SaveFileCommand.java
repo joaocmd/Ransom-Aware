@@ -14,6 +14,7 @@ import java.net.HttpURLConnection;
 import java.net.http.HttpClient;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 
 public class SaveFileCommand extends AbstractCommand {
@@ -58,9 +59,10 @@ public class SaveFileCommand extends AbstractCommand {
             JsonObject jsonFile = JsonParser.parseString("{}").getAsJsonObject();
             jsonFile.addProperty("data", encodedData);
             jsonFile.add("info", info);
-//            String signature = SecurityUtils.signFile(sessionInfo.getPrivateKeyPath(), jsonFile.toString().getBytes());
-//            jsonRoot.addProperty("fileSignature", signature);
 
+            PrivateKey signingKey = SecurityUtils.readPrivateKey(sessionInfo.getSignKeyPath());
+            byte[] signature = SecurityUtils.sign(signingKey, jsonFile.toString().getBytes());
+            jsonFile.addProperty("signature", SecurityUtils.getBase64(signature));
 
             byte[] encryptedData = SecurityUtils.aesCipher(Cipher.ENCRYPT_MODE, jsonFile.toString().getBytes(), key, iv);
             String decodedEncryptedData = SecurityUtils.getBase64(encryptedData);

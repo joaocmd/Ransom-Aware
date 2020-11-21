@@ -38,7 +38,7 @@ public class Client {
         Console console = System.console();
         String input;
 
-//        register();
+        register();
         login();
 
         do {

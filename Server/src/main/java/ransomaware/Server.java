@@ -64,7 +64,7 @@ public class Server {
 
     public static void start(RansomAware domain, int port) {
         HttpsServer server = prepareHttpsServer(domain, port);
-        System.out.println("Server starting!");
+        System.out.println("Server starting");
         server.start();
     }
 }
