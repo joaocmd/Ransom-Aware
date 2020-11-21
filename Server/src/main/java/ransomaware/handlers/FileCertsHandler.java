@@ -15,11 +15,11 @@ import java.net.HttpURLConnection;
 import java.util.Map;
 import java.util.logging.Logger;
 
-public class CertsHandler extends AbstractHandler {
+public class FileCertsHandler extends AbstractHandler {
 
-    private static final Logger LOGGER = Logger.getLogger(GetFileHandler.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(FileCertsHandler.class.getName());
 
-    public CertsHandler(RansomAware server, String method, boolean requireAuth) {
+    public FileCertsHandler(RansomAware server, String method, boolean requireAuth) {
         super(server, method, requireAuth);
     }
 

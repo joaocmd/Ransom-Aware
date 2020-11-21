@@ -3,6 +3,7 @@ package ransomaware;
 public class ClientVariables {
     public static String WORKSPACE;
     public static String FS_PATH;
+    public static String TMP_PATH = "/tmp/Ransom-Aware";
     public static String URL;
 
     public static final long SESSION_DURATION = 60*20;

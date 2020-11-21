@@ -19,10 +19,18 @@ public class GetFileCommand extends AbstractCommand {
 
     private final String owner;
     private final String filename;
+    private final String outputPath;
+    private boolean success;
 
-    public GetFileCommand(String owner, String filename) {
+    public GetFileCommand(String owner, String filename, String outputPath) {
         this.owner = owner;
         this.filename = filename;
+        this.outputPath = outputPath;
+        this.success = false;
+    }
+
+    public GetFileCommand(String owner, String filename) {
+        this(owner, filename, ClientVariables.WORKSPACE);
     }
 
     @Override
@@ -52,11 +60,21 @@ public class GetFileCommand extends AbstractCommand {
 
             byte[] fileData = SecurityUtils.decodeBase64(fileJson.get("data").getAsString());
 
-            File dir = new File(ClientVariables.WORKSPACE + '/' + owner);
+            File dir = new File(this.outputPath + '/' + owner);
             dir.mkdirs();
-            Files.write(Path.of(ClientVariables.WORKSPACE + '/' + owner + '/' + filename), fileData);
+            Files.write(Path.of(this.outputPath + '/' + owner + '/' + filename), fileData);
+
+            this.success = true;
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    String getOutputFilePath() {
+        return this.outputPath + '/' + owner + '/' + filename;
+    }
+
+    boolean hasSuccess() {
+        return this.success;
     }
 }
