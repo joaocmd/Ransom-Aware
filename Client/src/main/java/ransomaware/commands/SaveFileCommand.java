@@ -19,11 +19,12 @@ public class SaveFileCommand extends AbstractCommand {
 
     private final String owner;
     private final String filename;
-    private final SessionInfo info;
+    private SessionInfo info;
 
-    public SaveFileCommand(String owner, String filename) {
+    public SaveFileCommand(String owner, String filename, SessionInfo info) {
         this.owner = owner;
         this.filename = filename;
+        this.info = info;
     }
 
     @Override
@@ -42,6 +43,10 @@ public class SaveFileCommand extends AbstractCommand {
             byte[] data = Files.readAllBytes(Path.of(filePath));
             byte[] encryptedData = SecurityUtils.AesCipher(Cipher.ENCRYPT_MODE, data, key, iv);
 
+
+            System.out.println(new String(encryptedData));
+
+
             String encodedData = SecurityUtils.getBase64(encryptedData);
             String signature = SecurityUtils.signFile(info.getPrivateKeyPath(), encryptedData);
 
@@ -54,6 +59,7 @@ public class SaveFileCommand extends AbstractCommand {
             JsonObject fileInfo = JsonParser.parseString("{}").getAsJsonObject();
             fileInfo.addProperty("key", SecurityUtils.getBase64(key.getEncoded()));
             fileInfo.addProperty("iv", SecurityUtils.getBase64(iv.getIV()));
+            fileInfo.addProperty("by", info.getUsername());
             jsonFile.add("info", fileInfo);
             jsonRoot.add("file", jsonFile);
 

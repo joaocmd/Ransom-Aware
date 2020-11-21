@@ -37,7 +37,12 @@ public class GetFileCommand extends AbstractCommand {
             byte[] data = SecurityUtils.decodeBase64(fileJson.get("data").getAsString());
 
             JsonObject info = fileJson.getAsJsonObject("info");
-            byte[] signature = SecurityUtils.decodeBase64((info.get("signature")).getAsString());
+            String signature = info.get("signature").getAsString();
+            byte[] certificate = SecurityUtils.decodeBase64(response.get("certificate").getAsString());
+            if(!SecurityUtils.validSignature(signature, data, certificate)) {
+                System.err.println("Bad signature");
+                return;
+            }
 
             byte[] keyBytes = SecurityUtils.decodeBase64(info.get("key").getAsString());
             SecretKey key = SecurityUtils.getKeyFromBytes(keyBytes);

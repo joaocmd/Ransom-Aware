@@ -33,7 +33,7 @@ public class StoredFile {
         JsonObject obj = JsonParser.parseString(data).getAsJsonObject();
         JsonObject info = obj.getAsJsonObject("info");
         this.data = obj.get("data").getAsString();
-        this.signature = obj.get("signature").getAsString();
+        this.signature = info.get("signature").getAsString();
         this.key = info.get("key").getAsString();
         this.iv = info.get("iv").getAsString();
     }

@@ -11,9 +11,7 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.*;
@@ -21,8 +19,10 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 public class SecurityUtils {
@@ -121,7 +121,8 @@ public class SecurityUtils {
 
     public static String signFile(String user, byte[] data) {
         try {
-            String keyPath = ClientVariables.FS_PATH + "/" + user + "/sign.key";
+            //FIXME should private key's location be static or should it's path be input
+            String keyPath = ClientVariables.FS_PATH + "/daniel/sign.key";
             RSAPrivateKey privKey = readPrivateKey(keyPath);
             Signature sign =  Signature.getInstance("SHA256withRSA");
 
@@ -136,10 +137,28 @@ public class SecurityUtils {
                 | InvalidKeyException | SignatureException | InvalidKeySpecException e) {
             e.printStackTrace();
             System.exit(1);
+            return "";
         }
     }
 
-    public static RSAPrivateKey readPrivateKey(String path) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+    public static boolean validSignature(String signature, byte[] data, byte[] certificate) {
+        try {
+            X509Certificate cert = convertToCertificate(certificate);
+            PublicKey pubKey = cert.getPublicKey();
+
+            Signature sign = Signature.getInstance("SHA256withRSA");
+
+            sign.initVerify(pubKey);
+            sign.update(data);
+            return sign.verify(decodeBase64(signature));
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | CertificateException e) {
+            e.printStackTrace();
+            System.exit(1);
+            return false;
+        }
+    }
+
+    private static RSAPrivateKey readPrivateKey(String path) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         FileInputStream privateFIS = new FileInputStream(path);
         byte[] keyBytes = new byte[privateFIS.available()];
         privateFIS.read(keyBytes);
@@ -150,5 +169,23 @@ public class SecurityUtils {
         KeyFactory kf = KeyFactory.getInstance("RSA");
         return (RSAPrivateKey) kf.generatePrivate(spec);
 
+    }
+
+    private static X509Certificate convertToCertificate(byte[] cert) throws CertificateException {
+        InputStream in = new ByteArrayInputStream(cert);
+        CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+        return (X509Certificate) certFactory.generateCertificate(in);
+    }
+
+    //FIXME: may not be needed
+    private static RSAPublicKey readPublicKey(String path) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+        FileInputStream publicFIS = new FileInputStream(path);
+        byte[] keyBytes = new byte[publicFIS.available()];
+        publicFIS.read(keyBytes);
+        publicFIS.close();
+
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+        KeyFactory kf =  KeyFactory.getInstance("RSA");
+        return (RSAPublicKey) kf.generatePublic(spec);
     }
 }

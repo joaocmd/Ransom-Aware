@@ -38,6 +38,7 @@ public class SaveFileHandler extends AbstractHandler {
         JsonObject fileInfo = body.getAsJsonObject("file").getAsJsonObject("info");
         String key = fileInfo.get("key").getAsString();
         String iv = fileInfo.get("iv").getAsString();
+        String by = fileInfo.get("by").getAsString();
 
         LOGGER.info(String.format("user %s uploading file %s/%s", user, owner, fileName));
         try {
