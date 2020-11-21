@@ -137,6 +137,7 @@ public class SecurityUtils {
     }
 
     public static boolean verifySignature(byte[] signature, byte[] data, X509Certificate cert) {
+        // TODO: Should verify if the certificate is valid
         try {
             PublicKey pubKey = cert.getPublicKey();
             Signature sign = Signature.getInstance("SHA256withRSA");

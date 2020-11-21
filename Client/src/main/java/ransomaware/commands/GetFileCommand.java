@@ -19,7 +19,7 @@ import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Optional;
 
-public class GetFileCommand extends AbstractCommand {
+public class GetFileCommand implements Command {
 
     private final SessionInfo sessionInfo;
     private final String owner;

@@ -17,7 +17,7 @@ import java.nio.file.Path;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
-public class SaveFileCommand extends AbstractCommand {
+public class SaveFileCommand implements Command {
 
     private final String owner;
     private final String filename;

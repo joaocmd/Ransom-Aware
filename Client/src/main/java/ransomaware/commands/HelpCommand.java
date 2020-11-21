@@ -2,7 +2,7 @@ package ransomaware.commands;
 
 import java.net.http.HttpClient;
 
-public class HelpCommand extends AbstractCommand {
+public class HelpCommand implements Command {
 
     @Override
     public void run(HttpClient client) {

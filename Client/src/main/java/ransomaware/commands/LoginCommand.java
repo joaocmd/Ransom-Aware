@@ -9,7 +9,7 @@ import java.io.Console;
 import java.net.HttpURLConnection;
 import java.net.http.HttpClient;
 
-public class LoginCommand extends AbstractCommand {
+public class LoginCommand implements Command {
 
     private final SessionInfo info;
 

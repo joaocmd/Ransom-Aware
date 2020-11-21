@@ -14,7 +14,7 @@ import java.net.http.HttpClient;
 import java.util.Optional;
 
 
-public class RegisterCommand extends AbstractCommand{
+public class RegisterCommand implements Command{
 
     private final SessionInfo sessionInfo;
 
@@ -52,7 +52,8 @@ public class RegisterCommand extends AbstractCommand{
         JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
         jsonRoot.addProperty("username", user);
         jsonRoot.addProperty("password", password);
-        jsonRoot.addProperty("certificate", SecurityUtils.getBase64(cert));
+        jsonRoot.addProperty("encrypt-cert", SecurityUtils.getBase64(cert));
+        jsonRoot.addProperty("sign-cert", SecurityUtils.getBase64(cert));
 
         JsonObject response = Utils.requestPostFromURL(ClientVariables.URL + "/register", jsonRoot, client);
         if (response.get("status").getAsInt() != HttpURLConnection.HTTP_OK) {
@@ -61,7 +62,8 @@ public class RegisterCommand extends AbstractCommand{
         }
 
         response = Utils.requestPostFromURL(ClientVariables.URL + "/login", jsonRoot, client);
-        jsonRoot.remove("certificate");
+        jsonRoot.remove("encrypt-cert");
+        jsonRoot.remove("sign-cert");
         if (response.get("status").getAsInt() == HttpURLConnection.HTTP_OK) {
             sessionInfo.login(user);
         } else {

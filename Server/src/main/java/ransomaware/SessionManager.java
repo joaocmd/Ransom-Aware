@@ -70,7 +70,7 @@ public class SessionManager {
         throw new NoSuchUserException();
     }
 
-    public static void register(String username, String password, String encryptCert) {
+    public static void register(String username, String password, String encryptCert, String signCert) {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("_id", username);
@@ -90,7 +90,8 @@ public class SessionManager {
             String passwordDigest = SecurityUtils.getBase64(SecurityUtils.getDigest(password + new String(salt)));
             var obj = new BasicDBObject("_id", username)
                     .append("password", passwordDigest)
-                    .append("encryptCert", encryptCert);
+                    .append("encryptCert", encryptCert)
+                    .append("signCert", signCert);
             users.insert(obj);
             obj = new BasicDBObject("_id", username)
                     .append("salt", SecurityUtils.getBase64(salt));

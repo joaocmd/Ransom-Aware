@@ -5,18 +5,11 @@ import com.google.gson.JsonParser;
 import ransomaware.ClientVariables;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.*;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 
 public class Utils {
 
@@ -65,8 +58,9 @@ public class Utils {
     }
 
     public static void clearWorkspace(File dir) {
-        if(dir == null)
+        if(dir == null) {
             return;
+        }
         File[] files = dir.listFiles();
         if(files != null) {
             for (File file : files) {

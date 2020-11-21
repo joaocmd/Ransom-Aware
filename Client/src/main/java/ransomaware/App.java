@@ -17,13 +17,12 @@ public class App implements Callable<Integer> {
 
     public Integer call() throws Exception {
         ClientVariables.init(path, url);
-        Client client = new Client();
+        RansomAwareClient client = new RansomAwareClient();
         client.start();
         return 0;
     }
 
-    public static void main(String[] args) throws Exception {
-        int exitCode = new CommandLine(new App()).execute(args);
-//        System.exit(exitCode);
+    public static void main(String[] args) {
+       new CommandLine(new App()).execute(args);
     }
 }

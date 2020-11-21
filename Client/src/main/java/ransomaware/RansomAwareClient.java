@@ -13,13 +13,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 
-public class Client {
+public class RansomAwareClient {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final CookieManager cm = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
     private HttpClient client = HttpClient.newBuilder().cookieHandler(cm).executor(executor).build();
     private final SessionInfo sessionInfo = new SessionInfo();
 
-    private final Map<String, Function<String[], Optional<AbstractCommand>>> parsers = new HashMap<>();
+    private final Map<String, Function<String[], Optional<Command>>> parsers = new HashMap<>();
 
     private void populateParsers() {
         parsers.put("logout", this::parseLogout);
@@ -80,7 +80,7 @@ public class Client {
         }
     }
 
-    private Optional<AbstractCommand> parseLogout(String[] args) {
+    private Optional<Command> parseLogout(String[] args) {
         Runnable showUsage = () -> System.err.println("logout usage: no args");
 
         if (args.length != 1) {
@@ -114,7 +114,7 @@ public class Client {
         return new String[]{user, file};
     }
 
-    private Optional<AbstractCommand> parseGet(String[] args) {
+    private Optional<Command> parseGet(String[] args) {
         Runnable showUsage = () -> {
             System.err.println("get <file> usage:");
             System.err.println("    file: file name, can be user/file or just file");
@@ -133,7 +133,7 @@ public class Client {
         return Optional.of(new GetFileCommand(sessionInfo, file[0], file[1]));
     }
 
-    private Optional<AbstractCommand> parseSave(String[] args) {
+    private Optional<Command> parseSave(String[] args) {
         Runnable showUsage = () -> {
             System.err.println("save <file> usage:");
             System.err.println("    file: file name, can be user/file or just file");
@@ -152,7 +152,7 @@ public class Client {
         return Optional.of(new SaveFileCommand(sessionInfo, file[0], file[1]));
     }
 
-    private Optional<AbstractCommand> parseGrant(String[] args) {
+    private Optional<Command> parseGrant(String[] args) {
         Runnable showUsage = () -> {
             System.err.println("grant <file> <user> usage:");
             System.err.println("    file: file name, can be user/file or just file");
@@ -172,24 +172,24 @@ public class Client {
         return Optional.of(new GrantCommand(sessionInfo, file[1], args[2]));
     }
 
-    private Optional<AbstractCommand> parseList(String[] args) {
+    private Optional<Command> parseList(String[] args) {
         Runnable showUsage = () -> System.err.println("login usage: no args");
 
         if (args.length != 1) {
             showUsage.run();
             return Optional.empty();
         }
-        return Optional.of(new ListFilesCommand());
+        return Optional.of(new ListFilesCommand(sessionInfo));
     }
 
-    private Optional<AbstractCommand> parseExit(String[] args) {
+    private Optional<Command> parseExit(String[] args) {
         if (sessionInfo.isLogged()) {
             return  Optional.of(new LogoutCommand(sessionInfo));
         }
         return Optional.empty();
     }
 
-    private Optional<AbstractCommand> parseClear(String[] args) {
+    private Optional<Command> parseClear(String[] args) {
         Runnable showUsage = () -> System.err.println("clear usage: no args");
 
         if(args.length != 1) {

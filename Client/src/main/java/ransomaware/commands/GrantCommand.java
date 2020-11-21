@@ -12,7 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class GrantCommand extends AbstractCommand {
+public class GrantCommand implements Command {
 
     private final SessionInfo sessionInfo;
     private final String filename;
