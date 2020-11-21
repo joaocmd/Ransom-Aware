@@ -31,10 +31,11 @@ public class SaveFileHandler extends AbstractHandler {
         JsonObject body = getBodyAsJSON();
 
         String user = SessionManager.getUsername(this.getSessionToken());
-        String owner = body.getAsJsonObject("info").get("user").getAsString();
-        String fileName = body.getAsJsonObject("info").get("name").getAsString();
-        String data = body.getAsJsonObject("file").get("data").getAsString();
-        JsonObject fileInfo = body.getAsJsonObject("file").getAsJsonObject("info");
+        String owner = body.getAsJsonObject("requestInfo").get("user").getAsString();
+        String fileName = body.getAsJsonObject("requestInfo").get("name").getAsString();
+        String data = body.get("file").getAsString();
+
+        JsonObject fileInfo = body.getAsJsonObject("info");
         String key = fileInfo.get("key").getAsString();
         String iv = fileInfo.get("iv").getAsString();
 

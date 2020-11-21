@@ -1,6 +1,7 @@
 package ransomaware.commands;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import ransomaware.ClientVariables;
 import ransomaware.SecurityUtils;
 
@@ -41,16 +42,23 @@ public class GetFileCommand extends AbstractCommand {
                 return;
             }
 
-            JsonObject fileJson = response.getAsJsonObject("file");
-            byte[] data = SecurityUtils.decodeBase64(fileJson.get("data").getAsString());
+            JsonObject file = response.getAsJsonObject("file");
+            byte[] encryptedFile = SecurityUtils.decodeBase64(file.get("data").getAsString());
 
-            JsonObject info = fileJson.getAsJsonObject("info");
+            JsonObject info = file.getAsJsonObject("info");
             byte[] keyBytes = SecurityUtils.decodeBase64(info.get("key").getAsString());
             SecretKey key = SecurityUtils.getKeyFromBytes(keyBytes);
-
             byte[] iv = SecurityUtils.decodeBase64(info.get("iv").getAsString());
 
-            byte[] unencryptedData = SecurityUtils.AesCipher(Cipher.DECRYPT_MODE, data, key, new IvParameterSpec(iv));
+            byte[] unencryptedData = SecurityUtils.AesCipher(Cipher.DECRYPT_MODE, encryptedFile, key, new IvParameterSpec(iv));
+            JsonObject fileJson = JsonParser.parseString(new String(unencryptedData)).getAsJsonObject();
+
+            if (!fileJson.getAsJsonObject("info").equals(info)) {
+                System.out.println("WARNING: Signed info did not match public info");
+                // TODO: prompt continue
+            }
+
+            byte[] fileData = SecurityUtils.decodeBase64(fileJson.get("data").getAsString());
 
             File dir = new File(this.outputPath + '/' + owner);
             dir.mkdirs();
