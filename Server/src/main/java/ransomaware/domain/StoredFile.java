@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class StoredFile {
-    //FIXME check with johnny; Signature
     private final String owner;
     private final String name;
 
@@ -65,9 +64,9 @@ public class StoredFile {
         root.addProperty("data", data);
 
         JsonObject info = JsonParser.parseString("{}").getAsJsonObject();
-        JsonObject keys = JsonParser.parseString("{}").getAsJsonObject();
-        this.keys.forEach(keys::addProperty);
-        info.add("keys", keys);
+        JsonObject jsonKeys = JsonParser.parseString("{}").getAsJsonObject();
+        this.keys.forEach(jsonKeys::addProperty);
+        info.add("keys", jsonKeys);
         info.addProperty("iv", iv);
         info.addProperty("author", author);
 

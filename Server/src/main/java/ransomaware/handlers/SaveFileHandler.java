@@ -3,7 +3,6 @@ package ransomaware.handlers;
 import com.google.gson.JsonObject;
 import com.sun.net.httpserver.HttpExchange;
 import ransomaware.RansomAware;
-import ransomaware.SecurityUtils;
 import ransomaware.SessionManager;
 import ransomaware.domain.StoredFile;
 import ransomaware.exceptions.SessionExpiredException;

@@ -41,13 +41,11 @@ public class UserCertsHandler extends AbstractHandler {
         LOGGER.info(String.format("user %s requested %s's certificates", user, userToFetch));
 
         try {
-            // Get user's encrypt certificate
             String encryptCert = SessionManager.getEncryptCertificate(userToFetch);
             String signingCert = SessionManager.getSigningCertificate(userToFetch);
 
             JsonObject jsonCerts = JsonParser.parseString("{}").getAsJsonObject();
             jsonCerts.addProperty("encrypt", encryptCert);
-            // TODO: Also fetch user's signing certificate
              jsonCerts.addProperty("sign", signingCert);
             JsonObject response = JsonParser.parseString("{}").getAsJsonObject();
             response.add("certs", jsonCerts);

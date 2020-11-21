@@ -11,7 +11,9 @@ public class ServerVariables {
     public static final String SSL_STOREPASS = "changeme";
     public static final String SSL_KEYPASS = "changeme";
 
-    public  static void init(String path, String mongoUri) {
+    private  ServerVariables() {}
+
+    public static void init(String path, String mongoUri) {
         MONGO_URI = mongoUri;
         FS_PATH = path;
         FILES_PATH = path + "/files";
