@@ -62,7 +62,7 @@ public class GetFileCommand extends AbstractCommand {
 
             File dir = new File(this.outputPath + '/' + owner);
             dir.mkdirs();
-            Files.write(Path.of(this.outputPath + '/' + owner + '/' + filename), unencryptedData);
+            Files.write(Path.of(this.outputPath + '/' + owner + '/' + filename), fileData);
 
             this.success = true;
         } catch (IOException e) {
