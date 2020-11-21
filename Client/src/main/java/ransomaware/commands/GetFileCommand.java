@@ -46,12 +46,19 @@ public class GetFileCommand extends AbstractCommand {
             byte[] encryptedFile = SecurityUtils.decodeBase64(file.get("data").getAsString());
 
             JsonObject info = file.getAsJsonObject("info");
+            String signature = file.get("signature").getAsString();
+            byte[] certificate = SecurityUtils.decodeBase64(response.get("certificate").getAsString());
+
             byte[] keyBytes = SecurityUtils.decodeBase64(info.get("key").getAsString());
             SecretKey key = SecurityUtils.getKeyFromBytes(keyBytes);
             byte[] iv = SecurityUtils.decodeBase64(info.get("iv").getAsString());
 
             byte[] unencryptedData = SecurityUtils.AesCipher(Cipher.DECRYPT_MODE, encryptedFile, key, new IvParameterSpec(iv));
             JsonObject fileJson = JsonParser.parseString(new String(unencryptedData)).getAsJsonObject();
+            if(!SecurityUtils.validSignature(signature, unencryptedData, certificate)) {
+                System.err.println("Bad signature");
+                return;
+            }
 
             if (!fileJson.getAsJsonObject("info").equals(info)) {
                 System.out.println("WARNING: Signed info did not match public info");

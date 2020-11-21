@@ -179,7 +179,7 @@ public class Client {
             return  Optional.empty();
         }
 
-        return Optional.of(new SaveFileCommand(file[0], file[1]));
+        return Optional.of(new SaveFileCommand(file[0], file[1], sessionInfo));
     }
 
     private Optional<AbstractCommand> parseGrant(String[] args) {

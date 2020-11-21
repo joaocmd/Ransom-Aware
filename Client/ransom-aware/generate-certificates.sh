@@ -24,6 +24,7 @@ pathName="$name"/"$name"
 
 # Generate private and public keys
 openssl genrsa -out "$pathName".key
+#openssl pkcs8 -topk8 -inform PEM -outform DER -in "$pathName".key -out "$pathName".key -nocrypt
 openssl rsa -in "$pathName".key -pubout > "$pathName".pubkey
 
 # Generate certificate signing request

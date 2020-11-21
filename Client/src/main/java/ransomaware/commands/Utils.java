@@ -5,11 +5,18 @@ import com.google.gson.JsonParser;
 import ransomaware.ClientVariables;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.*;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 
 public class Utils {
 
@@ -70,6 +77,6 @@ public class Utils {
     }
 
     public static String getUserDirectory(String user) {
-        return ClientVariables.WORKSPACE + '/' + user;
+        return ClientVariables.WORKSPACE + "/" + user;
     }
 }
