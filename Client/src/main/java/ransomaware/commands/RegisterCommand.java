@@ -57,9 +57,9 @@ public class RegisterCommand implements Command{
             return;
         }
 
-        response = Utils.requestPostFromURL(ClientVariables.URL + "/login", jsonRoot, client);
         jsonRoot.remove("encrypt-cert");
         jsonRoot.remove("sign-cert");
+        response = Utils.requestPostFromURL(ClientVariables.URL + "/login", jsonRoot, client);
         if (response.get("status").getAsInt() == HttpURLConnection.HTTP_OK) {
             sessionInfo.login(user);
         } else {
