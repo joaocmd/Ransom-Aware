@@ -34,7 +34,6 @@ public class GetFileCommand extends AbstractCommand {
                 return;
             }
 
-            System.out.println(response.toString());
             JsonObject file = response.getAsJsonObject("file");
             byte[] encryptedFile = SecurityUtils.decodeBase64(file.get("data").getAsString());
 
