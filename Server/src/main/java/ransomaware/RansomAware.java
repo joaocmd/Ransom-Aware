@@ -120,8 +120,8 @@ public class RansomAware {
     private void spinUp(){
         FileManager.dropDB();
 
-        // FIXME: If the folder does not exist, it crashes
         File folder = new File(ServerVariables.FILES_PATH);
+        folder.mkdirs();
         File[] users =  folder.listFiles(File::isDirectory);
 
         for(File user : users) {
