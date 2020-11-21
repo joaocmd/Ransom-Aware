@@ -13,23 +13,31 @@ fi
 name=$1
 rootca=$2
 
-echo "$name"
-echo "$rootca"
+echo $name
+echo $rootca
 
-# Generate folder
-[ -d "$name" ] && rm -rf "$name"  # check if folder exists and removes it
-mkdir "$name"
+# mkdir $name
 
-pathName="$name"/"$name"
+function gen_cert {
+    # pathName=$name/$1
+    pathName=$1
+    # Generate private and public keys
+    openssl genrsa -out $pathName.key
 
-# Generate private and public keys
-openssl genrsa -out "$pathName".key
-#openssl pkcs8 -topk8 -inform PEM -outform DER -in "$pathName".key -out "$pathName".key -nocrypt
-openssl rsa -in "$pathName".key -pubout > "$pathName".pubkey
+    # Generate certificate signing request
+    echo $pathName.key
+    openssl req -new -key $pathName.key -out $pathName.csr \
+      -subj "/C=PT/ST=Lisbon/L=Lisbon/O=Ransom-Aware/OU=IT/CN=$name"
+    # Get signature by root CA
+    openssl x509 -req -days 365 -in $pathName.csr -CA $rootca/root-ca.pem -CAkey $rootca/root-ca.key -outform PEM -out $pathName.pem
 
-# Generate certificate signing request
-openssl req -new -key "$pathName".key -out "$pathName".csr \
-  -subj "/C=PT/ST=Lisbon/L=Lisbon/O=Ransom-Aware/OU=IT/CN=$name"
+    # Convert private key to be used in java
+    openssl pkcs8 -topk8 -inform PEM -outform DER -in $pathName.key -nocrypt > $pathName.pkcs8
 
-# Get signature by root CA
-openssl x509 -req -days 365 -in "$pathName".csr -CA "$rootca"/root-ca.pem -CAkey "$rootca"/root-ca.key -outform PEM -out "$pathName".pem
+    # Clean up
+    rm $pathName.csr
+    mv $pathName.pkcs8 $pathName.key
+}
+
+gen_cert $name-encrypt
+gen_cert $name-sign

@@ -107,10 +107,9 @@ public class GetFileCommand implements Command {
     }
 
     private X509Certificate getUserCert(String user, HttpClient client) {
-        // FIXME: should be signing cert and not encrypt
         JsonObject response = Utils.requestGetFromURL(ClientVariables.URL + "/users/certs/" + user, client);
         if (response.get("status").getAsInt() == HttpURLConnection.HTTP_OK) {
-            byte[] cert =  SecurityUtils.decodeBase64(response.getAsJsonObject("certs").get("encrypt").getAsString());
+            byte[] cert =  SecurityUtils.decodeBase64(response.getAsJsonObject("certs").get("sign").getAsString());
             return SecurityUtils.getCertFromBytes(cert);
         } else {
             Utils.handleError(response);

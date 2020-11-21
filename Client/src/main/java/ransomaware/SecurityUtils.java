@@ -21,6 +21,9 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 public class SecurityUtils {
+
+    private SecurityUtils() {}
+
     public static byte[] getDigest(String text) {
         MessageDigest digest;
         try {
@@ -88,11 +91,8 @@ public class SecurityUtils {
         return new byte[0];
     }
 
-    public static boolean checkCertificateUser(String path, String username) {
-        try (BufferedInputStream buf = new BufferedInputStream(new FileInputStream(path))) {
-            X509Certificate certificate = (X509Certificate)
-                    CertificateFactory.getInstance("X.509").generateCertificate(buf);
-
+    public static boolean checkCertificateUser(X509Certificate certificate, String username) {
+        try {
             certificate.checkValidity();
 
             String dn = certificate.getSubjectDN().getName();
@@ -109,14 +109,13 @@ public class SecurityUtils {
             return cn.equals(username);
         } catch (InvalidNameException | CertificateException e) {
             throw new CertificateInvalidException();
-        } catch (IOException e) {
-            throw new CertificateNotFoundException();
         }
     }
 
-    public static byte[] getCertificateToSend(String path) {
+    public static X509Certificate readCertificate(String path) {
         try (BufferedInputStream buf = new BufferedInputStream(new FileInputStream(path))) {
-            return buf.readAllBytes();
+            byte[] bytes = buf.readAllBytes();
+            return getCertFromBytes(bytes);
         } catch (IOException e) {
             throw new CertificateNotFoundException();
         }

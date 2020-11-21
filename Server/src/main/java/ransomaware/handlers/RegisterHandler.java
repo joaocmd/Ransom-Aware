@@ -29,8 +29,8 @@ public class RegisterHandler extends AbstractHandler {
 
         String username = body.get("username").getAsString();
         String password = body.get("password").getAsString();
-        String encodedEncryptCert = body.get("encrypt-certificate").getAsString();
-        String encodedSignCert = body.get("sign-certificate").getAsString();
+        String encodedEncryptCert = body.get("encrypt-cert").getAsString();
+        String encodedSignCert = body.get("sign-cert").getAsString();
 
         LOGGER.info(String.format("register request: %s password: [REDACTED]", username));
 

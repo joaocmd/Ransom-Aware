@@ -57,6 +57,19 @@ public class SessionManager {
         throw new NoSuchUserException();
     }
 
+    public static String getSigningCertificate(String username) {
+        MongoClient client = getMongoClient();
+
+        var query = new BasicDBObject("_id", username);
+        DBObject userQuery = client.getDB(ServerVariables.FS_PATH).getCollection("users").findOne(query);
+        client.close();
+
+        if (userQuery != null) {
+            return (String) userQuery.get("signCert");
+        }
+        throw new NoSuchUserException();
+    }
+
     public static void hasUser(String username) {
         MongoClient client = getMongoClient();
 

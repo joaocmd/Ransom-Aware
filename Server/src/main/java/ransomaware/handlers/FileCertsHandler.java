@@ -41,7 +41,7 @@ public class FileCertsHandler extends AbstractHandler {
         String filename = parts[4];
 
         String user = SessionManager.getUsername(getSessionToken());
-        LOGGER.info(String.format("user %s requested file %s/%s", user, owner,filename));
+        LOGGER.info(String.format("user %s requested certs for file %s/%s", user, owner,filename));
 
         try {
             // TODO: Get certs from all users with permissions

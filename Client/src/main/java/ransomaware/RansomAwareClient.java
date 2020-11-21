@@ -17,17 +17,21 @@ public class RansomAwareClient {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final CookieManager cm = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
     private HttpClient client = HttpClient.newBuilder().cookieHandler(cm).executor(executor).build();
-    private final SessionInfo sessionInfo = new SessionInfo();
+    private final SessionInfo sessionInfo;
 
     private final Map<String, Function<String[], Optional<Command>>> parsers = new HashMap<>();
 
+    public RansomAwareClient(String encryptKeyPath, String signKeyPath) {
+        this.sessionInfo = new SessionInfo(encryptKeyPath, signKeyPath);
+    }
+
     private void populateParsers() {
-        parsers.put("logout", this::parseLogout);
-        parsers.put("logout", this::parseLogout);
         parsers.put("get", this::parseGet);
         parsers.put("save", this::parseSave);
         parsers.put("grant", this::parseGrant);
         parsers.put("list", this::parseList);
+        parsers.put("create", this::parseCreate);
+        parsers.put("logout", this::parseLogout);
         parsers.put("exit", this::parseExit);
         parsers.put("clear", this::parseClear);
     }
@@ -116,7 +120,7 @@ public class RansomAwareClient {
 
     private Optional<Command> parseGet(String[] args) {
         Runnable showUsage = () -> {
-            System.err.println("get <file> usage:");
+            System.err.println("get <file> usage: fetches file from the server");
             System.err.println("    file: file name, can be user/file or just file");
         };
         if (args.length != 2) {
@@ -135,7 +139,7 @@ public class RansomAwareClient {
 
     private Optional<Command> parseSave(String[] args) {
         Runnable showUsage = () -> {
-            System.err.println("save <file> usage:");
+            System.err.println("save <file> usage: saves a file in the server");
             System.err.println("    file: file name, can be user/file or just file");
         };
         if (args.length != 2) {
@@ -150,6 +154,25 @@ public class RansomAwareClient {
         }
 
         return Optional.of(new SaveFileCommand(sessionInfo, file[0], file[1]));
+    }
+
+    private Optional<Command> parseCreate(String[] args) {
+        Runnable showUsage = () -> {
+            System.err.println("create <file> usage: creates a file locally");
+            System.err.println("    file: file name, can be user/file or just file, user must be current user");
+        };
+        if (args.length != 2) {
+            showUsage.run();
+            return Optional.empty();
+        }
+
+        String[] file = parseFileName(args[1]);
+        if (file == null || !file[0].equals(sessionInfo.getUsername())) {
+            showUsage.run();
+            return  Optional.empty();
+        }
+
+        return Optional.of(new CreateFileCommand(file[0], file[1]));
     }
 
     private Optional<Command> parseGrant(String[] args) {

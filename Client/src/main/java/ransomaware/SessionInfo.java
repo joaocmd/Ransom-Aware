@@ -6,20 +6,22 @@ public class SessionInfo {
     private String encryptKeyPath;
     private String signKeyPath;
 
+    public SessionInfo(String encryptKeyPath, String signKeyPath) {
+        this.encryptKeyPath = encryptKeyPath;
+        this.signKeyPath = signKeyPath;
+    }
+
     public String getUsername() {
-                              return username;
-                                              }
+        return username;
+    }
 
     public boolean isLogged() {
-                            return isLogged;
-                                            }
+        return isLogged;
+    }
 
     public void login(String username) {
         isLogged = true;
         this.username = username;
-        encryptKeyPath = ClientVariables.FS_PATH + '/' + username + '/' + username + ".pkcs8";
-        // FIXME: good paths
-        signKeyPath = ClientVariables.FS_PATH + '/' + username + '/' + username + ".pkcs8";
     }
 
     public void logOff(){
