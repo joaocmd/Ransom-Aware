@@ -51,6 +51,8 @@ public class GetFileHandler extends AbstractHandler {
             StoredFile file = server.getFile(user, new StoredFile(owner, filename));
             JsonObject response = JsonParser.parseString("{}").getAsJsonObject();
             response.add("file", file.getAsJsonObject());
+
+            // FIXME: Should the certificate of the owner be sent?
             response.addProperty("certificate", SessionManager.getEncryptCertificate(file.getOwner()));
             sendResponse(HttpURLConnection.HTTP_OK, response);
         } catch (NoSuchFileException e) {

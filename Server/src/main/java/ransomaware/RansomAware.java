@@ -30,16 +30,27 @@ public class RansomAware {
 
     private boolean hasAccessToFile(String user, StoredFile file) {
         // isOwner is used because we don't have permissions yet
-        boolean hasBeenGranted = userFiles.containsKey(user) && userFiles.get(user).contains(file.getFileName());
+        String filename = file.getFileName();
+        boolean hasBeenGranted = userFiles.containsKey(user) && userFiles.get(user).contains(filename) &&
+                usersWithAccess.containsKey(filename) && usersWithAccess.get(filename).contains(user);
         return isOwner(user, file) || hasBeenGranted;
     }
 
     public void uploadFile(String user, StoredFile file) {
-        // TODO: validate file name (dont allow .. and /)
         String fileName = file.getFileName();
 
-        // TODO: Check if permissions are correct with server's
+        // Check if file name is valid
+        String name = file.getName();
+        if (name.matches("[.]*") || name.contains("/")) {
+            throw new InvalidFileNameException();
+        }
+
         if (hasAccessToFile(user, file)) {
+            // Check if permissions are correct with server's
+            if (!usersWithAccess.get(fileName).equals(file.getUsersWithAccess())) {
+                throw new IllegalArgumentException();
+            }
+
             FileManager.saveFile(file);
 
             userFiles.putIfAbsent(user, new HashSet<>());
@@ -146,6 +157,8 @@ public class RansomAware {
                 userFiles.get(user.getName()).add(fileName);
                 usersWithAccess.putIfAbsent(fileName, new HashSet<>());
                 usersWithAccess.get(fileName).add(user.getName());
+
+                // TODO: Read permissions and add to maps
 
 
                 File[] versions = file.listFiles();

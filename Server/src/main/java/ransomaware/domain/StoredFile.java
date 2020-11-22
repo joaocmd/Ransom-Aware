@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class StoredFile {
     private final String owner;
@@ -73,6 +74,10 @@ public class StoredFile {
         root.add("info", info);
 
         return root;
+    }
+
+    public Set<String> getUsersWithAccess() {
+        return keys.keySet();
     }
 
     @Override
