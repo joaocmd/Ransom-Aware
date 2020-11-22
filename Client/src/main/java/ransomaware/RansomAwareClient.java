@@ -13,22 +13,25 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 
-public class Client {
+public class RansomAwareClient {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
-    private CookieManager cm = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
+    private final CookieManager cm = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
     private HttpClient client = HttpClient.newBuilder().cookieHandler(cm).executor(executor).build();
-    private SessionInfo sessionInfo = new SessionInfo();
+    private final SessionInfo sessionInfo;
 
-    private final Map<String, Function<String[], Optional<AbstractCommand>>> parsers = new HashMap<>();
+    private final Map<String, Function<String[], Optional<Command>>> parsers = new HashMap<>();
+
+    public RansomAwareClient(String encryptKeyPath, String signKeyPath) {
+        this.sessionInfo = new SessionInfo(encryptKeyPath, signKeyPath);
+    }
 
     private void populateParsers() {
-        parsers.put("register", this::parseRegister);
-        parsers.put("login", this::parseLogin);
-        parsers.put("logout", this::parseLogout);
         parsers.put("get", this::parseGet);
         parsers.put("save", this::parseSave);
         parsers.put("grant", this::parseGrant);
         parsers.put("list", this::parseList);
+        parsers.put("create", this::parseCreate);
+        parsers.put("logout", this::parseLogout);
         parsers.put("exit", this::parseExit);
         parsers.put("clear", this::parseClear);
     }
@@ -39,8 +42,8 @@ public class Client {
         Console console = System.console();
         String input;
 
-//        register();
-//        login();
+        register();
+        login();
 
         do {
             input = console.readLine("> ");
@@ -60,57 +63,28 @@ public class Client {
         System.gc();
     }
 
-//    private void register() {
-//        System.out.println("Register? [Yy]");
-//        Console console = System.console();
-//        String answer = console.readLine();
-//        if (answer.toLowerCase().startsWith("y")) {
-//            RegisterCommand register = new RegisterCommand();
-//            boolean success = false;
-//            while (!success) {
-//                success = register.run(new String[]{"register"}, client);
-//            }
-//        }
-//    }
-
-//    private void login() {
-//        System.out.println("Login:");
-//        LoginCommand login = new LoginCommand();
-//        while (username == null) {
-//            boolean success = login.run(new String[]{"login"}, client);
-//            if (success) {
-//                 username = login.getUsername();
-//                 sessionToken = login.getSessionToken();
-//            }
-//        }
-//    }
-
-    private Optional<AbstractCommand> parseRegister(String[] args) {
-        Runnable showUsage = () -> System.err.println("register usage: no args");
-
-        if (args.length != 1) {
-            showUsage.run();
-            return Optional.empty();
+    private void register() {
+        System.out.println("Register? [Yy]");
+        Console console = System.console();
+        String answer = console.readLine();
+        if (answer.toLowerCase().startsWith("y")) {
+            RegisterCommand register = new RegisterCommand(sessionInfo);
+            while (!sessionInfo.isLogged()) {
+                register.run(client);
+            }
         }
-        return Optional.of(new RegisterCommand());
     }
 
-    private Optional<AbstractCommand> parseLogin(String[] args) {
-        Runnable showUsage = () -> System.err.println("login usage: no args");
-
-        if (args.length != 1) {
-            showUsage.run();
-            return Optional.empty();
+    private void login() {
+        if (!sessionInfo.isLogged()) {
+            LoginCommand login = new LoginCommand(sessionInfo);
+            while (!sessionInfo.isLogged()) {
+                login.run(client);
+            }
         }
-        if (sessionInfo.isLogged())  {
-            System.err.println("Already logged in");
-            return  Optional.empty();
-        }
-
-        return Optional.of(new LoginCommand(sessionInfo));
     }
 
-    private Optional<AbstractCommand> parseLogout(String[] args) {
+    private Optional<Command> parseLogout(String[] args) {
         Runnable showUsage = () -> System.err.println("logout usage: no args");
 
         if (args.length != 1) {
@@ -144,9 +118,9 @@ public class Client {
         return new String[]{user, file};
     }
 
-    private Optional<AbstractCommand> parseGet(String[] args) {
+    private Optional<Command> parseGet(String[] args) {
         Runnable showUsage = () -> {
-            System.err.println("get <file> usage:");
+            System.err.println("get <file> usage: fetches file from the server");
             System.err.println("    file: file name, can be user/file or just file");
         };
         if (args.length != 2) {
@@ -160,12 +134,12 @@ public class Client {
             return Optional.empty();
         }
 
-        return Optional.of(new GetFileCommand(file[0], file[1]));
+        return Optional.of(new GetFileCommand(sessionInfo, file[0], file[1]));
     }
 
-    private Optional<AbstractCommand> parseSave(String[] args) {
+    private Optional<Command> parseSave(String[] args) {
         Runnable showUsage = () -> {
-            System.err.println("save <file> usage:");
+            System.err.println("save <file> usage: saves a file in the server");
             System.err.println("    file: file name, can be user/file or just file");
         };
         if (args.length != 2) {
@@ -179,10 +153,29 @@ public class Client {
             return  Optional.empty();
         }
 
-        return Optional.of(new SaveFileCommand(file[0], file[1]));
+        return Optional.of(new SaveFileCommand(sessionInfo, file[0], file[1]));
     }
 
-    private Optional<AbstractCommand> parseGrant(String[] args) {
+    private Optional<Command> parseCreate(String[] args) {
+        Runnable showUsage = () -> {
+            System.err.println("create <file> usage: creates a file locally");
+            System.err.println("    file: file name, can be user/file or just file, user must be current user");
+        };
+        if (args.length != 2) {
+            showUsage.run();
+            return Optional.empty();
+        }
+
+        String[] file = parseFileName(args[1]);
+        if (file == null || !file[0].equals(sessionInfo.getUsername())) {
+            showUsage.run();
+            return  Optional.empty();
+        }
+
+        return Optional.of(new CreateFileCommand(file[0], file[1]));
+    }
+
+    private Optional<Command> parseGrant(String[] args) {
         Runnable showUsage = () -> {
             System.err.println("grant <file> <user> usage:");
             System.err.println("    file: file name, can be user/file or just file");
@@ -199,27 +192,27 @@ public class Client {
             return  Optional.empty();
         }
 
-        return Optional.of(new GrantCommand(file[0], file[1], args[2]));
+        return Optional.of(new GrantCommand(sessionInfo, file[1], args[2]));
     }
 
-    private Optional<AbstractCommand> parseList(String[] args) {
+    private Optional<Command> parseList(String[] args) {
         Runnable showUsage = () -> System.err.println("login usage: no args");
 
         if (args.length != 1) {
             showUsage.run();
             return Optional.empty();
         }
-        return Optional.of(new ListFilesCommand());
+        return Optional.of(new ListFilesCommand(sessionInfo));
     }
 
-    private Optional<AbstractCommand> parseExit(String[] args) {
+    private Optional<Command> parseExit(String[] args) {
         if (sessionInfo.isLogged()) {
             return  Optional.of(new LogoutCommand(sessionInfo));
         }
         return Optional.empty();
     }
 
-    private Optional<AbstractCommand> parseClear(String[] args) {
+    private Optional<Command> parseClear(String[] args) {
         Runnable showUsage = () -> System.err.println("clear usage: no args");
 
         if(args.length != 1) {

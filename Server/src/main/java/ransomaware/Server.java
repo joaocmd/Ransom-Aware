@@ -13,6 +13,8 @@ import java.security.KeyStore;
 
 public class Server {
 
+    private Server() {}
+
     private static HttpsServer prepareHttpsServer(RansomAware domain, int port) {
         SSLContext context = null;
         HttpsServer server = null;
@@ -38,6 +40,7 @@ public class Server {
         registerEndpoints(domain, server);
 
         HttpsConfigurator configurator = new HttpsConfigurator(context) {
+            @Override
             public void configure(HttpsParameters params) {
                 SSLContext c = getSSLContext();
                 SSLParameters sslParameters = c.getDefaultSSLParameters();
@@ -64,7 +67,7 @@ public class Server {
 
     public static void start(RansomAware domain, int port) {
         HttpsServer server = prepareHttpsServer(domain, port);
-        System.out.println("Server starting!");
+        System.out.println("Server starting");
         server.start();
     }
 }

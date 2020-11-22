@@ -3,26 +3,27 @@ package ransomaware;
 import ransomaware.exceptions.CertificateInvalidException;
 import ransomaware.exceptions.CertificateNotFoundException;
 
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
+import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
+import java.io.*;
+import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 public class SecurityUtils {
+
+    private SecurityUtils() {}
+
     public static byte[] getDigest(String text) {
         MessageDigest digest;
         try {
@@ -56,7 +57,6 @@ public class SecurityUtils {
             keyGenerator.init(256);
             return keyGenerator.generateKey();
         } catch (NoSuchAlgorithmException e) {
-            System.err.println("Could not get AES key generator.");
             e.printStackTrace();
             System.exit(1);
         }
@@ -67,7 +67,7 @@ public class SecurityUtils {
         return new SecretKeySpec(bytes, 0, bytes.length, "AES");
     }
 
-    public static byte[] AesCipher(int opmode, byte[] data, SecretKey key, IvParameterSpec iv) {
+    public static byte[] aesCipher(int opmode, byte[] data, SecretKey key, IvParameterSpec iv) {
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             cipher.init(opmode, key, iv);
@@ -76,17 +76,24 @@ public class SecurityUtils {
             e.printStackTrace();
             System.exit(1);
         }
-        return null;
+        return new byte[0];
     }
 
-    public static boolean checkCertificateUser(String path, String username) {
+    public static byte[] rsaCipher(int opmode, byte[] data, Key key) {
         try {
-            BufferedInputStream buf = new BufferedInputStream(new FileInputStream(path));
-            X509Certificate certificate = (X509Certificate)
-                    CertificateFactory.getInstance("X.509").generateCertificate(buf);
+            Cipher cipher = Cipher.getInstance("RSA");
+            cipher.init(opmode, key);
+            return cipher.doFinal(data);
+        } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        return new byte[0];
+    }
 
+    public static boolean checkCertificateUser(X509Certificate certificate, String username) {
+        try {
             certificate.checkValidity();
-            buf.close();
 
             String dn = certificate.getSubjectDN().getName();
             LdapName ln = new LdapName(dn);
@@ -102,17 +109,89 @@ public class SecurityUtils {
             return cn.equals(username);
         } catch (InvalidNameException | CertificateException e) {
             throw new CertificateInvalidException();
+        }
+    }
+
+    public static X509Certificate readCertificate(String path) {
+        try (BufferedInputStream buf = new BufferedInputStream(new FileInputStream(path))) {
+            byte[] bytes = buf.readAllBytes();
+            return getCertFromBytes(bytes);
         } catch (IOException e) {
             throw new CertificateNotFoundException();
         }
     }
 
-    public static byte[] getCertificateToSend(String path) {
+    public static byte[] sign(PrivateKey key, byte[] data) {
         try {
-            BufferedInputStream buf = new BufferedInputStream(new FileInputStream(path));
-            return buf.readAllBytes();
-        } catch (IOException e) {
-            throw new CertificateNotFoundException();
+            Signature signature =  Signature.getInstance("SHA256withRSA");
+            signature.initSign(key);
+
+            signature.update(data);
+            return signature.sign();
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            e.printStackTrace();
+            System.exit(1);
         }
+        return new byte[0];
+    }
+
+    public static boolean verifySignature(byte[] signature, byte[] data, X509Certificate cert) {
+        // TODO: Should verify if the certificate is valid
+        try {
+            PublicKey pubKey = cert.getPublicKey();
+            Signature sign = Signature.getInstance("SHA256withRSA");
+
+            sign.initVerify(pubKey);
+            sign.update(data);
+            return sign.verify(signature);
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        return false;
+    }
+
+    public static PrivateKey readPrivateKey(String path) {
+        try (FileInputStream fis = new FileInputStream(path)) {
+            byte[] keyBytes = fis.readAllBytes();
+
+            PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
+
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            return kf.generatePrivate(spec);
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        return null;
+    }
+
+    public static X509Certificate getCertFromBytes(byte[] cert) {
+        try (InputStream in = new ByteArrayInputStream(cert)) {
+            CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+            return (X509Certificate) certFactory.generateCertificate(in);
+        } catch (IOException | CertificateException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        return null;
+    }
+
+    //FIXME: may not be needed
+    private static RSAPublicKey readPublicKey(String path) {
+        try (FileInputStream fis = new FileInputStream(path)) {
+            byte[] keyBytes = fis.readAllBytes();
+            X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            return (RSAPublicKey) kf.generatePublic(spec);
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        return null;
+    }
+
+    public static PublicKey getKeyFromCert(X509Certificate cert) {
+        return cert.getPublicKey();
     }
 }

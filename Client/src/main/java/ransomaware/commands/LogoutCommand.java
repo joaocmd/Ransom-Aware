@@ -13,7 +13,7 @@ import java.net.CookieStore;
 import java.net.http.HttpClient;
 import java.util.Optional;
 
-public class LogoutCommand extends AbstractCommand {
+public class LogoutCommand implements Command {
 
     private final SessionInfo info;
 

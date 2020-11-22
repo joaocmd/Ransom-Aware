@@ -3,19 +3,28 @@ package ransomaware.domain;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class StoredFile {
     private final String owner;
     private final String name;
-    private String data = null;
-    private String key = null;
-    private String iv = null;
 
-    public StoredFile(String owner, String name, String data, String key, String iv) {
+    private String data = null;
+
+    private Map<String, String> keys = null;
+    private String iv = null;
+    private String author = null;
+
+    public StoredFile(String owner, String name, String data, JsonObject info) {
         this.owner = owner;
         this.name = name;
         this.data = data;
-        this.key = key;
-        this.iv = iv;
+
+        this.keys = new HashMap<>();
+        info.getAsJsonObject("keys").entrySet().forEach(e -> this.keys.put(e.getKey(), e.getValue().getAsString()));
+        this.iv = info.get("iv").getAsString();
+        this.author = info.get("author").getAsString();
     }
 
     public StoredFile(String owner, String name) {
@@ -30,8 +39,12 @@ public class StoredFile {
         JsonObject obj = JsonParser.parseString(data).getAsJsonObject();
         JsonObject info = obj.getAsJsonObject("info");
         this.data = obj.get("data").getAsString();
-        this.key = info.get("key").getAsString();
+
+        JsonObject keysJson = info.getAsJsonObject("keys");
+        this.keys = new HashMap<>();
+        keysJson.entrySet().forEach(e -> this.keys.put(e.getKey(), e.getValue().getAsString()));
         this.iv = info.get("iv").getAsString();
+        this.author = info.get("author").getAsString();
     }
 
     public String getFileName() {
@@ -46,25 +59,17 @@ public class StoredFile {
         return name;
     }
 
-    public String getKey() {
-        return key;
-    }
-
-    public String getIV() {
-        return iv;
-    }
-
-    public String getData() {
-        return data;
-    }
-
     public JsonObject getAsJsonObject() {
         JsonObject root = JsonParser.parseString("{}").getAsJsonObject();
         root.addProperty("data", data);
 
         JsonObject info = JsonParser.parseString("{}").getAsJsonObject();
-        info.addProperty("key", key);
+        JsonObject jsonKeys = JsonParser.parseString("{}").getAsJsonObject();
+        this.keys.forEach(jsonKeys::addProperty);
+        info.add("keys", jsonKeys);
         info.addProperty("iv", iv);
+        info.addProperty("author", author);
+
         root.add("info", info);
 
         return root;

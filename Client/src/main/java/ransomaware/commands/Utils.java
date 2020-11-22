@@ -58,8 +58,9 @@ public class Utils {
     }
 
     public static void clearWorkspace(File dir) {
-        if(dir == null)
+        if(dir == null) {
             return;
+        }
         File[] files = dir.listFiles();
         if(files != null) {
             for (File file : files) {
@@ -70,6 +71,6 @@ public class Utils {
     }
 
     public static String getUserDirectory(String user) {
-        return ClientVariables.WORKSPACE + '/' + user;
+        return ClientVariables.WORKSPACE + "/" + user;
     }
 }

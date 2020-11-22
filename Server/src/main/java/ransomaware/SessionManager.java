@@ -57,6 +57,19 @@ public class SessionManager {
         throw new NoSuchUserException();
     }
 
+    public static String getSigningCertificate(String username) {
+        MongoClient client = getMongoClient();
+
+        var query = new BasicDBObject("_id", username);
+        DBObject userQuery = client.getDB(ServerVariables.FS_PATH).getCollection("users").findOne(query);
+        client.close();
+
+        if (userQuery != null) {
+            return (String) userQuery.get("signCert");
+        }
+        throw new NoSuchUserException();
+    }
+
     public static void hasUser(String username) {
         MongoClient client = getMongoClient();
 
@@ -70,7 +83,7 @@ public class SessionManager {
         throw new NoSuchUserException();
     }
 
-    public static void register(String username, String password, String encryptCert) {
+    public static void register(String username, String password, String encryptCert, String signCert) {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("_id", username);
@@ -90,13 +103,13 @@ public class SessionManager {
             String passwordDigest = SecurityUtils.getBase64(SecurityUtils.getDigest(password + new String(salt)));
             var obj = new BasicDBObject("_id", username)
                     .append("password", passwordDigest)
-                    .append("encryptCert", encryptCert);
+                    .append("encryptCert", encryptCert)
+                    .append("signCert", signCert);
             users.insert(obj);
             obj = new BasicDBObject("_id", username)
                     .append("salt", SecurityUtils.getBase64(salt));
             salts.insert(obj);
             client.close();
-            System.out.println("Registered: " + username);
         } else {
             client.close();
             throw new DuplicateUsernameException();
