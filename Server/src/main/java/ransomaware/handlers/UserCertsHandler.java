@@ -46,7 +46,7 @@ public class UserCertsHandler extends AbstractHandler {
 
             JsonObject jsonCerts = JsonParser.parseString("{}").getAsJsonObject();
             jsonCerts.addProperty("encrypt", encryptCert);
-             jsonCerts.addProperty("sign", signingCert);
+            jsonCerts.addProperty("sign", signingCert);
             JsonObject response = JsonParser.parseString("{}").getAsJsonObject();
             response.add("certs", jsonCerts);
 
