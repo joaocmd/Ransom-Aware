@@ -22,18 +22,24 @@ public class SaveFileCommand implements Command {
     private final String owner;
     private final String filename;
     private final SessionInfo sessionInfo;
+    private final String filePath;
 
     public SaveFileCommand(SessionInfo sessionInfo, String owner, String filename) {
-        this.owner = owner;
-        this.filename = filename;
+        this(sessionInfo, Utils.getFilePath(owner, filename));
+    }
+
+    public SaveFileCommand(SessionInfo sessionInfo, String filePath) {
+        String[] args = filePath.split("/");
+
+        this.owner = args[args.length - 2];
+        this.filename = args[args.length - 1];
         this.sessionInfo = sessionInfo;
+        this.filePath = filePath;
     }
 
     @Override
     public void run(HttpClient client) {
         try {
-            String filePath = Utils.getFilePath(owner, filename);
-
             File file = new File(filePath);
             if (!file.exists()) {
                 System.err.println("File not found locally.");
@@ -92,6 +98,8 @@ public class SaveFileCommand implements Command {
                 byte[] decodedCert = SecurityUtils.decodeBase64(entry.getValue().getAsString());
                 PublicKey userKey = SecurityUtils.getKeyFromCert(SecurityUtils.getCertFromBytes(decodedCert));
                 String encryptedKey = SecurityUtils.getBase64(SecurityUtils.rsaCipher(Cipher.ENCRYPT_MODE, secretKey, userKey));
+
+                // TODO: Validate certificates
 
                 result.addProperty(entry.getKey(), encryptedKey);
             });

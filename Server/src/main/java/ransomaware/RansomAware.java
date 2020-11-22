@@ -37,6 +37,8 @@ public class RansomAware {
     public void uploadFile(String user, StoredFile file) {
         // TODO: validate file name (dont allow .. and /)
         String fileName = file.getFileName();
+
+        // TODO: Check if permissions are correct with server's
         if (hasAccessToFile(user, file)) {
             FileManager.saveFile(file);
 
@@ -65,13 +67,22 @@ public class RansomAware {
         }
     }
 
-    public Map<String, String> getEncryptCertificates(StoredFile file) {
-        // As we don't have permissions, only the owner's certificate is sent
-        String owner = file.getOwner();
-        String ownerEncryptCert = SessionManager.getEncryptCertificate(owner);
+    public Map<String, String> getEncryptCertificates(StoredFile file, String username) {
+        String filename = file.getFileName();
 
+        // Check if file exists
+        if (!usersWithAccess.containsKey(filename)) {
+            throw new NoSuchFileException();
+        }
+
+        // Check if has access
+        if (!hasAccessToFile(username, file)) {
+            throw new UnauthorizedException();
+        }
+
+        // Get all certificates
         Map<String, String> certs = new HashMap<>();
-        certs.put(owner, ownerEncryptCert);
+        usersWithAccess.get(filename).forEach(user -> certs.put(user, SessionManager.getEncryptCertificate(user)));
 
         return certs;
     }

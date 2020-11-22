@@ -91,6 +91,7 @@ public class SessionManager {
         var salts = client.getDB(ServerVariables.FS_PATH).getCollection("salts");
         var user = users.findOne(query);
 
+        // FIXME: Like this a username can be "......." which is bad
         if(username.contains("/") || username.startsWith(".")) {
             throw new InvalidUserNameException();
         }

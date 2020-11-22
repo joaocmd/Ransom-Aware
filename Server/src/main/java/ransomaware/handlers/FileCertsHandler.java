@@ -1,6 +1,5 @@
 package ransomaware.handlers;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
@@ -44,8 +43,7 @@ public class FileCertsHandler extends AbstractHandler {
         LOGGER.info(String.format("user %s requested certs for file %s/%s", user, owner,filename));
 
         try {
-            // TODO: Get certs from all users with permissions
-            Map<String, String> certs = server.getEncryptCertificates(new StoredFile(owner, filename));
+            Map<String, String> certs = server.getEncryptCertificates(new StoredFile(owner, filename), user);
             JsonObject response = JsonParser.parseString("{}").getAsJsonObject();
 
             JsonObject jsonCerts = JsonParser.parseString("{}").getAsJsonObject();
