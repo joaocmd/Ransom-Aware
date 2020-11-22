@@ -32,7 +32,7 @@ public class GetFileHandler extends AbstractHandler {
 
         String[] parts = exchange.getRequestURI().getPath().split("/");
         if (parts.length != 4) {
-            StringBuilder msg = new StringBuilder("Invalid file patloginh: ");
+            StringBuilder msg = new StringBuilder("Invalid file path: ");
             for (String part: parts) {
                 msg.append("/").append(part);
             }
