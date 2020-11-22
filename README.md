@@ -15,7 +15,12 @@ To create the keystore from previously generated rsa key pair:
 
 The password for generated keystores/keys is `changeme`
 
-## TODO list
-- [ ] Add a create command to client to create a file in the proper folder
-- [ ] Force login on client start
-- [ ] Unknown
+## Usage
+
+To run the client, use the command
+
+`mvn compile exec:java -Dexec.args="-d <user-encrypt-key> -s <user-sign-key>"`
+
+To run the server, use the command
+
+`mvn compile exec:java`
