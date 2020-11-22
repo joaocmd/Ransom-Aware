@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpExchange;
 import ransomaware.RansomAware;
 import ransomaware.SessionManager;
 import ransomaware.domain.StoredFile;
+import ransomaware.exceptions.InvalidFileNameException;
 import ransomaware.exceptions.SessionExpiredException;
 import ransomaware.exceptions.UnauthorizedException;
 
@@ -43,6 +44,10 @@ public class SaveFileHandler extends AbstractHandler {
             sendResponse(HttpURLConnection.HTTP_OK, "OK");
         } catch (UnauthorizedException e) {
             sendResponse(HttpURLConnection.HTTP_FORBIDDEN, "Unauthorized access to resource");
+        } catch (InvalidFileNameException e) {
+            sendResponse(HttpURLConnection.HTTP_BAD_REQUEST, "Invalid file name");
+        } catch (IllegalArgumentException e) {
+            sendResponse(HttpURLConnection.HTTP_BAD_REQUEST, "Permissions don't match stored permissions");
         } catch (Exception e) {
             LOGGER.severe(e.getMessage());
             e.printStackTrace();

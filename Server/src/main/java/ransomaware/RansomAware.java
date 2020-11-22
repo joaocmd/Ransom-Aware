@@ -30,14 +30,27 @@ public class RansomAware {
 
     private boolean hasAccessToFile(String user, StoredFile file) {
         // isOwner is used because we don't have permissions yet
-        boolean hasBeenGranted = userFiles.containsKey(user) && userFiles.get(user).contains(file.getFileName());
+        String filename = file.getFileName();
+        boolean hasBeenGranted = userFiles.containsKey(user) && userFiles.get(user).contains(filename) &&
+                usersWithAccess.containsKey(filename) && usersWithAccess.get(filename).contains(user);
         return isOwner(user, file) || hasBeenGranted;
     }
 
     public void uploadFile(String user, StoredFile file) {
-        // TODO: validate file name (dont allow .. and /)
         String fileName = file.getFileName();
+
+        // Check if file name is valid
+        String name = file.getName();
+        if (name.matches("[.]*") || name.contains("/")) {
+            throw new InvalidFileNameException();
+        }
+
         if (hasAccessToFile(user, file)) {
+            // Check if permissions are correct with server's
+            if (!usersWithAccess.get(fileName).equals(file.getUsersWithAccess())) {
+                throw new IllegalArgumentException();
+            }
+
             FileManager.saveFile(file);
 
             userFiles.putIfAbsent(user, new HashSet<>());
@@ -65,13 +78,22 @@ public class RansomAware {
         }
     }
 
-    public Map<String, String> getEncryptCertificates(StoredFile file) {
-        // As we don't have permissions, only the owner's certificate is sent
-        String owner = file.getOwner();
-        String ownerEncryptCert = SessionManager.getEncryptCertificate(owner);
+    public Map<String, String> getEncryptCertificates(StoredFile file, String username) {
+        String filename = file.getFileName();
 
+        // Check if file exists
+        if (!usersWithAccess.containsKey(filename)) {
+            throw new NoSuchFileException();
+        }
+
+        // Check if has access
+        if (!hasAccessToFile(username, file)) {
+            throw new UnauthorizedException();
+        }
+
+        // Get all certificates
         Map<String, String> certs = new HashMap<>();
-        certs.put(owner, ownerEncryptCert);
+        usersWithAccess.get(filename).forEach(user -> certs.put(user, SessionManager.getEncryptCertificate(user)));
 
         return certs;
     }
@@ -135,6 +157,8 @@ public class RansomAware {
                 userFiles.get(user.getName()).add(fileName);
                 usersWithAccess.putIfAbsent(fileName, new HashSet<>());
                 usersWithAccess.get(fileName).add(user.getName());
+
+                // TODO: Read permissions and add to maps
 
 
                 File[] versions = file.listFiles();

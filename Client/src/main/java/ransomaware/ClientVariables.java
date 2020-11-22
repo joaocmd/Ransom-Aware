@@ -2,7 +2,7 @@ package ransomaware;
 
 public class ClientVariables {
     public static String WORKSPACE;
-    public static final String TMP_PATH = "/tmp/Ransom-Aware-Client/";
+    public static final String TMP_PATH = "/tmp/Ransom-Aware-Client";
     public static String URL;
 
     private ClientVariables() {}

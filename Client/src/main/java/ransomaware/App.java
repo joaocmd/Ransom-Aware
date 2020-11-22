@@ -19,8 +19,6 @@ public class App implements Callable<Integer> {
     @Option(names = {"-s", "--signing-key"}, required = true, description = "Path to key used to sign files")
     private String signKeyPath;
 
-    // FIXME: Get private key and certificate paths and workspace folder
-
     public Integer call() {
         ClientVariables.init(path, url);
         RansomAwareClient client = new RansomAwareClient(decryptKeyPath, signKeyPath);

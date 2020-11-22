@@ -91,7 +91,8 @@ public class SessionManager {
         var salts = client.getDB(ServerVariables.FS_PATH).getCollection("salts");
         var user = users.findOne(query);
 
-        if(username.contains("/") || username.startsWith(".")) {
+        // Check if username is illegal, like "daniel/joao" or ".."
+        if (username.matches("[.]*") || username.contains("/")) {
             throw new InvalidUserNameException();
         }
 
