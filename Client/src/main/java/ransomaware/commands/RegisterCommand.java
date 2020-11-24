@@ -65,6 +65,8 @@ public class RegisterCommand implements Command{
         } else {
             Utils.handleError(response);
         }
+
+        System.out.println("Registered successfully");
     }
 
     private X509Certificate readCertificate(String username, String name) {

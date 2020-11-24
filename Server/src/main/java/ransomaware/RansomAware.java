@@ -135,6 +135,41 @@ public class RansomAware {
 
     }
 
+    public void revokePermission(String userRevoking, String userToRevoke, StoredFile file) {
+        String filename = file.getFileName();
+
+        // Check if user exists
+        SessionManager.hasUser(userToRevoke);
+
+        // Check if file exists
+        if (!(userFiles.containsKey(userRevoking) && userFiles.get(userRevoking).contains(filename))) {
+            throw new NoSuchFileException();
+        }
+
+        // Check if it is owner to revoke permissions
+        if (!isOwner(userRevoking, file)) {
+            throw new UnauthorizedException();
+        }
+
+        // Check if already don't permissions
+        if (!hasAccessToFile(userToRevoke, file)) {
+            throw new AlreadyRevokedException();
+        }
+
+        // Revoke permissions to user file list and users with access list
+        if (userFiles.containsKey(userToRevoke)) {
+            userFiles.get(userToRevoke).remove(filename);
+        } else {
+            throw new AlreadyGrantedException();
+        }
+
+        if (usersWithAccess.containsKey(filename)) {
+            usersWithAccess.get(filename).remove(userToRevoke);
+        } else {
+            throw new AlreadyGrantedException();
+        }
+    }
+
     public void logout(int sessionToken) {
         SessionManager.logout(sessionToken);
     }

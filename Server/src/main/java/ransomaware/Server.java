@@ -61,7 +61,7 @@ public class Server {
         server.createContext("/files/certs", new FileCertsHandler(domain, "GET", true));
         server.createContext("/save", new SaveFileHandler(domain, "POST", true));
         server.createContext("/grant", new GrantHandler(domain, "POST", true));
-//        server.createContext("/revoke", new GrantHandler(domain, "POST", false));
+        server.createContext("/revoke", new RevokeHandler(domain, "POST", true));
 
     }
 

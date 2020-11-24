@@ -84,6 +84,8 @@ public class SaveFileCommand implements Command {
             if (response.get("status").getAsInt() != HttpURLConnection.HTTP_OK) {
                 Utils.handleError(response);
             }
+
+            System.out.println("File successfully saved");
         } catch (Exception e) {
             e.printStackTrace();
         }

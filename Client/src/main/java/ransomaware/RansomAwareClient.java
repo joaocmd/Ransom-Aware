@@ -29,6 +29,7 @@ public class RansomAwareClient {
         parsers.put("get", this::parseGet);
         parsers.put("save", this::parseSave);
         parsers.put("grant", this::parseGrant);
+        parsers.put("revoke", this::parseRevoke);
         parsers.put("list", this::parseList);
         parsers.put("create", this::parseCreate);
         parsers.put("logout", this::parseLogout);
@@ -193,6 +194,26 @@ public class RansomAwareClient {
         }
 
         return Optional.of(new GrantCommand(sessionInfo, file[1], args[2]));
+    }
+
+    private Optional<Command> parseRevoke(String[] args) {
+        Runnable showUsage = () -> {
+            System.err.println("revoke <file> <user> usage:");
+            System.err.println("    file: file name, can be user/file or just file");
+            System.err.println("    user: user name, to revoke permissions");
+        };
+        if (args.length != 3) {
+            showUsage.run();
+            return Optional.empty();
+        }
+
+        String[] file = parseFileName(args[1]);
+        if (file == null) {
+            showUsage.run();
+            return  Optional.empty();
+        }
+
+        return Optional.of(new RevokeCommand(sessionInfo, file[1], args[2]));
     }
 
     private Optional<Command> parseList(String[] args) {

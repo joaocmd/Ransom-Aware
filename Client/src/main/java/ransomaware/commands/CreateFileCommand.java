@@ -23,6 +23,8 @@ public class CreateFileCommand implements Command {
             dir.mkdirs();
             dir = new File(ClientVariables.WORKSPACE + '/' + owner + '/' + filename);
             dir.createNewFile();
+
+            System.out.println("File successfully created");
         } catch (IOException e) {
             e.printStackTrace();
         }

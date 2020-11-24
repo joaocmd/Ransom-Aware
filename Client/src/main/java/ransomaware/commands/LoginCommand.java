@@ -35,5 +35,7 @@ public class LoginCommand implements Command {
         } else {
             Utils.handleError(response);
         }
+
+        System.out.println("Login successful");
     }
 }

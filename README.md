@@ -2,6 +2,8 @@
 
 ## Setup
 
+### Import root CA certificate
+
 Go to your Java Security folder:
 
 `cd $(readlink -f /usr/bin/java | sed "s:bin/java::")/lib/security`
@@ -15,11 +17,17 @@ To create the keystore from previously generated rsa key pair:
 
 The password for generated keystores/keys is `changeme`
 
+### Generate a user signing key pair and certificate and a encrypt key pair and certificate
+
+On Client/ransom-aware folder, run 
+
+`./generate-certificates.sh <username> <path-to-rootCA>`
+
 ## Usage
 
 To run the client, use the command
 
-`mvn compile exec:java -Dexec.args="-d <user-encrypt-key> -s <user-sign-key>"`
+`mvn compile exec:java -Dexec.args="-d <path-to-user-encrypt-key> -s <path-to-user-sign-key>"`
 
 To run the server, use the command
 
