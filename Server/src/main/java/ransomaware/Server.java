@@ -1,6 +1,9 @@
 package ransomaware;
 
-import com.sun.net.httpserver.*;
+import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.HttpsConfigurator;
+import com.sun.net.httpserver.HttpsParameters;
+import com.sun.net.httpserver.HttpsServer;
 import ransomaware.handlers.*;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -10,6 +13,7 @@ import javax.net.ssl.TrustManagerFactory;
 import java.io.FileInputStream;
 import java.net.InetSocketAddress;
 import java.security.KeyStore;
+import java.util.Scanner;
 import java.util.logging.Logger;
 
 public class Server {
@@ -72,5 +76,13 @@ public class Server {
         HttpsServer server = prepareHttpsServer(domain, port);
         LOGGER.info("Server starting");
         server.start();
+
+        // Create new thread where we wait for user to end the server
+        new Thread(() -> {
+            LOGGER.info("<Press enter to shutdown>");
+            new Scanner(System.in).nextLine();
+
+            server.stop(0);
+        }).start();
     }
 }
