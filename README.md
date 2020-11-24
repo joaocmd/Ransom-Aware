@@ -23,6 +23,8 @@ On Client/ransom-aware folder, run
 
 `./generate-certificates.sh <username> <path-to-rootCA>`
 
+The path to root CA must be the folder with the keys and certificate
+
 ## Usage
 
 To run the client, use the command
