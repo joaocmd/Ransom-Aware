@@ -88,7 +88,7 @@ public class GetFileCommand implements Command {
             Files.write(Path.of(this.outputPath + '/' + owner + '/' + filename), fileData);
 
             this.success = true;
-            System.out.println("File successfully got");
+            System.out.println("File successfully fetched");
         } catch (IOException e) {
             e.printStackTrace();
         }

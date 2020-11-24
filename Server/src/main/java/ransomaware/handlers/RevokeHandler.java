@@ -34,13 +34,13 @@ public class RevokeHandler extends AbstractHandler {
             sendResponse(HttpURLConnection.HTTP_BAD_REQUEST, "File name is invalid");
             return;
         }
-        String userToGrant = body.get("user").getAsString();
+        String userToRevoke = body.get("user").getAsString();
 
         String owner = SessionManager.getUsername(getSessionToken());
-        LOGGER.info(String.format("User '%s' granted permissions of File '%s' to '%s'", owner, file, userToGrant));
 
         try {
-            server.revokePermission(owner, userToGrant, new StoredFile(parts[0], parts[1]));
+            server.revokePermission(owner, userToRevoke, new StoredFile(parts[0], parts[1]));
+            LOGGER.info(String.format("User '%s' granted revoked of File '%s' to '%s'", owner, file, userToRevoke));
             sendResponse(HttpURLConnection.HTTP_OK, "OK");
         } catch (NoSuchFileException e) {
             sendResponse(HttpURLConnection.HTTP_NOT_FOUND, "No such file");

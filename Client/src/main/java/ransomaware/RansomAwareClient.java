@@ -31,8 +31,10 @@ public class RansomAwareClient {
         parsers.put("grant", this::parseGrant);
         parsers.put("revoke", this::parseRevoke);
         parsers.put("list", this::parseList);
+        parsers.put("list-permissions", this::parseListPermissions);
         parsers.put("create", this::parseCreate);
         parsers.put("logout", this::parseLogout);
+        parsers.put("help", this::parseHelp);
         parsers.put("exit", this::parseExit);
         parsers.put("clear", this::parseClear);
     }
@@ -138,6 +140,25 @@ public class RansomAwareClient {
         return Optional.of(new GetFileCommand(sessionInfo, file[0], file[1]));
     }
 
+    private Optional<Command> parseListPermissions(String[] args) {
+        Runnable showUsage = () -> {
+            System.err.println("list-permissions <file> usage: fetches users with file permissions from the server");
+            System.err.println("    file: file name, can be user/file or just file");
+        };
+        if (args.length != 2) {
+            showUsage.run();
+            return Optional.empty();
+        }
+
+        String[] file = parseFileName(args[1]);
+        if (file == null) {
+            showUsage.run();
+            return Optional.empty();
+        }
+
+        return Optional.of(new ListFilePermissionsCommand(sessionInfo, file[0], file[1]));
+    }
+
     private Optional<Command> parseSave(String[] args) {
         Runnable showUsage = () -> {
             System.err.println("save <file> usage: saves a file in the server");
@@ -193,7 +214,7 @@ public class RansomAwareClient {
             return  Optional.empty();
         }
 
-        return Optional.of(new GrantCommand(sessionInfo, file[1], args[2]));
+        return Optional.of(new GrantCommand(sessionInfo, file[0], file[1], args[2]));
     }
 
     private Optional<Command> parseRevoke(String[] args) {
@@ -213,17 +234,27 @@ public class RansomAwareClient {
             return  Optional.empty();
         }
 
-        return Optional.of(new RevokeCommand(sessionInfo, file[1], args[2]));
+        return Optional.of(new RevokeCommand(sessionInfo, file[0], file[1], args[2]));
     }
 
     private Optional<Command> parseList(String[] args) {
-        Runnable showUsage = () -> System.err.println("login usage: no args");
+        Runnable showUsage = () -> System.err.println("list usage: no args");
 
         if (args.length != 1) {
             showUsage.run();
             return Optional.empty();
         }
         return Optional.of(new ListFilesCommand(sessionInfo));
+    }
+
+    private Optional<Command> parseHelp(String[] args) {
+        Runnable showUsage = () -> System.err.println("help usage: no args");
+
+        if (args.length != 1) {
+            showUsage.run();
+            return Optional.empty();
+        }
+        return Optional.of(new HelpCommand());
     }
 
     private Optional<Command> parseExit(String[] args) {

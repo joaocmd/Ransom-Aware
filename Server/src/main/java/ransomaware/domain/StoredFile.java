@@ -66,8 +66,10 @@ public class StoredFile {
 
         JsonObject info = JsonParser.parseString("{}").getAsJsonObject();
         JsonObject jsonKeys = JsonParser.parseString("{}").getAsJsonObject();
-        this.keys.forEach(jsonKeys::addProperty);
-        info.add("keys", jsonKeys);
+        if (this.keys != null) {
+            this.keys.forEach(jsonKeys::addProperty);
+            info.add("keys", jsonKeys);
+        }
         info.addProperty("iv", iv);
         info.addProperty("author", author);
 

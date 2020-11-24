@@ -37,10 +37,10 @@ public class GrantHandler extends AbstractHandler {
         String userToGrant = body.get("user").getAsString();
 
         String owner = SessionManager.getUsername(getSessionToken());
-        LOGGER.info(String.format("User '%s' granted permissions of File '%s' to '%s'", owner, file, userToGrant));
 
         try {
             server.grantPermission(owner, userToGrant, new StoredFile(parts[0], parts[1]));
+            LOGGER.info(String.format("User '%s' granted permissions of File '%s' to '%s'", owner, file, userToGrant));
             sendResponse(HttpURLConnection.HTTP_OK, "OK");
         } catch (NoSuchFileException e) {
             sendResponse(HttpURLConnection.HTTP_NOT_FOUND, "No such file");

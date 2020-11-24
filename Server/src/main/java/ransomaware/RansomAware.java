@@ -7,10 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -157,22 +154,27 @@ public class RansomAware {
             throw new UnauthorizedException();
         }
 
-        // Check if already don't permissions
+        // Check if already has lost permissions
         if (!hasAccessToFile(userToRevoke, file)) {
             throw new AlreadyRevokedException();
+        }
+
+        // Check if it is revoking permissions of owner
+        if (isOwner(userToRevoke, file)) {
+            throw new UnauthorizedException();
         }
 
         // Revoke permissions to user file list and users with access list
         if (userFiles.containsKey(userToRevoke)) {
             userFiles.get(userToRevoke).remove(filename);
         } else {
-            throw new AlreadyGrantedException();
+            throw new AlreadyRevokedException();
         }
 
         if (usersWithAccess.containsKey(filename)) {
             usersWithAccess.get(filename).remove(userToRevoke);
         } else {
-            throw new AlreadyGrantedException();
+            throw new AlreadyRevokedException();
         }
     }
 
@@ -201,16 +203,22 @@ public class RansomAware {
                 usersWithAccess.putIfAbsent(fileName, new HashSet<>());
                 usersWithAccess.get(fileName).add(user.getName());
 
-                File[] versions = file.listFiles();
-                int mostRecent = versions.length;
+                Optional<File> mostRecent = Stream.of(file.listFiles())
+                        .sorted(Comparator.comparing(File::getName).reversed())
+                        .findFirst();
+                if (mostRecent.isEmpty()) {
+                    LOGGER.severe("Inconsistent file system");
+                    System.exit(1);
+                }
             
-                FileManager.saveNewFileVersion(fileName, mostRecent);
+                FileManager.saveNewFileVersion(fileName, Integer.parseInt(mostRecent.get().getName()));
 
                 // Read permissions and add to maps
                 try {
                     // Get file to read
-                    String mostRecentPath = versions[versions.length - 1].getPath();
+                    String mostRecentPath = mostRecent.get().getAbsolutePath();
                     StoredFile fileWithOwner = new StoredFile(user.getName(), file.getName());
+                    fileWithOwner.toString();
                     String data = Files.readString(Path.of(mostRecentPath));
                     StoredFile storedFile = new StoredFile(fileWithOwner, data);
 

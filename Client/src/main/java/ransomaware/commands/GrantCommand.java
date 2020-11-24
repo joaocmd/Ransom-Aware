@@ -16,22 +16,30 @@ import java.nio.file.Paths;
 public class GrantCommand implements Command {
 
     private final SessionInfo sessionInfo;
+    private final String owner;
     private final String filename;
     private final String userToGrant;
 
-    public GrantCommand(SessionInfo sessionInfo, String filename, String userToGrant) {
+    public GrantCommand(SessionInfo sessionInfo, String owner, String filename, String userToGrant) {
         this.sessionInfo = sessionInfo;
+        this.owner = owner;
         this.filename = filename;
         this.userToGrant = userToGrant;
     }
 
     @Override
     public void run(HttpClient client) {
-        String owner = sessionInfo.getUsername();
+        String user = sessionInfo.getUsername();
 
         // Verify if giving permissions to self
-        if (owner.equals(userToGrant)) {
-            System.err.println("You shouldn't give permissions to yourself....");
+        if (user.equals(userToGrant)) {
+            System.err.println("You can't give permissions to yourself");
+            return;
+        }
+
+        // Verify if giving permissions to owner
+        if (userToGrant.equals(owner)) {
+            System.err.println("You can't give more permissions to owner");
             return;
         }
 
@@ -40,7 +48,7 @@ public class GrantCommand implements Command {
         dir.mkdirs();
 
         // Get file to temporary folder
-        GetFileCommand getCommand = new GetFileCommand(sessionInfo, owner, filename, ClientVariables.TMP_PATH);
+        GetFileCommand getCommand = new GetFileCommand(sessionInfo, user, filename, ClientVariables.TMP_PATH);
         getCommand.run(client);
         if (!getCommand.hasSuccess()) {
             return;
@@ -50,7 +58,7 @@ public class GrantCommand implements Command {
         // Send grant request, adding certificate to new save
         JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
         jsonRoot.addProperty("user", userToGrant);
-        jsonRoot.addProperty("file", owner + '/' + filename);
+        jsonRoot.addProperty("file", user + '/' + filename);
 
         JsonObject responseGrant = Utils.requestPostFromURL(ClientVariables.URL + "/grant", jsonRoot, client);
         if (responseGrant.get("status").getAsInt() != HttpURLConnection.HTTP_OK) {

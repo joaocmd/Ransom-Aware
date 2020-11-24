@@ -16,22 +16,30 @@ import java.nio.file.Paths;
 public class RevokeCommand implements Command {
 
     private final SessionInfo sessionInfo;
+    private final String owner;
     private final String filename;
     private final String userToRevoke;
 
-    public RevokeCommand(SessionInfo sessionInfo, String filename, String userToRevoke) {
+    public RevokeCommand(SessionInfo sessionInfo, String owner, String filename, String userToRevoke) {
         this.sessionInfo = sessionInfo;
+        this.owner = owner;
         this.filename = filename;
         this.userToRevoke = userToRevoke;
     }
 
     @Override
     public void run(HttpClient client) {
-        String owner = sessionInfo.getUsername();
+        String user = sessionInfo.getUsername();
 
-        // Verify if revoking permissions to self
+        // Verify if revoking permissions to the owner
         if (owner.equals(userToRevoke)) {
-            System.err.println("You shouldn't revoke permissions from yourself....");
+            System.err.println("You can't revoke permission to owner");
+            return;
+        }
+
+        // Verify if revoking permissions to user itself
+        if (user.equals(userToRevoke)) {
+            System.err.println("You can't revoke permission to yourself");
             return;
         }
 
@@ -40,7 +48,7 @@ public class RevokeCommand implements Command {
         dir.mkdirs();
 
         // Get file to temporary folder
-        GetFileCommand getCommand = new GetFileCommand(sessionInfo, owner, filename, ClientVariables.TMP_PATH);
+        GetFileCommand getCommand = new GetFileCommand(sessionInfo, user, filename, ClientVariables.TMP_PATH);
         getCommand.run(client);
         if (!getCommand.hasSuccess()) {
             return;
@@ -50,7 +58,7 @@ public class RevokeCommand implements Command {
         // Send revoke request, adding certificate to new save
         JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
         jsonRoot.addProperty("user", userToRevoke);
-        jsonRoot.addProperty("file", owner + '/' + filename);
+        jsonRoot.addProperty("file", user + '/' + filename);
 
         JsonObject responseRevoke = Utils.requestPostFromURL(ClientVariables.URL + "/revoke", jsonRoot, client);
         if (responseRevoke.get("status").getAsInt() != HttpURLConnection.HTTP_OK) {
