@@ -10,8 +10,11 @@ import javax.net.ssl.TrustManagerFactory;
 import java.io.FileInputStream;
 import java.net.InetSocketAddress;
 import java.security.KeyStore;
+import java.util.logging.Logger;
 
 public class Server {
+
+    private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
 
     private Server() {}
 
@@ -67,7 +70,7 @@ public class Server {
 
     public static void start(RansomAware domain, int port) {
         HttpsServer server = prepareHttpsServer(domain, port);
-        System.out.println("Server starting");
+        LOGGER.info("Server starting");
         server.start();
     }
 }

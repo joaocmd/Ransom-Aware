@@ -17,9 +17,12 @@ import java.io.OutputStream;
 import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.util.Optional;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 public abstract class AbstractHandler implements HttpHandler {
+
+    private static final Logger LOGGER = Logger.getLogger(AbstractHandler.class.getName());
 
     protected final RansomAware server;
     private final String method;
@@ -87,7 +90,7 @@ public abstract class AbstractHandler implements HttpHandler {
             }
         } catch (IOException e) {
             e.printStackTrace();
-            System.err.println("Error on reading request body");
+            LOGGER.severe("Error on reading request body");
             sendResponse(HttpURLConnection.HTTP_BAD_REQUEST, "Malformed request body");
         }
     }
@@ -121,7 +124,7 @@ public abstract class AbstractHandler implements HttpHandler {
         try {
             this.exchange.sendResponseHeaders(statusCode, message.length());
         } catch (IOException e) {
-            System.err.println("Error on writing response headers");
+            LOGGER.severe("Error on writing response headers");
             e.printStackTrace();
             return;
         }
@@ -129,7 +132,7 @@ public abstract class AbstractHandler implements HttpHandler {
             os.write(message.getBytes());
             os.flush();
         } catch (IOException e) {
-            System.err.println("Error on writing response body");
+            LOGGER.severe("Error on writing response body");
         }
     }
 

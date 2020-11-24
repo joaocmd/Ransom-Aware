@@ -13,8 +13,11 @@ import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
 public class SessionManager {
+
+    private static final Logger LOGGER = Logger.getLogger(SessionManager.class.getName());
 
     private static final ConcurrentHashMap<Integer, SessionObject> sessions = new ConcurrentHashMap<>();
     
@@ -48,7 +51,9 @@ public class SessionManager {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("_id", username);
-        DBObject userQuery = client.getDB(ServerVariables.FS_PATH).getCollection("users").findOne(query);
+        DBObject userQuery = client.getDB(ServerVariables.FS_PATH)
+                .getCollection(ServerVariables.DB_COLLECTION_USERS)
+                .findOne(query);
         client.close();
 
         if (userQuery != null) {
@@ -61,7 +66,9 @@ public class SessionManager {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("_id", username);
-        DBObject userQuery = client.getDB(ServerVariables.FS_PATH).getCollection("users").findOne(query);
+        DBObject userQuery = client.getDB(ServerVariables.FS_PATH)
+                .getCollection(ServerVariables.DB_COLLECTION_USERS)
+                .findOne(query);
         client.close();
 
         if (userQuery != null) {
@@ -74,7 +81,9 @@ public class SessionManager {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("_id", username);
-        DBObject userQuery = client.getDB(ServerVariables.FS_PATH).getCollection("users").findOne(query);
+        DBObject userQuery = client.getDB(ServerVariables.FS_PATH)
+                .getCollection(ServerVariables.DB_COLLECTION_USERS)
+                .findOne(query);
         client.close();
 
         if (userQuery != null) {
@@ -87,8 +96,10 @@ public class SessionManager {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("_id", username);
-        var users = client.getDB(ServerVariables.FS_PATH).getCollection("users");
-        var salts = client.getDB(ServerVariables.FS_PATH).getCollection("salts");
+        var users = client.getDB(ServerVariables.FS_PATH)
+                .getCollection(ServerVariables.DB_COLLECTION_USERS);
+        var salts = client.getDB(ServerVariables.FS_PATH)
+                .getCollection(ServerVariables.DB_COLLECTION_SALTS);
         var user = users.findOne(query);
 
         // Check if username is illegal, like "daniel/joao" or ".."
@@ -125,8 +136,12 @@ public class SessionManager {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("_id", username);
-        DBObject userQuery = client.getDB(ServerVariables.FS_PATH).getCollection("users").findOne(query);
-        DBObject saltQuery = client.getDB(ServerVariables.FS_PATH).getCollection("salts").findOne(query);
+        DBObject userQuery = client.getDB(ServerVariables.FS_PATH)
+                .getCollection(ServerVariables.DB_COLLECTION_USERS)
+                .findOne(query);
+        DBObject saltQuery = client.getDB(ServerVariables.FS_PATH)
+                .getCollection(ServerVariables.DB_COLLECTION_SALTS)
+                .findOne(query);
         client.close();
 
         if (userQuery != null) {
@@ -158,7 +173,7 @@ public class SessionManager {
         try {
             client = new MongoClient(new MongoClientURI(ServerVariables.MONGO_URI));
         } catch (UnknownHostException e) {
-            System.err.println("Can't establish connection to the database.");
+            LOGGER.severe("Can't establish connection to the database.");
             System.exit(1);
         }
         return client;

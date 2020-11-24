@@ -12,6 +12,9 @@ public class ServerVariables {
     public static final String SSL_KEYPASS = "changeme";
 
     public static final String PASSWORD_SALT = "joca-o-maior";
+    public static final String DB_COLLECTION_USERS = "users";
+    public static final String DB_COLLECTION_FILES = "files";
+    public static final String DB_COLLECTION_SALTS = "salts";
 
     private  ServerVariables() {}
 

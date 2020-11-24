@@ -13,8 +13,11 @@ import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.logging.Logger;
 
 public class FileManager {
+
+    private static final Logger LOGGER = Logger.getLogger(FileManager.class.getName());
 
     private FileManager() {}
 
@@ -25,7 +28,9 @@ public class FileManager {
     private static int getFileVersion(String fileName) {
         MongoClient client = getMongoClient();
         var query = new BasicDBObject("_id", fileName);
-        DBObject file = client.getDB(ServerVariables.FS_PATH).getCollection("files").findOne(query);
+        DBObject file = client.getDB(ServerVariables.FS_PATH)
+                .getCollection(ServerVariables.DB_COLLECTION_FILES)
+                .findOne(query);
         client.close();
 
         if (file != null) {
@@ -37,7 +42,7 @@ public class FileManager {
 
     public static void dropDB(){
         MongoClient client = getMongoClient();
-        client.getDB(ServerVariables.FS_PATH).getCollection("files").drop();
+        client.getDB(ServerVariables.FS_PATH).getCollection(ServerVariables.DB_COLLECTION_FILES).drop();
         client.close();
     }
 
@@ -45,7 +50,9 @@ public class FileManager {
         MongoClient client = getMongoClient();
         var query = new BasicDBObject("_id", fileName);
         var update = new BasicDBObject("version", version);
-        client.getDB(ServerVariables.FS_PATH).getCollection("files").update(query, update, true, false);
+        client.getDB(ServerVariables.FS_PATH)
+                .getCollection(ServerVariables.DB_COLLECTION_FILES)
+                .update(query, update, true, false);
         client.close();
     }
 
@@ -65,7 +72,7 @@ public class FileManager {
             saveNewFileVersion(fileName, newVersion);
         } catch (IOException e) {
             e.printStackTrace();
-            System.err.println("Error writing to file");
+            LOGGER.severe("Error writing to file");
             System.exit(1);
         }
     }
@@ -86,7 +93,7 @@ public class FileManager {
         try {
             client = new MongoClient(new MongoClientURI(ServerVariables.MONGO_URI));
         } catch (UnknownHostException e) {
-            System.err.println("Can't establish connection to the database.");
+            LOGGER.severe("Can't establish connection to the database.");
             System.exit(1);
         }
         return client;
