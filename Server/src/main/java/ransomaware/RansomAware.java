@@ -4,14 +4,20 @@ import ransomaware.domain.StoredFile;
 import ransomaware.exceptions.*;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 public class RansomAware {
+
+    private static final Logger LOGGER = Logger.getLogger(RansomAware.class.getName());
 
     private final ConcurrentHashMap<String, Set<String>> userFiles = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Set<String>> usersWithAccess = new ConcurrentHashMap<>();
@@ -181,6 +187,8 @@ public class RansomAware {
         folder.mkdirs();
         File[] users =  folder.listFiles(File::isDirectory);
 
+        LOGGER.info("Reading files stored");
+
         for(File user : users) {
             userFiles.putIfAbsent(user.getName(), new HashSet<>());
 
@@ -193,13 +201,35 @@ public class RansomAware {
                 usersWithAccess.putIfAbsent(fileName, new HashSet<>());
                 usersWithAccess.get(fileName).add(user.getName());
 
-                // TODO: Read permissions and add to maps
-
-
                 File[] versions = file.listFiles();
                 int mostRecent = versions.length;
             
                 FileManager.saveNewFileVersion(fileName, mostRecent);
+
+                // Read permissions and add to maps
+                try {
+                    // Get file to read
+                    String mostRecentPath = versions[versions.length - 1].getPath();
+                    StoredFile fileWithOwner = new StoredFile(user.getName(), file.getName());
+                    String data = Files.readString(Path.of(mostRecentPath));
+                    StoredFile storedFile = new StoredFile(fileWithOwner, data);
+
+                    // Add permissions to users that are not the owner
+                    for (String userWithAccess: storedFile.getUsersWithAccess()) {
+                        // Ignore if owner
+                        if (userWithAccess.equals(user.getName())) continue;
+
+                        // Add permission
+                        userFiles.putIfAbsent(userWithAccess, new HashSet<>());
+                        userFiles.get(userWithAccess).add(fileName);
+                        usersWithAccess.putIfAbsent(fileName, new HashSet<>());
+                        usersWithAccess.get(fileName).add(userWithAccess);
+                    }
+                } catch (IOException e) {
+                    // FIXME: Should the server be prepared for problems reading the file?
+                    e.printStackTrace();
+                }
+
             }
         }
     }

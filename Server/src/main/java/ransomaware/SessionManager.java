@@ -101,7 +101,10 @@ public class SessionManager {
             byte[] salt = new byte[64];
             rand.nextBytes(salt);
 
-            String passwordDigest = SecurityUtils.getBase64(SecurityUtils.getDigest(password + new String(salt)));
+            String passwordDigest = SecurityUtils
+                    .getBase64(
+                            SecurityUtils.getDigest(password + new String(salt) + ServerVariables.PASSWORD_SALT)
+                    );
             var obj = new BasicDBObject("_id", username)
                     .append("password", passwordDigest)
                     .append("encryptCert", encryptCert)
@@ -128,7 +131,10 @@ public class SessionManager {
 
         if (userQuery != null) {
             byte[] salt = SecurityUtils.decodeBase64((String)saltQuery.get("salt"));
-            String digest = SecurityUtils.getBase64(SecurityUtils.getDigest(password + new String(salt)));
+            String digest = SecurityUtils
+                    .getBase64(
+                            SecurityUtils.getDigest(password + new String(salt) + ServerVariables.PASSWORD_SALT)
+                    );
             if (userQuery.get("password").equals(digest)) {
                 SecureRandom rand = new SecureRandom();
                 int token = rand.nextInt();
