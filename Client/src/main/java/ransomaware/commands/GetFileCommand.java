@@ -82,10 +82,13 @@ public class GetFileCommand implements Command {
             }
 
             byte[] fileData = SecurityUtils.decodeBase64(fileJson.get("data").getAsString());
+            byte[] metadata = info.toString().getBytes();
 
             File dir = new File(this.outputPath + '/' + owner);
             dir.mkdirs();
+
             Files.write(Path.of(this.outputPath + '/' + owner + '/' + filename), fileData);
+            Files.write(Path.of(this.outputPath + '/' + owner + "/." + filename + ".metadata"), metadata);
 
             this.success = true;
             System.out.println("File successfully fetched");
@@ -95,12 +98,9 @@ public class GetFileCommand implements Command {
     }
 
     private byte[] getCorrectKey(JsonObject keys) {
-        Optional<String> encodedKey = keys.entrySet().stream()
-                .filter(e -> e.getKey().equals(sessionInfo.getUsername()))
-                .map(e -> e.getValue().getAsString())
-                .findFirst();
-        if (encodedKey.isPresent()) {
-            return SecurityUtils.decodeBase64(encodedKey.get());
+        String encodedKey = keys.get(sessionInfo.getUsername()).getAsString();
+        if (encodedKey != null) {
+            return SecurityUtils.decodeBase64(encodedKey);
         } else {
             System.err.println("This should not have happened.");
             return new byte[0];

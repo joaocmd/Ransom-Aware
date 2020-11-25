@@ -67,7 +67,7 @@ public class RevokeCommand implements Command {
         }
 
         // Save file to server
-        SaveFileCommand saveCommand = new SaveFileCommand(sessionInfo, filePath);
+        SendFileCommand saveCommand = new SendFileCommand(sessionInfo, filePath, true);
         saveCommand.run(client);
 
         // Remove file
