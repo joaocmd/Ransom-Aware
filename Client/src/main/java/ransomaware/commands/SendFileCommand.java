@@ -79,11 +79,12 @@ public class SendFileCommand implements Command {
             jsonRoot.add("requestInfo", requestInfo);
 
             JsonObject response = Utils.requestPostFromURL(ClientVariables.URL + "/save", jsonRoot, client);
-            if (response.get("status").getAsInt() != HttpURLConnection.HTTP_OK) {
+            if (response.get("status").getAsInt() == HttpURLConnection.HTTP_OK) {
+                Files.write(getMetadataPath(), info.toString().getBytes());
+                System.out.println("File successfully saved");
+            } else {
                 Utils.handleError(response);
             }
-
-            System.out.println("File successfully saved");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -125,9 +126,7 @@ public class SendFileCommand implements Command {
     }
 
     private FileInfo getFileInfoFile(HttpClient client) throws IOException {
-        Path path = Path.of(filePath);
-        String fileName = '.' + path.getFileName().toString() + ".metadata";
-        Path metadataPath = path.resolveSibling(fileName);
+        Path metadataPath = getMetadataPath();
 
         try {
             byte[] data = Files.readAllBytes(metadataPath);
@@ -144,6 +143,12 @@ public class SendFileCommand implements Command {
         } catch (NoSuchFileException e) {
             return getFileInfoServer(client);
         }
+    }
+
+    private Path getMetadataPath() {
+        Path path = Path.of(filePath);
+        String fileName = '.' + path.getFileName().toString() + ".metadata";
+        return path.resolveSibling(fileName);
     }
 
     private static class FileInfo {
