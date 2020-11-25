@@ -67,8 +67,8 @@ public class GrantCommand implements Command {
         }
 
         // Save file to server
-        SaveFileCommand saveCommand = new SaveFileCommand(sessionInfo, filePath);
-        saveCommand.run(client);
+        SendFileCommand sendCommand = new SendFileCommand(sessionInfo, filePath, true);
+        sendCommand.run(client);
 
         // Remove file
         try {

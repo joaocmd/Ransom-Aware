@@ -27,7 +27,7 @@ public class RansomAwareClient {
 
     private void populateParsers() {
         parsers.put("get", this::parseGet);
-        parsers.put("save", this::parseSave);
+        parsers.put("save", this::parseSend);
         parsers.put("grant", this::parseGrant);
         parsers.put("revoke", this::parseRevoke);
         parsers.put("list", this::parseList);
@@ -159,9 +159,9 @@ public class RansomAwareClient {
         return Optional.of(new ListFilePermissionsCommand(sessionInfo, file[0], file[1]));
     }
 
-    private Optional<Command> parseSave(String[] args) {
+    private Optional<Command> parseSend(String[] args) {
         Runnable showUsage = () -> {
-            System.err.println("save <file> usage: saves a file in the server");
+            System.err.println("send <file> usage: sends the file to the remote server");
             System.err.println("    file: file name, can be user/file or just file");
         };
         if (args.length != 2) {
@@ -175,7 +175,7 @@ public class RansomAwareClient {
             return  Optional.empty();
         }
 
-        return Optional.of(new SaveFileCommand(sessionInfo, file[0], file[1]));
+        return Optional.of(new SendFileCommand(sessionInfo, file[0], file[1], false));
     }
 
     private Optional<Command> parseCreate(String[] args) {
