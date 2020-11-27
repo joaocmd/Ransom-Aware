@@ -16,6 +16,8 @@ public class ServerVariables {
     public static final String DB_COLLECTION_FILES = "files";
     public static final String DB_COLLECTION_SALTS = "salts";
 
+    public static final String RSYNC_SERVER = "rsync://localhost:12000/files/";
+
     private  ServerVariables() {}
 
     public static void init(String path, String mongoUri) {

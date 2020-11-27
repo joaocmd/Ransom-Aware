@@ -1,5 +1,7 @@
 package ransomaware;
 
+import com.github.fracpete.processoutput4j.output.CollectingProcessOutput;
+import com.github.fracpete.rsync4j.RSync;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
@@ -68,11 +70,30 @@ public class FileManager {
         try {
             Path path = Paths.get(filePath);
             Files.write(path, file.toString().getBytes());
+            sendToBackupServer(filePath, file, newVersion);
             saveNewFileVersion(fileName, newVersion);
         } catch (IOException e) {
             e.printStackTrace();
             LOGGER.severe("Error writing to file");
             System.exit(1);
+        }
+    }
+
+    private static void sendToBackupServer(String localPath, StoredFile file, int version) {
+        RSync rsync = new RSync()
+                .recursive(true)
+                .relative(true)
+                .dirs(true)
+                .times(true)
+                .source(localPath)
+                .destination(ServerVariables.RSYNC_SERVER);
+
+        try {
+            CollectingProcessOutput output = rsync.execute();
+            System.out.println(output.getStdOut());
+            System.out.println(output.getStdErr());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
