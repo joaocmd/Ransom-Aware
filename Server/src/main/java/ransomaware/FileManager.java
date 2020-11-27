@@ -88,11 +88,12 @@ public class FileManager {
                 .source(localPath)
                 .destination(ServerVariables.RSYNC_SERVER);
 
+        CollectingProcessOutput output = null;
         try {
-            CollectingProcessOutput output = rsync.execute();
-            System.out.println(output.getStdOut());
-            System.out.println(output.getStdErr());
+            output = rsync.execute();
+            LOGGER.info(output.getStdOut());
         } catch (Exception e) {
+            LOGGER.severe(output.getStdErr());
             e.printStackTrace();
         }
     }
