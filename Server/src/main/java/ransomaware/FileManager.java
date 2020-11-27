@@ -120,10 +120,9 @@ public class FileManager {
 
         String fileFolder = ServerVariables.FILES_PATH + '/' + fileName + '/';
         for (int i = newVersion + 1; i <= currentVersion; i++) {
-            String filePath = fileFolder + i;
             try {
-                Files.delete(Path.of(filePath));
-                deleteFromBackupServer(filePath);
+                Files.delete(Path.of(fileFolder + i));
+                deleteFromBackupServer(fileFolder);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -139,21 +138,18 @@ public class FileManager {
     }
 
     private static void deleteFromBackupServer(String localPath) {
-        File mock = new File("mock");
-        try {
-            mock.createNewFile();
-            RSync rsync = new RSync()
+        RSync rsync = new RSync()
+                .archive(true)
                 .delete(true)
-                .recursive(true)
-                .dirs(true)
-                .source("mock")
+                .times(true)
+                .source(localPath)
                 .destination(ServerVariables.RSYNC_SERVER + localPath);
 
+        try {
             CollectingProcessOutput output = rsync.execute();
             if (!output.hasSucceeded()) {
                 LOGGER.severe(output.getStdErr());
             }
-            mock.delete();
         } catch (Exception e) {
             e.printStackTrace();
         }
