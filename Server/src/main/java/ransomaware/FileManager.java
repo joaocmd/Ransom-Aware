@@ -9,11 +9,9 @@ import ransomaware.exceptions.NoSuchFileException;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.InvalidParameterException;
 import java.util.logging.Logger;
 
 public class FileManager {
@@ -90,14 +88,7 @@ public class FileManager {
     }
 
     private static MongoClient getMongoClient() {
-        MongoClient client = null;
-        try {
-            client = new MongoClient(new MongoClientURI(ServerVariables.MONGO_URI));
-        } catch (UnknownHostException e) {
-            LOGGER.severe("Can't establish connection to the database.");
-            System.exit(1);
-        }
-        return client;
+        return new MongoClient(new MongoClientURI(ServerVariables.MONGO_URI));
     }
 
     public static void rollBack(StoredFile file, int n) {
