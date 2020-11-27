@@ -104,19 +104,27 @@ public class SendFileCommand implements Command {
         byte[] secretKey = key.getEncoded();
 
         JsonObject response = Utils.requestGetFromURL(ClientVariables.URL + "/files/certs/" + owner + '/' + filename, client);
+        int responseStatus = response.get("status").getAsInt();
 
         JsonObject root = JsonParser.parseString("{}").getAsJsonObject();
         JsonObject keys = JsonParser.parseString("{}").getAsJsonObject();
+        if (responseStatus == HttpURLConnection.HTTP_OK) {
+            response.getAsJsonObject("certs").entrySet().forEach(entry -> {
+                byte[] decodedCert = SecurityUtils.decodeBase64(entry.getValue().getAsString());
+                PublicKey userKey = SecurityUtils.getKeyFromCert(SecurityUtils.getCertFromBytes(decodedCert));
+                String encryptedKey = SecurityUtils.getBase64(SecurityUtils.rsaCipher(Cipher.ENCRYPT_MODE, secretKey, userKey));
 
-        response.getAsJsonObject("certs").entrySet().forEach(entry -> {
-            byte[] decodedCert = SecurityUtils.decodeBase64(entry.getValue().getAsString());
-            PublicKey userKey = SecurityUtils.getKeyFromCert(SecurityUtils.getCertFromBytes(decodedCert));
+                // TODO: Validate certificates
+
+                keys.addProperty(entry.getKey(), encryptedKey);
+            });
+        } else if (responseStatus == HttpURLConnection.HTTP_NOT_FOUND) {
+            response = Utils.requestGetFromURL(ClientVariables.URL + "/users/certs/" + sessionInfo.getUsername(), client);
+            byte[] encodedCert = SecurityUtils.decodeBase64(response.getAsJsonObject("certs").get("encrypt").getAsString());
+            PublicKey userKey = SecurityUtils.getKeyFromCert(SecurityUtils.getCertFromBytes(encodedCert));
             String encryptedKey = SecurityUtils.getBase64(SecurityUtils.rsaCipher(Cipher.ENCRYPT_MODE, secretKey, userKey));
-
-            // TODO: Validate certificates
-
-            keys.addProperty(entry.getKey(), encryptedKey);
-        });
+            keys.addProperty(sessionInfo.getUsername(), encryptedKey);
+        }
 
         root.add("keys", keys);
         root.addProperty("iv", SecurityUtils.getBase64(iv.getIV()));
