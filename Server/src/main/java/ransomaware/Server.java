@@ -69,7 +69,7 @@ public class Server {
         server.createContext("/save", new SaveFileHandler(domain, "POST", true));
         server.createContext("/grant", new GrantHandler(domain, "POST", true));
         server.createContext("/revoke", new RevokeHandler(domain, "POST", true));
-
+        server.createContext("/rollback", new RollbackHandler(domain, "POST", true));
     }
 
     public static void start(RansomAware domain, int port) {
