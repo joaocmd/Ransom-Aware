@@ -60,7 +60,6 @@ public class RansomAware {
             userFiles.putIfAbsent(user, new HashSet<>());
             userFiles.get(user).add(fileName);
 
-            // draft for getting the certificates for all users with access later
             usersWithAccess.putIfAbsent(fileName, new HashSet<>());
             usersWithAccess.get(fileName).add(user);
         } else {
@@ -267,7 +266,8 @@ public class RansomAware {
                 userFiles.get(u).remove(fileName);
             }
             usersWithAccess.remove(fileName);
-            usersWithAccess.put(fileName, newFile.getUsersWithAccess());
+            usersWithAccess.put(fileName, new HashSet<>());
+            usersWithAccess.get(fileName).addAll(newFile.getUsersWithAccess());
             for (String u: newFile.getUsersWithAccess()) {
                 userFiles.get(u).add(fileName);
             }
