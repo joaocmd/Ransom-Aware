@@ -50,7 +50,7 @@ public class RansomAware {
 
         if (hasAccessToFile(user, file)) {
             // Check if permissions are correct with server's
-            if (!usersWithAccess.get(fileName).equals(file.getUsersWithAccess())) {
+            if (usersWithAccess.containsKey(fileName) && !usersWithAccess.get(fileName).equals(file.getUsersWithAccess())) {
                 throw new IllegalArgumentException();
             }
 
@@ -224,10 +224,6 @@ public class RansomAware {
 
                     // Add permissions to users that are not the owner
                     for (String userWithAccess: storedFile.getUsersWithAccess()) {
-                        // Ignore if owner
-                        if (userWithAccess.equals(user.getName())) continue;
-
-                        // Add permission
                         userFiles.putIfAbsent(userWithAccess, new HashSet<>());
                         userFiles.get(userWithAccess).add(fileName);
                         usersWithAccess.putIfAbsent(fileName, new HashSet<>());
