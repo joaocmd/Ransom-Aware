@@ -70,7 +70,7 @@ public class FileManager {
         try {
             Path path = Paths.get(filePath);
             Files.write(path, file.toString().getBytes());
-            sendToBackupServer(filePath, file, newVersion);
+            sendToBackupServer(filePath);
             saveNewFileVersion(fileName, newVersion);
         } catch (IOException e) {
             e.printStackTrace();
@@ -79,7 +79,7 @@ public class FileManager {
         }
     }
 
-    private static void sendToBackupServer(String localPath, StoredFile file, int version) {
+    private static void sendToBackupServer(String localPath) {
         RSync rsync = new RSync()
                 .recursive(true)
                 .relative(true)
@@ -88,12 +88,12 @@ public class FileManager {
                 .source(localPath)
                 .destination(ServerVariables.RSYNC_SERVER);
 
-        CollectingProcessOutput output = null;
         try {
-            output = rsync.execute();
-            LOGGER.info(output.getStdOut());
+            CollectingProcessOutput output = rsync.execute();
+            if (!output.hasSucceeded()) {
+                LOGGER.severe(output.getStdErr());
+            }
         } catch (Exception e) {
-            LOGGER.severe(output.getStdErr());
             e.printStackTrace();
         }
     }
@@ -120,9 +120,10 @@ public class FileManager {
 
         String fileFolder = ServerVariables.FILES_PATH + '/' + fileName + '/';
         for (int i = newVersion + 1; i <= currentVersion; i++) {
-            Path toDelete = Path.of(fileFolder + i);
+            String filePath = fileFolder + i;
             try {
-                Files.delete(toDelete);
+                Files.delete(Path.of(filePath));
+                deleteFromBackupServer(filePath);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -135,5 +136,26 @@ public class FileManager {
                 .getCollection(ServerVariables.DB_COLLECTION_FILES)
                 .update(query, update);
         client.close();
+    }
+
+    private static void deleteFromBackupServer(String localPath) {
+        File mock = new File("mock");
+        try {
+            mock.createNewFile();
+            RSync rsync = new RSync()
+                .delete(true)
+                .recursive(true)
+                .dirs(true)
+                .source("mock")
+                .destination(ServerVariables.RSYNC_SERVER + localPath);
+
+            CollectingProcessOutput output = rsync.execute();
+            if (!output.hasSucceeded()) {
+                LOGGER.severe(output.getStdErr());
+            }
+            mock.delete();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

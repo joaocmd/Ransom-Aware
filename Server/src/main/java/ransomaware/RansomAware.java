@@ -204,8 +204,7 @@ public class RansomAware {
                 usersWithAccess.get(fileName).add(user.getName());
 
                 Optional<File> mostRecent = Stream.of(file.listFiles())
-                        .sorted(Comparator.comparing(File::getName).reversed())
-                        .findFirst();
+                        .max(Comparator.comparing((File f) -> Integer.parseInt(f.getName())));
                 if (mostRecent.isEmpty()) {
                     LOGGER.severe("Inconsistent file system");
                     System.exit(1);
