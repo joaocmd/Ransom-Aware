@@ -19,8 +19,11 @@ public class App implements Callable<Integer> {
     @Option(names = {"-db", "--db-url"}, description = "MongoDB URL")
     private String mongoUrl = "mongodb://localhost:27017";
 
+    @Option(names = {"-r", "--rsync-uri"}, description = "Rsync server ssh uri")
+    private String rsyncUri = "localhost:rsync/";
+
     public Integer call() {
-        ServerVariables.init(path, mongoUrl);
+        ServerVariables.init(path, mongoUrl, rsyncUri);
         new RansomAware(port, firstTime);
         return 0;
     }

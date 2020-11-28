@@ -62,11 +62,10 @@ public class RegisterCommand implements Command{
         response = Utils.requestPostFromURL(ClientVariables.URL + "/login", jsonRoot, client);
         if (response.get("status").getAsInt() == HttpURLConnection.HTTP_OK) {
             sessionInfo.login(user);
+            System.out.println("Registered and logged in successfully");
         } else {
             Utils.handleError(response);
         }
-
-        System.out.println("Registered successfully");
     }
 
     private X509Certificate readCertificate(String username, String name) {

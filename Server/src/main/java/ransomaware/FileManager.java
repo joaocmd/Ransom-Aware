@@ -1,5 +1,8 @@
 package ransomaware;
 
+import com.github.fracpete.processoutput4j.output.CollectingProcessOutput;
+import com.github.fracpete.rsync4j.Binaries;
+import com.github.fracpete.rsync4j.RSync;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
@@ -9,11 +12,9 @@ import ransomaware.exceptions.NoSuchFileException;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.InvalidParameterException;
 import java.util.logging.Logger;
 
 public class FileManager {
@@ -70,11 +71,32 @@ public class FileManager {
         try {
             Path path = Paths.get(filePath);
             Files.write(path, file.toString().getBytes());
+            sendToBackupServer(filePath);
             saveNewFileVersion(fileName, newVersion);
         } catch (IOException e) {
             e.printStackTrace();
             LOGGER.severe("Error writing to file");
             System.exit(1);
+        }
+    }
+
+    private static void sendToBackupServer(String localPath) {
+        RSync rsync = new RSync()
+                .recursive(true)
+                .relative(true)
+                .dirs(true)
+                .times(true)
+                .source(localPath)
+                .destination(ServerVariables.RSYNC_SERVER)
+                .rsh("ssh -i " + ServerVariables.RSYNC_KEY);
+
+        try {
+            CollectingProcessOutput output = rsync.execute();
+            if (!output.hasSucceeded()) {
+                LOGGER.severe(output.getStdErr());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -90,14 +112,7 @@ public class FileManager {
     }
 
     private static MongoClient getMongoClient() {
-        MongoClient client = null;
-        try {
-            client = new MongoClient(new MongoClientURI(ServerVariables.MONGO_URI));
-        } catch (UnknownHostException e) {
-            LOGGER.severe("Can't establish connection to the database.");
-            System.exit(1);
-        }
-        return client;
+        return new MongoClient(new MongoClientURI(ServerVariables.MONGO_URI));
     }
 
     public static void rollBack(StoredFile file, int n) {
@@ -107,13 +122,13 @@ public class FileManager {
 
         String fileFolder = ServerVariables.FILES_PATH + '/' + fileName + '/';
         for (int i = newVersion + 1; i <= currentVersion; i++) {
-            Path toDelete = Path.of(fileFolder + i);
             try {
-                Files.delete(toDelete);
+                Files.delete(Path.of(fileFolder + i));
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+        deleteFromBackupServer(fileFolder);
 
         MongoClient client = getMongoClient();
         var query = new BasicDBObject("_id", fileName);
@@ -122,5 +137,24 @@ public class FileManager {
                 .getCollection(ServerVariables.DB_COLLECTION_FILES)
                 .update(query, update);
         client.close();
+    }
+
+    private static void deleteFromBackupServer(String localPath) {
+        RSync rsync = new RSync()
+                .archive(true)
+                .delete(true)
+                .times(true)
+                .source(localPath)
+                .destination(ServerVariables.RSYNC_SERVER + localPath)
+                .rsh("ssh -i " + ServerVariables.RSYNC_KEY);
+
+        try {
+            CollectingProcessOutput output = rsync.execute();
+            if (!output.hasSucceeded()) {
+                LOGGER.severe(output.getStdErr());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
