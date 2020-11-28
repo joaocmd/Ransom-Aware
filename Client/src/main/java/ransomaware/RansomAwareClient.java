@@ -31,6 +31,7 @@ public class RansomAwareClient {
         parsers.put("save-new-keys", this::parseSendWithKeys);
         parsers.put("grant", this::parseGrant);
         parsers.put("revoke", this::parseRevoke);
+        parsers.put("rollback", this::parseRollback);
         parsers.put("list", this::parseList);
         parsers.put("list-permissions", this::parseListPermissions);
         parsers.put("create", this::parseCreate);
@@ -244,6 +245,31 @@ public class RansomAwareClient {
         }
 
         return Optional.of(new RevokeCommand(sessionInfo, file[0], file[1], args[2]));
+    }
+
+    private Optional<Command> parseRollback(String[] args) {
+        Runnable showUsage = () -> {
+            System.err.println("rollback <file> <n> usage:");
+            System.err.println("    file: file name, can be user/file or just file");
+            System.err.println("    n: number of versions to rollback");
+        };
+        if (args.length != 3) {
+            showUsage.run();
+            return Optional.empty();
+        }
+
+        String[] file = parseFileName(args[1]);
+        if (file == null) {
+            showUsage.run();
+            return  Optional.empty();
+        }
+
+        try {
+            return Optional.of(new RollbackCommand(sessionInfo, file[0], file[1], Integer.parseInt(args[2])));
+        } catch (NumberFormatException e) {
+            showUsage.run();
+            return  Optional.empty();
+        }
     }
 
     private Optional<Command> parseList(String[] args) {

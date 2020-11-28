@@ -13,6 +13,7 @@ import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.InvalidParameterException;
 import java.util.logging.Logger;
 
 public class FileManager {
@@ -25,7 +26,7 @@ public class FileManager {
         return user + '/' + file;
     }
 
-    private static int getFileVersion(String fileName) {
+    public static int getFileVersion(String fileName) {
         MongoClient client = getMongoClient();
         var query = new BasicDBObject("_id", fileName);
         DBObject file = client.getDB(ServerVariables.FS_PATH)
@@ -97,5 +98,29 @@ public class FileManager {
             System.exit(1);
         }
         return client;
+    }
+
+    public static void rollBack(StoredFile file, int n) {
+        String fileName = file.getFileName();
+        int currentVersion = getFileVersion(fileName);
+        int newVersion = currentVersion - n;
+
+        String fileFolder = ServerVariables.FILES_PATH + '/' + fileName + '/';
+        for (int i = newVersion + 1; i <= currentVersion; i++) {
+            Path toDelete = Path.of(fileFolder + i);
+            try {
+                Files.delete(toDelete);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        MongoClient client = getMongoClient();
+        var query = new BasicDBObject("_id", fileName);
+        var update = new BasicDBObject("version", newVersion);
+        client.getDB(ServerVariables.FS_PATH)
+                .getCollection(ServerVariables.DB_COLLECTION_FILES)
+                .update(query, update);
+        client.close();
     }
 }

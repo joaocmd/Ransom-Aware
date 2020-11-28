@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.InvalidParameterException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
@@ -50,7 +51,7 @@ public class RansomAware {
 
         if (hasAccessToFile(user, file)) {
             // Check if permissions are correct with server's
-            if (!usersWithAccess.get(fileName).equals(file.getUsersWithAccess())) {
+            if (usersWithAccess.containsKey(fileName) && !usersWithAccess.get(fileName).equals(file.getUsersWithAccess())) {
                 throw new IllegalArgumentException();
             }
 
@@ -59,7 +60,6 @@ public class RansomAware {
             userFiles.putIfAbsent(user, new HashSet<>());
             userFiles.get(user).add(fileName);
 
-            // draft for getting the certificates for all users with access later
             usersWithAccess.putIfAbsent(fileName, new HashSet<>());
             usersWithAccess.get(fileName).add(user);
         } else {
@@ -224,10 +224,6 @@ public class RansomAware {
 
                     // Add permissions to users that are not the owner
                     for (String userWithAccess: storedFile.getUsersWithAccess()) {
-                        // Ignore if owner
-                        if (userWithAccess.equals(user.getName())) continue;
-
-                        // Add permission
                         userFiles.putIfAbsent(userWithAccess, new HashSet<>());
                         userFiles.get(userWithAccess).add(fileName);
                         usersWithAccess.putIfAbsent(fileName, new HashSet<>());
@@ -239,6 +235,45 @@ public class RansomAware {
                 }
 
             }
+        }
+    }
+
+    public void rollback(String user, StoredFile file, int n) {
+        String fileName = file.getFileName();
+
+        if (!isOwner(user, file)) {
+            throw new UnauthorizedException();
+        }
+
+        if (!usersWithAccess.containsKey(file.getFileName())) {
+            throw new NoSuchFileException();
+        }
+
+        int newVersion = FileManager.getFileVersion(fileName) - n;
+        if (newVersion <= 0) {
+            throw new InvalidParameterException();
+        }
+
+        FileManager.rollBack(file, n);
+        Path filePath = Path.of(ServerVariables.FILES_PATH + '/' + fileName + '/' + newVersion);
+        try {
+            String fileData = Files.readString(filePath);
+            StoredFile newFile = new StoredFile(file, fileData);
+
+            // Refresh permissions
+            Set<String> usersThatHadAccess = usersWithAccess.get(fileName);
+            for (String u: usersThatHadAccess) {
+                userFiles.get(u).remove(fileName);
+            }
+            usersWithAccess.remove(fileName);
+            usersWithAccess.put(fileName, new HashSet<>());
+            usersWithAccess.get(fileName).addAll(newFile.getUsersWithAccess());
+            for (String u: newFile.getUsersWithAccess()) {
+                userFiles.get(u).add(fileName);
+            }
+        } catch (IOException e) {
+            LOGGER.severe("Could not read new file version");
+            throw new RuntimeException(e);
         }
     }
 }
