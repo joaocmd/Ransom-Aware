@@ -32,10 +32,9 @@ public class LoginCommand implements Command {
         JsonObject response = Utils.requestPostFromURL(ClientVariables.URL + "/login", jsonRoot, client);
         if (response.get("status").getAsInt() == HttpURLConnection.HTTP_OK) {
             info.login(username);
+            System.out.println("Login successful");
         } else {
             Utils.handleError(response);
         }
-
-        System.out.println("Login successful");
     }
 }

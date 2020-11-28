@@ -16,7 +16,8 @@ public class ServerVariables {
     public static final String DB_COLLECTION_FILES = "files";
     public static final String DB_COLLECTION_SALTS = "salts";
 
-    public static final String RSYNC_SERVER = "rsync://localhost:12000/files/";
+    public static final String RSYNC_SERVER = "localhost:rsync/";
+    public static String RSYNC_KEY = "id_rsync";
 
     private  ServerVariables() {}
 
@@ -25,5 +26,6 @@ public class ServerVariables {
         FS_PATH = path;
         FILES_PATH = path + "/files";
         SSL_KEYSTORE = String.format("%s/server-ssl.p12", FS_PATH);
+        RSYNC_KEY = String.format("%s/id_rsync", FS_PATH);
     }
 }

@@ -1,6 +1,7 @@
 package ransomaware;
 
 import com.github.fracpete.processoutput4j.output.CollectingProcessOutput;
+import com.github.fracpete.rsync4j.Binaries;
 import com.github.fracpete.rsync4j.RSync;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -86,7 +87,8 @@ public class FileManager {
                 .dirs(true)
                 .times(true)
                 .source(localPath)
-                .destination(ServerVariables.RSYNC_SERVER);
+                .destination(ServerVariables.RSYNC_SERVER)
+                .rsh("ssh -i " + ServerVariables.RSYNC_KEY);
 
         try {
             CollectingProcessOutput output = rsync.execute();
@@ -122,11 +124,11 @@ public class FileManager {
         for (int i = newVersion + 1; i <= currentVersion; i++) {
             try {
                 Files.delete(Path.of(fileFolder + i));
-                deleteFromBackupServer(fileFolder);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+        deleteFromBackupServer(fileFolder);
 
         MongoClient client = getMongoClient();
         var query = new BasicDBObject("_id", fileName);
@@ -143,7 +145,8 @@ public class FileManager {
                 .delete(true)
                 .times(true)
                 .source(localPath)
-                .destination(ServerVariables.RSYNC_SERVER + localPath);
+                .destination(ServerVariables.RSYNC_SERVER + localPath)
+                .rsh("ssh -i " + ServerVariables.RSYNC_KEY);
 
         try {
             CollectingProcessOutput output = rsync.execute();
