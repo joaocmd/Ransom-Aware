@@ -47,7 +47,7 @@ public class RollbackCommand implements Command {
 
             JsonObject response = Utils.requestPostFromURL(ClientVariables.URL + "/rollback", jsonRoot, client);
             if (response.get("status").getAsInt() == HttpURLConnection.HTTP_OK) {
-                System.out.println("Succesfully rolled back, fetching new version");
+                System.out.println("Successfully rolled back, fetching new version");
                 new GetFileCommand(sessionInfo, owner, filename).run(client);
             } else {
                 Utils.handleError(response);
