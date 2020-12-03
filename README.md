@@ -33,12 +33,12 @@ Repeat the steps above for generate a rsa key pair, but sign with root CA:
 openssl genrsa -out server-ssl.key
 openssl rsa -in server-ssl.key -pubout > server-ssl.pubkey
 openssl req -new -key server-ssl.key -out server-ssl.csr
-openssl x509 -req -days 365 -in server-ssl.csr -signkey root-ca.key -out server-ssl.pem
+openssl x509 -req -days 365 -in server-ssl.csr -CA root-ca.pem -CAkey root-ca.key -out server-ssl.pem
 ```
 
 For java to be able to use it, we need to put the private key in a `pkcs12` (or `jks`) keystore.
 ```shell script
-openssl pkcs12 -export -name server -in server.pem -inkey server.key -out server-ssl.p12
+openssl pkcs12 -export -name server-ssl -in server-ssl.pem -inkey server-ssl.key -out server-ssl.p12
 ```
 
 #### SSH
