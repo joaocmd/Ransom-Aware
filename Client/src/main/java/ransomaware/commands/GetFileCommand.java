@@ -44,7 +44,7 @@ public class GetFileCommand implements Command {
         try {
             JsonObject response = Utils.requestGetFromURL(ClientVariables.URL + "/files" + '/' + owner + '/' + filename, client);
             if (response.get("status").getAsInt() != HttpURLConnection.HTTP_OK) {
-                Utils.handleError(response);
+                Utils.handleError(response, this.sessionInfo);
                 return;
             }
 
@@ -113,7 +113,7 @@ public class GetFileCommand implements Command {
             byte[] cert =  SecurityUtils.decodeBase64(response.getAsJsonObject("certs").get("sign").getAsString());
             return SecurityUtils.getCertFromBytes(cert);
         } else {
-            Utils.handleError(response);
+            Utils.handleError(response, this.sessionInfo);
         }
         return null;
     }

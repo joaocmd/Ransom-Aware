@@ -83,7 +83,7 @@ public class SendFileCommand implements Command {
                 Files.write(getMetadataPath(), info.toString().getBytes());
                 System.out.println("File successfully saved");
             } else {
-                Utils.handleError(response);
+                Utils.handleError(response, this.sessionInfo);
             }
         } catch (Exception e) {
             e.printStackTrace();

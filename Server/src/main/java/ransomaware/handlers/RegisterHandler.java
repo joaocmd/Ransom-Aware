@@ -65,6 +65,12 @@ public class RegisterHandler extends AbstractHandler {
         }
 
         try {
+            if(!SecurityUtils.isCertificateValid(cert.get())) {
+                String message = String.format("%s certificate is not trusted", certName);
+                LOGGER.info(message);
+                sendResponse(HttpURLConnection.HTTP_FORBIDDEN, message);
+                return false;
+            }
             if (!SecurityUtils.isCertificateOfUser(cert.get(), username)) {
                 String message = String.format("%s certificate does not belong to the user", certName);
                 LOGGER.info(message);

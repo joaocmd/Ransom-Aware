@@ -50,7 +50,7 @@ public class RollbackCommand implements Command {
                 System.out.println("Successfully rolled back, fetching new version");
                 new GetFileCommand(sessionInfo, owner, filename).run(client);
             } else {
-                Utils.handleError(response);
+                Utils.handleError(response, this.sessionInfo);
             }
         } catch (Exception e) {
             e.printStackTrace();

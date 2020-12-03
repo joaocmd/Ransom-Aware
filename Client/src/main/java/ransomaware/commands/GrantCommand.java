@@ -62,7 +62,7 @@ public class GrantCommand implements Command {
 
         JsonObject responseGrant = Utils.requestPostFromURL(ClientVariables.URL + "/grant", jsonRoot, client);
         if (responseGrant.get("status").getAsInt() != HttpURLConnection.HTTP_OK) {
-            Utils.handleError(responseGrant);
+            Utils.handleError(responseGrant, this.sessionInfo);
             return;
         }
 
