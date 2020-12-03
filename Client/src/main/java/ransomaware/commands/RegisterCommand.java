@@ -81,6 +81,11 @@ public class RegisterCommand implements Command{
                 System.err.println("Certificate does not correspond to the user");
                 return null;
             }
+
+            if (!SecurityUtils.isCertificateValid(cert)) {
+                System.err.println("Certificate is not valid");
+                return null;
+            }
         } catch (CertificateNotFoundException e) {
             System.err.println("Certificate not found");
         } catch (CertificateInvalidException e) {

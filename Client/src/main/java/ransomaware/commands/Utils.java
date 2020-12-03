@@ -18,7 +18,7 @@ public class Utils {
     private Utils() {}
 
     public static void handleError(JsonObject err, SessionInfo info) {
-        if(err.get("status").getAsString().equals(HttpURLConnection.HTTP_UNAUTHORIZED)) {
+        if(err.get("status").getAsInt() == HttpURLConnection.HTTP_UNAUTHORIZED && err.get("body").getAsString().contains("token")) {
             info.logOff();
         }
         System.err.println(err.get("status").getAsString() + ": " + err.get("body").getAsString());
