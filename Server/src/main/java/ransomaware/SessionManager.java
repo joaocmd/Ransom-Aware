@@ -169,7 +169,14 @@ public class SessionManager {
     }
 
     private static MongoClient getMongoClient() {
-        return new MongoClient(new MongoClientURI(ServerVariables.MONGO_URI));
+        MongoClient client = null;
+        try {
+            client = new MongoClient(new MongoClientURI(ServerVariables.MONGO_URI));
+        } catch (UnknownHostException e) {
+            LOGGER.severe("Can't establish connection to the database.");
+            System.exit(1);
+        }
+        return client;
     }
 
     private static class SessionObject {

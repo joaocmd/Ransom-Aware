@@ -9,6 +9,8 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import ransomaware.domain.StoredFile;
 import ransomaware.exceptions.NoSuchFileException;
+import java.net.UnknownHostException;
+import java.security.InvalidParameterException;
 
 import java.io.File;
 import java.io.IOException;
@@ -112,7 +114,14 @@ public class FileManager {
     }
 
     private static MongoClient getMongoClient() {
-        return new MongoClient(new MongoClientURI(ServerVariables.MONGO_URI));
+        MongoClient client = null;
+        try {
+            client = new MongoClient(new MongoClientURI(ServerVariables.MONGO_URI));
+        } catch (UnknownHostException e) {
+            LOGGER.severe("Can't establish connection to the database.");
+            System.exit(1);
+        }
+        return client;
     }
 
     public static void rollBack(StoredFile file, int n) {

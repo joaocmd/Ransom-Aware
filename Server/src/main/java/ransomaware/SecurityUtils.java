@@ -74,7 +74,6 @@ public class SecurityUtils {
     }
 
     public static boolean isCertificateValid(X509Certificate cert) {
-        System.out.println("Hello biatch");
         TrustManagerFactory tmfactory = null;
         try {
             tmfactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
