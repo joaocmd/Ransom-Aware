@@ -11,6 +11,7 @@ public class HelpCommand implements Command {
                 "get - download file to workspace \n" +
                 "list-permissions - list users with file permissions \n" +
                 "save - save file to server\n" +
+                "save-renew - save file to server and renew the keys\n" +
                 "grant - grant permissions of read/edit file to user\n" +
                 "revoke - grant permissions of read/edit file from user\n" +
                 "clear - clear workspace\n";

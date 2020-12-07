@@ -76,6 +76,9 @@ public class GetFileCommand implements Command {
                 System.err.println("Could not get certificate for author");
                 return;
             }
+            if (!SecurityUtils.isCertificateValid(cert)) {
+                System.err.println("Signature is not from trusted CA");
+            }
             if(!SecurityUtils.verifySignature(SecurityUtils.decodeBase64(encodedSignature), fileJson.toString().getBytes(), cert)) {
                 System.err.println("WARNING: File contains bad signature");
                 return;

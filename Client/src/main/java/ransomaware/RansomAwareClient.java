@@ -27,8 +27,8 @@ public class RansomAwareClient {
 
     private void populateParsers() {
         parsers.put("get", this::parseGet);
-        parsers.put("save", this::parseSendNoKeys);
-        parsers.put("save-new-keys", this::parseSendWithKeys);
+        parsers.put("save", this::parseSaveNoKeys);
+        parsers.put("save-renew", this::parseSaveWithKeys);
         parsers.put("grant", this::parseGrant);
         parsers.put("revoke", this::parseRevoke);
         parsers.put("rollback", this::parseRollback);
@@ -161,17 +161,17 @@ public class RansomAwareClient {
         return Optional.of(new ListFilePermissionsCommand(sessionInfo, file[0], file[1]));
     }
 
-    private Optional<Command> parseSendWithKeys(String[] args) {
-        return parseSend(args, true);
+    private Optional<Command> parseSaveWithKeys(String[] args) {
+        return parseSave(args, true);
     }
 
-    private Optional<Command> parseSendNoKeys(String[] args) {
-        return parseSend(args, false);
+    private Optional<Command> parseSaveNoKeys(String[] args) {
+        return parseSave(args, false);
     }
 
-    private Optional<Command> parseSend(String[] args, boolean generateNewKeys) {
+    private Optional<Command> parseSave(String[] args, boolean generateNewKeys) {
         Runnable showUsage = () -> {
-            System.err.println("send <file> usage: sends the file to the remote server");
+            System.err.println("save <file> usage: sends the file to the remote server");
             System.err.println("    file: file name, can be user/file or just file");
         };
         if (args.length != 2) {

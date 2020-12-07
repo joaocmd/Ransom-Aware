@@ -68,7 +68,7 @@ mvn compile exec:java
 ### Backup Server
 
 The backup server needs to be running a `ssh` server.
-Edit the `/etc/ssh/sshd_config` file the following lines should be present:
+Edit the `/etc/ssh/sshd_config` file, add/uncomment the following lines:
 ```
 PubkeyAuthentication yes
 AuthorizedKeysFile /etc/ssh/authorized_keys

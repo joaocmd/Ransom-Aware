@@ -132,12 +132,17 @@ public class SendFileCommand implements Command {
                 }
                 keys.addProperty(entry.getKey(), encryptedKey);
             });
-
         } else if (responseStatus == HttpURLConnection.HTTP_NOT_FOUND) {
+            // File not created yet, just get my certificate
             response = Utils.requestGetFromURL(ClientVariables.URL + "/users/certs/" + sessionInfo.getUsername(), client);
-            byte[] encodedCert = SecurityUtils.decodeBase64(response.getAsJsonObject("certs").get("encrypt").getAsString());
-            PublicKey userKey = SecurityUtils.getKeyFromCert(SecurityUtils.getCertFromBytes(encodedCert));
+            byte[] decodedCert = SecurityUtils.decodeBase64(response.getAsJsonObject("certs").get("encrypt").getAsString());
+            X509Certificate cert = SecurityUtils.getCertFromBytes(decodedCert);
+            PublicKey userKey = SecurityUtils.getKeyFromCert(cert);
             String encryptedKey = SecurityUtils.getBase64(SecurityUtils.rsaCipher(Cipher.ENCRYPT_MODE, secretKey, userKey));
+
+            if (!SecurityUtils.isCertificateValid(cert)) {
+                throw new CertificateInvalidException();
+            }
             keys.addProperty(sessionInfo.getUsername(), encryptedKey);
         }
 
@@ -154,7 +159,6 @@ public class SendFileCommand implements Command {
         try {
             byte[] data = Files.readAllBytes(metadataPath);
             JsonObject metadata = JsonParser.parseString(new String(data)).getAsJsonObject();
-            // TODO: check that this does indeed replace the value on the object (even though it's called add)
             metadata.addProperty("author", sessionInfo.getUsername());
 
             byte[] ivBytes = SecurityUtils.decodeBase64(metadata.get("iv").getAsString());

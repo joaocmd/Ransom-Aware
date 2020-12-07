@@ -1,6 +1,5 @@
 package ransomaware;
 
-import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import ransomaware.exceptions.CertificateInvalidException;
 
 import javax.naming.InvalidNameException;
@@ -46,8 +45,6 @@ public class SecurityUtils {
                             .generateCertificate(new ByteArrayInputStream(certificateRaw));
 
             certificate.checkValidity();
-            // TODO: Also verify the root certificate
-            
             return Optional.of(certificate);
         } catch (CertificateException e) {
             e.printStackTrace();
