@@ -30,7 +30,7 @@ public class RollbackHandler extends AbstractHandler {
         }
 
         try {
-            int sessionToken = this.getSessionToken();
+            String sessionToken = this.getSessionToken();
             String username = SessionManager.getUsername(sessionToken);
 
             JsonObject bodyAsJson = getBodyAsJSON();

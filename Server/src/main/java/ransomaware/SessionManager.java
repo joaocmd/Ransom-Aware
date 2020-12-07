@@ -19,7 +19,7 @@ public class SessionManager {
 
     private static final Logger LOGGER = Logger.getLogger(SessionManager.class.getName());
 
-    private static final ConcurrentHashMap<Integer, SessionObject> sessions = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, SessionObject> sessions = new ConcurrentHashMap<>();
     
     public enum SessionState {
         VALID,
@@ -27,7 +27,7 @@ public class SessionManager {
         EXPIRED
     }
 
-    public static SessionState getSessionSate(int sessionToken) {
+    public static SessionState getSessionSate(String sessionToken) {
         if (sessions.containsKey(sessionToken)) {
             if (sessions.get(sessionToken).expirationMoment.isAfter(Instant.now())) {
                 return SessionState.VALID;
@@ -39,7 +39,7 @@ public class SessionManager {
         return SessionState.INVALID;
     }
 
-    public static String getUsername(Integer sessionToken) {
+    public static String getUsername(String sessionToken) {
         if (sessions.containsKey(sessionToken)) {
             return sessions.get(sessionToken).username;
         }
@@ -132,7 +132,7 @@ public class SessionManager {
 
     }
 
-    public static int login(String username, String password) {
+    public static String login(String username, String password) {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("_id", username);
@@ -152,7 +152,9 @@ public class SessionManager {
                     );
             if (userQuery.get("password").equals(digest)) {
                 SecureRandom rand = new SecureRandom();
-                int token = rand.nextInt();
+                byte[] buffer = new byte[16];
+                rand.nextBytes(buffer);
+                String token = SecurityUtils.getBase64(buffer);
                 sessions.put(token, new SessionObject(username, Instant.now().plusSeconds(ServerVariables.SESSION_DURATION)));
                 return token;
             }
@@ -160,7 +162,7 @@ public class SessionManager {
         throw new UnauthorizedException();
     }
 
-    public static void logout(int sessionToken) {
+    public static void logout(String sessionToken) {
         try {
             sessions.remove(sessionToken);
         } catch (NullPointerException ignored) {
@@ -189,12 +191,7 @@ public class SessionManager {
         }
     }
 
-    public static String createSessionCookie(int token) {
-        StringBuilder c = new StringBuilder()
-                .append("login-token=")
-                .append(token)
-                .append("; HttpOnly; Secure; Version=1; max-age=")
-                .append(ServerVariables.SESSION_DURATION);
-        return c.toString();
+    public static String createSessionCookie(String token) {
+        return "login-token=" + token + "; HttpOnly; Secure; Version=1; max-age=" + ServerVariables.SESSION_DURATION;
     }
 }

@@ -178,7 +178,7 @@ public class RansomAware {
         }
     }
 
-    public void logout(int sessionToken) {
+    public void logout(String sessionToken) {
         SessionManager.logout(sessionToken);
     }
     
