@@ -25,7 +25,7 @@ public class ListFilePermissionsCommand implements Command {
     public void run(HttpClient client) {
         JsonObject response = Utils.requestGetFromURL(ClientVariables.URL + "/files/certs/"  + owner + '/' + filename, client);
         if (response.get("status").getAsInt() != HttpURLConnection.HTTP_OK) {
-            Utils.handleError(response);
+            Utils.handleError(response, this.info);
             return;
         }
 

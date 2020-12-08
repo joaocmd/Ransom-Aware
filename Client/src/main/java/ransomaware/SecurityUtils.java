@@ -9,6 +9,9 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 import java.io.*;
 import java.security.*;
 import java.security.cert.CertificateException;
@@ -193,5 +196,28 @@ public class SecurityUtils {
 
     public static PublicKey getKeyFromCert(X509Certificate cert) {
         return cert.getPublicKey();
+    }
+
+    public static boolean isCertificateValid(X509Certificate cert) {
+        TrustManagerFactory tmfactory = null;
+        try {
+            tmfactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmfactory.init((KeyStore) null);
+        } catch (NoSuchAlgorithmException | KeyStoreException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        for (TrustManager trustManager : tmfactory.getTrustManagers()) {
+            if (trustManager instanceof X509TrustManager) {
+                try {
+                    ((X509TrustManager) trustManager).checkClientTrusted(new X509Certificate[]{cert}, "RSA");
+                    return true;
+                } catch (CertificateException e) {
+                    //ignore
+                }
+            }
+        }
+        return false;
     }
 }

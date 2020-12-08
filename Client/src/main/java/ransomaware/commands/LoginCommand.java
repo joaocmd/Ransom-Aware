@@ -34,7 +34,7 @@ public class LoginCommand implements Command {
             info.login(username);
             System.out.println("Login successful");
         } else {
-            Utils.handleError(response);
+            Utils.handleError(response, this.info);
         }
     }
 }

@@ -49,6 +49,10 @@ ssh-keygen -t ed25519 -C "ransom-aware-server"
 
 This requires the server to have `ssh-askpass` installed.
 The server uses `id_rsync` as a key name for that file.
+The keyfile must have permissions 600:
+```shell script
+chmod 600 id_rsync
+```
 
 #### Running the server
 The server requires a `MongoDB` server. Which can be easily run through a docker container.
@@ -68,7 +72,7 @@ mvn compile exec:java
 ### Backup Server
 
 The backup server needs to be running a `ssh` server.
-Edit the `/etc/ssh/sshd_config` file the following lines should be present:
+Edit the `/etc/ssh/sshd_config` file, add/uncomment the following lines:
 ```
 PubkeyAuthentication yes
 AuthorizedKeysFile /etc/ssh/authorized_keys

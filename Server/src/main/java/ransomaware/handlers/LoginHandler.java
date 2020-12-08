@@ -29,11 +29,8 @@ public class LoginHandler extends AbstractHandler {
         LOGGER.info(String.format("login request: %s password: [REDACTED]", username));
 
         try {
-            int sessionToken = SessionManager.login(username, password);
+            String sessionToken = SessionManager.login(username, password);
             String cookie = SessionManager.createSessionCookie(sessionToken);
-            JsonObject resp = JsonParser.parseString("{}").getAsJsonObject();
-            resp.addProperty("status", Integer.toString(sessionToken));
-
             sendResponse(HttpURLConnection.HTTP_OK, "Successful login", cookie);
         } catch (UnauthorizedException e) {
             super.sendResponse(HttpURLConnection.HTTP_UNAUTHORIZED, "Invalid credentials");

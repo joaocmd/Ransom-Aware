@@ -25,7 +25,7 @@ public class LogoutHandler extends AbstractHandler {
             return;
         }
 
-        int sessionToken = this.getSessionToken();
+        String sessionToken = this.getSessionToken();
         LOGGER.info(String.format("logout request: %s", SessionManager.getUsername(sessionToken)));
         server.logout(sessionToken);
         sendResponse(HttpURLConnection.HTTP_OK, "OK");

@@ -62,7 +62,7 @@ public class RevokeCommand implements Command {
 
         JsonObject responseRevoke = Utils.requestPostFromURL(ClientVariables.URL + "/revoke", jsonRoot, client);
         if (responseRevoke.get("status").getAsInt() != HttpURLConnection.HTTP_OK) {
-            Utils.handleError(responseRevoke);
+            Utils.handleError(responseRevoke, this.sessionInfo);
             return;
         }
 

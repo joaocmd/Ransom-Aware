@@ -53,7 +53,7 @@ public class RegisterCommand implements Command{
 
         JsonObject response = Utils.requestPostFromURL(ClientVariables.URL + "/register", jsonRoot, client);
         if (response.get("status").getAsInt() != HttpURLConnection.HTTP_OK) {
-            Utils.handleError(response);
+            Utils.handleError(response, this.sessionInfo);
             return;
         }
 
@@ -64,7 +64,7 @@ public class RegisterCommand implements Command{
             sessionInfo.login(user);
             System.out.println("Registered and logged in successfully");
         } else {
-            Utils.handleError(response);
+            Utils.handleError(response, this.sessionInfo);
         }
     }
 
@@ -79,6 +79,11 @@ public class RegisterCommand implements Command{
 
             if (!SecurityUtils.checkCertificateUser(cert, username)) {
                 System.err.println("Certificate does not correspond to the user");
+                return null;
+            }
+
+            if (!SecurityUtils.isCertificateValid(cert)) {
+                System.err.println("Certificate is not valid");
                 return null;
             }
         } catch (CertificateNotFoundException e) {

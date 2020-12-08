@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import ransomaware.ClientVariables;
 import ransomaware.SecurityUtils;
 import ransomaware.SessionInfo;
+import ransomaware.exceptions.CertificateInvalidException;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -18,6 +19,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.cert.X509Certificate;
 
 public class SendFileCommand implements Command {
 
@@ -56,6 +58,11 @@ public class SendFileCommand implements Command {
             JsonObject jsonRoot = JsonParser.parseString("{}").getAsJsonObject();
 
             FileInfo cryptoInfo = getFileKeys(client);
+
+            if (cryptoInfo == null) {
+                return;
+            }
+
             SecretKey key = cryptoInfo.getKey();
             IvParameterSpec iv = cryptoInfo.getIv();
             JsonObject info = cryptoInfo.getInfo();
@@ -83,7 +90,7 @@ public class SendFileCommand implements Command {
                 Files.write(getMetadataPath(), info.toString().getBytes());
                 System.out.println("File successfully saved");
             } else {
-                Utils.handleError(response);
+                Utils.handleError(response, this.sessionInfo);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -91,10 +98,15 @@ public class SendFileCommand implements Command {
     }
 
     private FileInfo getFileKeys(HttpClient client) throws IOException {
-        if (generateNewKeys) {
-            return getFileInfoServer(client);
-        } else {
-            return getFileInfoFile(client);
+        try {
+            if (generateNewKeys) {
+                return getFileInfoServer(client);
+            } else {
+                return getFileInfoFile(client);
+            }
+        } catch (CertificateInvalidException e) {
+            System.err.println("Certificates for users with permission are not valid");
+            return null;
         }
     }
 
@@ -111,18 +123,26 @@ public class SendFileCommand implements Command {
         if (responseStatus == HttpURLConnection.HTTP_OK) {
             response.getAsJsonObject("certs").entrySet().forEach(entry -> {
                 byte[] decodedCert = SecurityUtils.decodeBase64(entry.getValue().getAsString());
+                X509Certificate cert = SecurityUtils.getCertFromBytes(decodedCert);
                 PublicKey userKey = SecurityUtils.getKeyFromCert(SecurityUtils.getCertFromBytes(decodedCert));
                 String encryptedKey = SecurityUtils.getBase64(SecurityUtils.rsaCipher(Cipher.ENCRYPT_MODE, secretKey, userKey));
 
-                // TODO: Validate certificates
-
+                if (!SecurityUtils.isCertificateValid(cert)) {
+                    throw new CertificateInvalidException();
+                }
                 keys.addProperty(entry.getKey(), encryptedKey);
             });
         } else if (responseStatus == HttpURLConnection.HTTP_NOT_FOUND) {
+            // File not created yet, just get my certificate
             response = Utils.requestGetFromURL(ClientVariables.URL + "/users/certs/" + sessionInfo.getUsername(), client);
-            byte[] encodedCert = SecurityUtils.decodeBase64(response.getAsJsonObject("certs").get("encrypt").getAsString());
-            PublicKey userKey = SecurityUtils.getKeyFromCert(SecurityUtils.getCertFromBytes(encodedCert));
+            byte[] decodedCert = SecurityUtils.decodeBase64(response.getAsJsonObject("certs").get("encrypt").getAsString());
+            X509Certificate cert = SecurityUtils.getCertFromBytes(decodedCert);
+            PublicKey userKey = SecurityUtils.getKeyFromCert(cert);
             String encryptedKey = SecurityUtils.getBase64(SecurityUtils.rsaCipher(Cipher.ENCRYPT_MODE, secretKey, userKey));
+
+            if (!SecurityUtils.isCertificateValid(cert)) {
+                throw new CertificateInvalidException();
+            }
             keys.addProperty(sessionInfo.getUsername(), encryptedKey);
         }
 
@@ -139,7 +159,6 @@ public class SendFileCommand implements Command {
         try {
             byte[] data = Files.readAllBytes(metadataPath);
             JsonObject metadata = JsonParser.parseString(new String(data)).getAsJsonObject();
-            // TODO: check that this does indeed replace the value on the object (even though it's called add)
             metadata.addProperty("author", sessionInfo.getUsername());
 
             byte[] ivBytes = SecurityUtils.decodeBase64(metadata.get("iv").getAsString());

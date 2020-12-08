@@ -5,12 +5,12 @@ import ransomaware.exceptions.CertificateInvalidException;
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 import java.io.*;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
+import java.security.*;
+import java.security.cert.*;
 import java.util.Base64;
 import java.util.Optional;
 
@@ -45,8 +45,6 @@ public class SecurityUtils {
                             .generateCertificate(new ByteArrayInputStream(certificateRaw));
 
             certificate.checkValidity();
-            // TODO: Also verify the root certificate
-            
             return Optional.of(certificate);
         } catch (CertificateException e) {
             e.printStackTrace();
@@ -72,4 +70,26 @@ public class SecurityUtils {
         }
     }
 
+    public static boolean isCertificateValid(X509Certificate cert) {
+        TrustManagerFactory tmfactory = null;
+        try {
+            tmfactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmfactory.init((KeyStore) null);
+        } catch (NoSuchAlgorithmException | KeyStoreException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        for (TrustManager trustManager : tmfactory.getTrustManagers()) {
+            if (trustManager instanceof X509TrustManager) {
+                try {
+                    ((X509TrustManager) trustManager).checkClientTrusted(new X509Certificate[]{cert}, "RSA");
+                    return true;
+                } catch (CertificateException e) {
+                    //ignore
+                }
+            }
+        }
+        return false;
+    }
 }

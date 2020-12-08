@@ -44,7 +44,7 @@ public class GetFileCommand implements Command {
         try {
             JsonObject response = Utils.requestGetFromURL(ClientVariables.URL + "/files" + '/' + owner + '/' + filename, client);
             if (response.get("status").getAsInt() != HttpURLConnection.HTTP_OK) {
-                Utils.handleError(response);
+                Utils.handleError(response, this.sessionInfo);
                 return;
             }
 
@@ -75,6 +75,9 @@ public class GetFileCommand implements Command {
             if (cert == null) {
                 System.err.println("Could not get certificate for author");
                 return;
+            }
+            if (!SecurityUtils.isCertificateValid(cert)) {
+                System.err.println("Signature is not from trusted CA");
             }
             if(!SecurityUtils.verifySignature(SecurityUtils.decodeBase64(encodedSignature), fileJson.toString().getBytes(), cert)) {
                 System.err.println("WARNING: File contains bad signature");
@@ -113,7 +116,7 @@ public class GetFileCommand implements Command {
             byte[] cert =  SecurityUtils.decodeBase64(response.getAsJsonObject("certs").get("sign").getAsString());
             return SecurityUtils.getCertFromBytes(cert);
         } else {
-            Utils.handleError(response);
+            Utils.handleError(response, this.sessionInfo);
         }
         return null;
     }

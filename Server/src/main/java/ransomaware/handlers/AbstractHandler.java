@@ -29,7 +29,7 @@ public abstract class AbstractHandler implements HttpHandler {
     private final boolean requireAuth;
     private JsonObject body;
     private HttpExchange exchange;
-    private int sessionToken;
+    private String sessionToken;
 
     public AbstractHandler(RansomAware server, String method, boolean requireAuth) {
         this.server = server;
@@ -56,13 +56,13 @@ public abstract class AbstractHandler implements HttpHandler {
                         .filter(s -> s.startsWith("login-token"))
                         .findFirst();
 
-                if (!loginCookie.isPresent()) {
+                if (loginCookie.isEmpty()) {
                     sendResponse(HttpURLConnection.HTTP_UNAUTHORIZED, "No session token given");
                     return;
                 }
 
                 HttpCookie cookie = HttpCookie.parse(loginCookie.get()).get(0);
-                this.sessionToken = Integer.parseInt(cookie.getValue());
+                this.sessionToken = cookie.getValue();
                 switch (SessionManager.getSessionSate(this.sessionToken)) {
                     case INVALID:
                         sendResponse(HttpURLConnection.HTTP_UNAUTHORIZED, "Invalid session token");
@@ -85,8 +85,7 @@ public abstract class AbstractHandler implements HttpHandler {
             String bodyString = new String(is.readAllBytes());
             JsonElement jsonParsed = JsonParser.parseString(bodyString);
             if (!jsonParsed.isJsonNull()) {
-                JsonObject bodyJson = jsonParsed.getAsJsonObject();
-                this.body = bodyJson;
+                this.body = jsonParsed.getAsJsonObject();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -136,7 +135,7 @@ public abstract class AbstractHandler implements HttpHandler {
         }
     }
 
-    protected int getSessionToken() {
+    protected String getSessionToken() {
         return this.sessionToken;
     }
 }
