@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
 
 public class SendFileCommand implements Command {
 
@@ -149,6 +150,7 @@ public class SendFileCommand implements Command {
         root.add("keys", keys);
         root.addProperty("iv", SecurityUtils.getBase64(iv.getIV()));
         root.addProperty("author", sessionInfo.getUsername());
+        root.addProperty("timestamp", Instant.now().toString());
 
         return new FileInfo(iv, key, root);
     }
@@ -160,6 +162,7 @@ public class SendFileCommand implements Command {
             byte[] data = Files.readAllBytes(metadataPath);
             JsonObject metadata = JsonParser.parseString(new String(data)).getAsJsonObject();
             metadata.addProperty("author", sessionInfo.getUsername());
+            metadata.addProperty("timestamp", Instant.now().toString());
 
             byte[] ivBytes = SecurityUtils.decodeBase64(metadata.get("iv").getAsString());
             byte[] keyBytes = SecurityUtils.decodeBase64(metadata.getAsJsonObject("keys").get(sessionInfo.getUsername()).getAsString());

@@ -14,10 +14,11 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.http.HttpClient;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
-import java.util.Optional;
+import java.time.Instant;
 
 public class GetFileCommand implements Command {
 
@@ -79,8 +80,13 @@ public class GetFileCommand implements Command {
             if (!SecurityUtils.isCertificateValid(cert)) {
                 System.err.println("Signature is not from trusted CA");
             }
-            if(!SecurityUtils.verifySignature(SecurityUtils.decodeBase64(encodedSignature), fileJson.toString().getBytes(), cert)) {
+            if (!SecurityUtils.verifySignature(SecurityUtils.decodeBase64(encodedSignature), fileJson.toString().getBytes(), cert)) {
                 System.err.println("WARNING: File contains bad signature");
+                return;
+            }
+
+            if (!fileIsFresh(info)) {
+                System.err.println("WARNING: File received is not fresh");
                 return;
             }
 
@@ -98,6 +104,27 @@ public class GetFileCommand implements Command {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private boolean fileIsFresh(JsonObject info) {
+        Instant receivedTs = Instant.parse(info.get("timestamp").getAsString());
+        try {
+            byte[] data = Files.readAllBytes(getMetadataPath());
+            JsonObject metadata = JsonParser.parseString(new String(data)).getAsJsonObject();
+            Instant localTs = Instant.parse(metadata.get("timestamp").getAsString());
+            if (localTs.isAfter(receivedTs)) {
+                return false;
+            }
+        } catch (IOException e) {
+            // Ignored, file not found
+        }
+        return true;
+    }
+
+    private Path getMetadataPath() {
+        Path path = Path.of(getOutputFilePath());
+        String fileName = '.' + path.getFileName().toString() + ".metadata";
+        return path.resolveSibling(fileName);
     }
 
     private byte[] getCorrectKey(JsonObject keys) {
