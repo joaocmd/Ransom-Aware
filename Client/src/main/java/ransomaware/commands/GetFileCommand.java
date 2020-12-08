@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.http.HttpClient;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
@@ -26,18 +25,28 @@ public class GetFileCommand implements Command {
     private final String owner;
     private final String filename;
     private final String outputPath;
+    private final boolean rollback;
     private boolean success;
 
-    public GetFileCommand(SessionInfo sessionInfo, String owner, String filename, String outputPath) {
+    public GetFileCommand(SessionInfo sessionInfo, String owner, String filename, String outputPath, boolean rollback) {
         this.sessionInfo = sessionInfo;
         this.owner = owner;
         this.filename = filename;
         this.outputPath = outputPath;
         this.success = false;
+        this.rollback = rollback;
+    }
+
+    public GetFileCommand(SessionInfo sessionInfo, String owner, String filename, String outputPath) {
+        this(sessionInfo, owner, filename, outputPath, false);
     }
 
     public GetFileCommand(SessionInfo sessionInfo, String owner, String filename) {
-        this(sessionInfo, owner, filename, ClientVariables.WORKSPACE);
+        this(sessionInfo, owner, filename, ClientVariables.WORKSPACE, false);
+    }
+
+    public GetFileCommand(SessionInfo sessionInfo, String owner, String filename, boolean rollback) {
+        this(sessionInfo, owner, filename, ClientVariables.WORKSPACE, rollback);
     }
 
     @Override
@@ -85,7 +94,7 @@ public class GetFileCommand implements Command {
                 return;
             }
 
-            if (!fileIsFresh(info)) {
+            if (!rollback && !fileIsFresh(info)) {
                 System.err.println("WARNING: File received is not fresh");
                 return;
             }
