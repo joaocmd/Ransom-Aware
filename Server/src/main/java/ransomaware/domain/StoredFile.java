@@ -3,6 +3,7 @@ package ransomaware.domain;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -16,6 +17,7 @@ public class StoredFile {
     private Map<String, String> keys = null;
     private String iv = null;
     private String author = null;
+    private Instant timestamp = null;
 
     public StoredFile(String owner, String name, String data, JsonObject info) {
         this.owner = owner;
@@ -26,6 +28,7 @@ public class StoredFile {
         info.getAsJsonObject("keys").entrySet().forEach(e -> this.keys.put(e.getKey(), e.getValue().getAsString()));
         this.iv = info.get("iv").getAsString();
         this.author = info.get("author").getAsString();
+        this.timestamp = Instant.parse(info.get("timestamp").getAsString());
     }
 
     public StoredFile(String owner, String name) {
@@ -46,6 +49,7 @@ public class StoredFile {
         keysJson.entrySet().forEach(e -> this.keys.put(e.getKey(), e.getValue().getAsString()));
         this.iv = info.get("iv").getAsString();
         this.author = info.get("author").getAsString();
+        this.timestamp = Instant.parse(info.get("timestamp").getAsString());
     }
 
     public String getFileName() {
@@ -72,6 +76,7 @@ public class StoredFile {
         }
         info.addProperty("iv", iv);
         info.addProperty("author", author);
+        info.addProperty("timestamp", timestamp.toString());
 
         root.add("info", info);
 
