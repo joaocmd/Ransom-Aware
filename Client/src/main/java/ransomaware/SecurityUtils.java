@@ -202,21 +202,18 @@ public class SecurityUtils {
         TrustManagerFactory tmfactory = null;
         try {
             tmfactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        try {
             tmfactory.init((KeyStore) null);
-        } catch (KeyStoreException e) {
+        } catch (NoSuchAlgorithmException | KeyStoreException e) {
             e.printStackTrace();
+            System.exit(1);
         }
+
         for (TrustManager trustManager : tmfactory.getTrustManagers()) {
             if (trustManager instanceof X509TrustManager) {
                 try {
                     ((X509TrustManager) trustManager).checkClientTrusted(new X509Certificate[]{cert}, "RSA");
                     return true;
                 } catch (CertificateException e) {
-                    e.printStackTrace();
                 }
             }
         }
