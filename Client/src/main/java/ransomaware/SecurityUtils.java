@@ -214,6 +214,7 @@ public class SecurityUtils {
                     ((X509TrustManager) trustManager).checkClientTrusted(new X509Certificate[]{cert}, "RSA");
                     return true;
                 } catch (CertificateException e) {
+                    //ignore
                 }
             }
         }
