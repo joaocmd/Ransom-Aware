@@ -11,10 +11,22 @@ public class ServerVariables {
     public static final String SSL_STOREPASS = "changeme";
     public static final String SSL_KEYPASS = "changeme";
 
-    public  static void init(String path, String mongoUri) {
+    public static final String PASSWORD_SALT = "joca-o-maior";
+    public static final String DB_COLLECTION_USERS = "users";
+    public static final String DB_COLLECTION_FILES = "files";
+    public static final String DB_COLLECTION_SALTS = "salts";
+
+    public static String RSYNC_SERVER = "localhost:rsync/";
+    public static String RSYNC_KEY = "id_rsync";
+
+    private  ServerVariables() {}
+
+    public static void init(String path, String mongoUri, String rsyncUri) {
         MONGO_URI = mongoUri;
         FS_PATH = path;
         FILES_PATH = path + "/files";
         SSL_KEYSTORE = String.format("%s/server-ssl.p12", FS_PATH);
+        RSYNC_SERVER = rsyncUri;
+        RSYNC_KEY = String.format("%s/id_rsync", FS_PATH);
     }
 }

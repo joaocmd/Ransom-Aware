@@ -9,7 +9,7 @@ import java.io.Console;
 import java.net.HttpURLConnection;
 import java.net.http.HttpClient;
 
-public class LoginCommand extends AbstractCommand {
+public class LoginCommand implements Command {
 
     private final SessionInfo info;
 
@@ -31,10 +31,10 @@ public class LoginCommand extends AbstractCommand {
         // Send request
         JsonObject response = Utils.requestPostFromURL(ClientVariables.URL + "/login", jsonRoot, client);
         if (response.get("status").getAsInt() == HttpURLConnection.HTTP_OK) {
-            info.setUsername(username);
-            info.setLogged(true);
+            info.login(username);
+            System.out.println("Login successful");
         } else {
-            Utils.handleError(response);
+            Utils.handleError(response, this.info);
         }
     }
 }

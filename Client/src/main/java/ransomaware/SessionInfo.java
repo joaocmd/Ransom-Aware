@@ -3,25 +3,37 @@ package ransomaware;
 public class SessionInfo {
     private String username;
     private boolean isLogged = false;
+    private String encryptKeyPath;
+    private String signKeyPath;
 
-    public void setUsername(String username) {
-                                           this.username = username;
-                                                                    }
+    public SessionInfo(String encryptKeyPath, String signKeyPath) {
+        this.encryptKeyPath = encryptKeyPath;
+        this.signKeyPath = signKeyPath;
+    }
 
     public String getUsername() {
-                              return username;
-                                              }
+        return username;
+    }
 
     public boolean isLogged() {
-                            return isLogged;
-                                            }
+        return isLogged;
+    }
 
-    public void setLogged(boolean logged) {
-            isLogged = logged;
-        }
+    public void login(String username) {
+        isLogged = true;
+        this.username = username;
+    }
 
     public void logOff(){
-        setLogged(false);
-        setUsername("");
+        isLogged = false;
+        username = "";
+    }
+
+    public String getEncryptKeyPath() {
+        return encryptKeyPath;
+    }
+
+    public String getSignKeyPath() {
+        return signKeyPath;
     }
 }

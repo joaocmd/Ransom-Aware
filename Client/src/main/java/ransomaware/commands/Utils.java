@@ -3,9 +3,11 @@ package ransomaware.commands;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import ransomaware.ClientVariables;
+import ransomaware.SessionInfo;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -15,7 +17,10 @@ public class Utils {
 
     private Utils() {}
 
-    public static void handleError(JsonObject err) {
+    public static void handleError(JsonObject err, SessionInfo info) {
+        if(err.get("status").getAsInt() == HttpURLConnection.HTTP_UNAUTHORIZED && err.get("body").getAsString().contains("token")) {
+            info.logOff();
+        }
         System.err.println(err.get("status").getAsString() + ": " + err.get("body").getAsString());
     }
 
@@ -58,8 +63,9 @@ public class Utils {
     }
 
     public static void clearWorkspace(File dir) {
-        if(dir == null)
+        if(dir == null) {
             return;
+        }
         File[] files = dir.listFiles();
         if(files != null) {
             for (File file : files) {
@@ -70,6 +76,6 @@ public class Utils {
     }
 
     public static String getUserDirectory(String user) {
-        return ClientVariables.WORKSPACE + '/' + user;
+        return ClientVariables.WORKSPACE + "/" + user;
     }
 }

@@ -2,16 +2,19 @@ package ransomaware.commands;
 
 import java.net.http.HttpClient;
 
-public class HelpCommand extends AbstractCommand {
+public class HelpCommand implements Command {
 
     @Override
     public void run(HttpClient client) {
         String help = "List of commands:\n" +
-                "login - \n" +
-                "list - \n" +
-                "get - \n" +
-                "save - \n" +
-                "register - \n";
+                "list - list files with granted access\n" +
+                "get - download file to workspace \n" +
+                "list-permissions - list users with file permissions \n" +
+                "save - save file to server\n" +
+                "save-renew - save file to server and renew the keys\n" +
+                "grant - grant permissions of read/edit file to user\n" +
+                "revoke - grant permissions of read/edit file from user\n" +
+                "clear - clear workspace\n";
 
         System.out.println(help);
     }

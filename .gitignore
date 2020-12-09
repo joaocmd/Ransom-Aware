@@ -137,5 +137,11 @@ hs_err_pid*
 Server/ransom-aware/files/
 Client/workspace/
 
+# HTTP requests for testing
+*.http
+
+# Ignore .iml files
+*.iml
+
 # End of https://www.toptal.com/developers/gitignore/api/java,intellij
 
