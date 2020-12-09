@@ -108,17 +108,5 @@ public class SessionManagerUnitTest extends BaseIT {
             SessionManager.login("zeus", "NotThisOneForSure,AmIRight?");
         });
     }
-
-    // Helper
-    JsonObject formRegisterReq(String username, String password) {
-        JsonObject jsonRequest = JsonParser.parseString("{}").getAsJsonObject();
-        jsonRequest.addProperty("username", username);
-        jsonRequest.addProperty("password", password);
-        return jsonRequest;
-    }
-
-    JsonObject formRegisterReq(String username) {
-        return formRegisterReq(username, generateRandomString(10, true, true));
-    }
 }
 
