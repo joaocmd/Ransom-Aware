@@ -79,11 +79,12 @@ class RansomAwareUnitTest extends BaseIT {
     @BeforeEach
     public void setUp() {
         testFile1 = loadFile(testFileName);
-        server = new RansomAware(9999, true, false);
+        server = new RansomAware(9999, true, true);
     }
 
     @AfterEach
     public void tearDown() {
+        if (server != null) server.shutdown();
     }
 
     // tests
@@ -285,9 +286,7 @@ class RansomAwareUnitTest extends BaseIT {
             server.uploadFile(testUser1.username, fileSent);
 
             // Give access to user1
-            assertThrows(AlreadyGrantedException.class, () -> {
-                server.grantPermission(testUser1.username, testUser1.username, fileSent);
-            });
+            assertThrows(AlreadyGrantedException.class, () -> server.grantPermission(testUser1.username, testUser1.username, fileSent));
         } catch (Exception e) {
             fail("Should not have thrown exception");
         }
@@ -308,9 +307,7 @@ class RansomAwareUnitTest extends BaseIT {
             server.getFile(testUser2.username, new StoredFile(testFile1.owner, testFile1.filename));
 
             // Give access to user2 again
-            assertThrows(AlreadyGrantedException.class, () -> {
-                server.grantPermission(testUser1.username, testUser2.username, fileSent);
-            });
+            assertThrows(AlreadyGrantedException.class, () -> server.grantPermission(testUser1.username, testUser2.username, fileSent));
 
         } catch (Exception e) {
             fail("Should not have thrown exception");
@@ -321,8 +318,160 @@ class RansomAwareUnitTest extends BaseIT {
      * Revoke permissions tests
      */
 
+    @Test
+    @DisplayName("User1 having grant permission to user2, revokes it")
+    void revokeSuccess() {
+        try {
+            // Upload file with user1
+            StoredFile fileSent = new StoredFile(testFile1.owner, testFile1.filename, testFile1.data, testFile1.fileInfo);
+            server.uploadFile(testUser1.username, fileSent);
+
+            StoredFile fileUsed = new StoredFile(testFile1.owner, testFile1.filename);
+
+            // Give access to user2
+            server.grantPermission(testUser1.username, testUser2.username, fileUsed);
+
+            // Verify that user2 can get file
+            server.getFile(testUser2.username, fileUsed);
+
+            // Revoke user2 permission
+            server.revokePermission(testUser1.username, testUser2.username, fileUsed);
+
+            // Verify that user2 can't get the file
+            assertThrows(UnauthorizedException.class, () -> server.getFile(testUser2.username, fileUsed));
+
+        } catch (Exception e) {
+            fail("Should not have thrown exception");
+        }
+    }
+
+    @Test
+    @DisplayName("User2 tries to revoke permission when it is not the owner but has access")
+    void revokeNotOwner() {
+        try {
+            // Upload file with user1
+            StoredFile fileSent = new StoredFile(testFile1.owner, testFile1.filename, testFile1.data, testFile1.fileInfo);
+            server.uploadFile(testUser1.username, fileSent);
+
+            StoredFile fileUsed = new StoredFile(testFile1.owner, testFile1.filename);
+
+            // Give access to user2
+            server.grantPermission(testUser1.username, testUser2.username, fileUsed);
+
+            // Verify that user2 can get file
+            server.getFile(testUser2.username, fileUsed);
+
+            // User2 tries to revoke permission to user1
+            assertThrows(UnauthorizedException.class, () -> server.revokePermission(testUser2.username, testUser1.username, fileUsed));
+
+        } catch (Exception e) {
+            fail("Should not have thrown exception");
+        }
+    }
+
+    @Test
+    @DisplayName("User2 tries to revoke permission when it is does not have access")
+    void revokeWithoutAccess() {
+        try {
+            // Upload file with user1
+            StoredFile fileSent = new StoredFile(testFile1.owner, testFile1.filename, testFile1.data, testFile1.fileInfo);
+            server.uploadFile(testUser1.username, fileSent);
+
+            StoredFile fileUsed = new StoredFile(testFile1.owner, testFile1.filename);
+
+            // Verify that user2 cant get file
+            assertThrows(UnauthorizedException.class, () -> server.getFile(testUser2.username, fileUsed));
+
+            // User2 tries to revoke permission to user1
+            assertThrows(UnauthorizedException.class, () -> server.revokePermission(testUser2.username, testUser1.username, fileUsed));
+
+        } catch (Exception e) {
+            fail("Should not have thrown exception");
+        }
+    }
+
+    @Test
+    @DisplayName("User1 tries to revoke permission to user2 when user2 already does not have permission")
+    void ownerRevokeAlreadyWithoutAccess() {
+        try {
+            // Upload file with user1
+            StoredFile fileSent = new StoredFile(testFile1.owner, testFile1.filename, testFile1.data, testFile1.fileInfo);
+            server.uploadFile(testUser1.username, fileSent);
+
+            StoredFile fileUsed = new StoredFile(testFile1.owner, testFile1.filename);
+
+            // Verify that user2 cant get file
+            assertThrows(UnauthorizedException.class, () -> server.getFile(testUser2.username, fileUsed));
+
+            // User1 tries to revoke permission to user2
+            assertThrows(AlreadyRevokedException.class, () -> server.revokePermission(testUser1.username, testUser2.username, fileUsed));
+
+        } catch (Exception e) {
+            fail("Should not have thrown exception");
+        }
+    }
+
+    @Test
+    @DisplayName("User1 tries to revoke permission to user2 on file non existent")
+    void userRevokeNonExistentFile() {
+        try {
+            StoredFile fileUsed = new StoredFile(testFile1.owner, "IDontExistForReal");
+
+            // Verify that user1 cant get file because it does not exist
+            assertThrows(NoSuchFileException.class, () -> server.getFile(testUser1.username, fileUsed));
+
+            // User1 tries to revoke permission to user2
+            assertThrows(NoSuchFileException.class, () -> server.revokePermission(testUser1.username, testUser2.username, fileUsed));
+
+        } catch (Exception e) {
+            fail("Should not have thrown exception");
+        }
+    }
+
+    @Test
+    @DisplayName("User1 tries to revoke permission to non existent user on existent file")
+    void userRevokeNonExistentUser() {
+        try {
+            // Upload file with user1
+            StoredFile fileSent = new StoredFile(testFile1.owner, testFile1.filename, testFile1.data, testFile1.fileInfo);
+            server.uploadFile(testUser1.username, fileSent);
+
+            StoredFile fileUsed = new StoredFile(testFile1.owner, testFile1.filename);
+
+            // Verify that user1 can get file because it exists
+            server.getFile(testUser1.username, fileUsed);
+
+            // User1 tries to revoke permission to non existent user
+            assertThrows(NoSuchUserException.class, () -> server.revokePermission(testUser1.username, "antonio-bambuino", fileUsed));
+
+        } catch (Exception e) {
+            fail("Should not have thrown exception");
+        }
+    }
+
+    @Test
+    @DisplayName("User1 tries to revoke permission to itself, being owner")
+    void ownerRevokeOwner() {
+        try {
+            // Upload file with user1
+            StoredFile fileSent = new StoredFile(testFile1.owner, testFile1.filename, testFile1.data, testFile1.fileInfo);
+            server.uploadFile(testUser1.username, fileSent);
+
+            StoredFile fileUsed = new StoredFile(testFile1.owner, testFile1.filename);
+
+            // Verify that user1 can get file because it exists
+            server.getFile(testUser1.username, fileUsed);
+
+            // User1 tries to revoke permission to itself
+            assertThrows(UnauthorizedException.class, () -> server.revokePermission(testUser1.username, testUser1.username, fileUsed));
+
+        } catch (Exception e) {
+            fail("Should not have thrown exception");
+        }
+    }
+
     /**
-     *
+     * owner revoking owner
      * Revoke
     */
 
