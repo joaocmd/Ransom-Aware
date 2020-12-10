@@ -77,26 +77,25 @@ public class GetFileCommand implements Command {
             if (!fileJson.getAsJsonObject("info").equals(info)) {
                 System.out.println(fileJson.getAsJsonObject("info").toString());
                 System.out.println(info.toString());
-                System.out.println("WARNING: Signed info did not match public info");
+                System.out.println("ERROR: Signed info did not match public info, aborting");
                 return;
             }
 
             X509Certificate cert = getUserCert(fileJson.getAsJsonObject("info").get("author").getAsString(), client);
             if (cert == null) {
-                System.err.println("Could not get certificate for author");
+                System.err.println("ERROR: Could not get certificate for author, aborting");
                 return;
             }
             if (!SecurityUtils.isCertificateValid(cert)) {
-                System.err.println("Signature is not from trusted CA");
+                System.err.println("ERROR: Certificate is not trusted, aborting");
             }
             if (!SecurityUtils.verifySignature(SecurityUtils.decodeBase64(encodedSignature), fileJson.toString().getBytes(), cert)) {
-                System.err.println("WARNING: File contains bad signature");
+                System.err.println("ERROR: File contains bad signature, aborting");
                 return;
             }
 
             if (!rollback && !fileIsFresh(info)) {
-                System.err.println("WARNING: File received is not fresh");
-                return;
+                System.err.println("WARNING: File received is not fresh, this might be intentional, resuming");
             }
 
             byte[] fileData = SecurityUtils.decodeBase64(fileJson.get("data").getAsString());
