@@ -5,7 +5,7 @@
 The system was developed using JDK 11, and so, Java 11 is necessary to run the project. The scripts use maven for running the program.
 
 ### Server
-* MongoDB (docker run -p 27017:27017 --name mongodb mongo);
+* MongoDB (`docker run -p 27017:27017 --name mongodb mongo`);
 * `ssh-askpass` might be needed if the server does not trust the backup server yet or if the ssh is pashphrase protected (which it should be).
 
 ### Backup Server
