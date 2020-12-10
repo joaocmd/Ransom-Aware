@@ -2,10 +2,12 @@ package ransomaware;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.List;
@@ -18,6 +20,7 @@ public class BaseIT {
     protected static Properties testProps;
     private static MongoClient mongoClient;
     private static String dbName;
+    private static File resourcesDirectory;
     static String baseUrl;
 
     @BeforeAll
@@ -44,7 +47,9 @@ public class BaseIT {
 
             mongoClient.getDB(dbName);
 
-            ServerVariables.init("ransom-aware", "mongodb://" + dbHost + ":" + dbPort, "localhost:rsync/", dbName);
+            resourcesDirectory = new File("src/test/resources");
+
+            ServerVariables.init(resourcesDirectory.getAbsolutePath() + "/ransom-aware-test", "mongodb://" + dbHost + ":" + dbPort, "localhost:rsync/", dbName);
         } catch (UnknownHostException e) {
             System.out.print("Could not connect to MongoDB database");
             throw e;
@@ -57,16 +62,20 @@ public class BaseIT {
     }
 
     @AfterAll
-    public static void cleanup() {
+    public static void cleanup() throws IOException {
         // Comment next line to keep testing data
-        // mongoClient.dropDatabase(dbName);
+        mongoClient.dropDatabase(dbName);
 
         System.gc();
+
+        // Delete files
+        File filesFolder = new File(resourcesDirectory.getAbsolutePath() + "/" + dbName + "/files");
+        FileUtils.deleteDirectory(filesFolder);
     }
 
     // Helper methods
 
-    String generateRandomString(int length, boolean useLetters, boolean useNumbers) {
+    static String generateRandomString(int length, boolean useLetters, boolean useNumbers) {
         return RandomStringUtils.random(length, useLetters, useNumbers);
     }
 

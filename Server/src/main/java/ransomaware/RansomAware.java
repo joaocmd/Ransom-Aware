@@ -217,7 +217,6 @@ public class RansomAware {
                     // Get file to read
                     String mostRecentPath = mostRecent.get().getAbsolutePath();
                     StoredFile fileWithOwner = new StoredFile(user.getName(), file.getName());
-                    fileWithOwner.toString();
                     String data = Files.readString(Path.of(mostRecentPath));
                     StoredFile storedFile = new StoredFile(fileWithOwner, data);
 
@@ -274,5 +273,9 @@ public class RansomAware {
             LOGGER.severe("Could not read new file version");
             throw new RuntimeException(e);
         }
+    }
+
+    public void shutdown() {
+        Server.stop();
     }
 }
