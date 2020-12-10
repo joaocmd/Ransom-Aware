@@ -51,7 +51,7 @@ public class SessionManager {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("_id", username);
-        DBObject userQuery = client.getDB(ServerVariables.FS_PATH)
+        DBObject userQuery = client.getDB(ServerVariables.DB_NAME)
                 .getCollection(ServerVariables.DB_COLLECTION_USERS)
                 .findOne(query);
         client.close();
@@ -66,7 +66,7 @@ public class SessionManager {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("_id", username);
-        DBObject userQuery = client.getDB(ServerVariables.FS_PATH)
+        DBObject userQuery = client.getDB(ServerVariables.DB_NAME)
                 .getCollection(ServerVariables.DB_COLLECTION_USERS)
                 .findOne(query);
         client.close();
@@ -81,7 +81,7 @@ public class SessionManager {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("_id", username);
-        DBObject userQuery = client.getDB(ServerVariables.FS_PATH)
+        DBObject userQuery = client.getDB(ServerVariables.DB_NAME)
                 .getCollection(ServerVariables.DB_COLLECTION_USERS)
                 .findOne(query);
         client.close();
@@ -96,9 +96,9 @@ public class SessionManager {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("_id", username);
-        var users = client.getDB(ServerVariables.FS_PATH)
+        var users = client.getDB(ServerVariables.DB_NAME)
                 .getCollection(ServerVariables.DB_COLLECTION_USERS);
-        var salts = client.getDB(ServerVariables.FS_PATH)
+        var salts = client.getDB(ServerVariables.DB_NAME)
                 .getCollection(ServerVariables.DB_COLLECTION_SALTS);
         var user = users.findOne(query);
 
@@ -136,10 +136,10 @@ public class SessionManager {
         MongoClient client = getMongoClient();
 
         var query = new BasicDBObject("_id", username);
-        DBObject userQuery = client.getDB(ServerVariables.FS_PATH)
+        DBObject userQuery = client.getDB(ServerVariables.DB_NAME)
                 .getCollection(ServerVariables.DB_COLLECTION_USERS)
                 .findOne(query);
-        DBObject saltQuery = client.getDB(ServerVariables.FS_PATH)
+        DBObject saltQuery = client.getDB(ServerVariables.DB_NAME)
                 .getCollection(ServerVariables.DB_COLLECTION_SALTS)
                 .findOne(query);
         client.close();

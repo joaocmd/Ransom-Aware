@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 public class Server {
 
     private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
+    private static HttpsServer serverStarted;
 
     private Server() {}
 
@@ -76,6 +77,7 @@ public class Server {
         HttpsServer server = prepareHttpsServer(domain, port);
         LOGGER.info("Server starting");
         server.start();
+        serverStarted = server;
 
         // Create new thread where we wait for user to end the server
         new Thread(() -> {
@@ -84,5 +86,11 @@ public class Server {
 
             server.stop(0);
         }).start();
+    }
+
+    public static void stop() {
+        if (serverStarted != null) {
+            serverStarted.stop(0);
+        }
     }
 }
