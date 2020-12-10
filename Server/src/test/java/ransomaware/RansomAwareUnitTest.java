@@ -38,9 +38,10 @@ class RansomAwareUnitTest extends BaseIT {
     }
 
     // static members
-    static RansomAware server = new RansomAware(9999, true);
+    static RansomAware server;
     static TestUser testUser1;
     static TestUser testUser2;
+    static TestUser testUser3;
     static String testFileName = "/test-file1.txt";
     static String invalidFilename = "fake/joao.txt";
     static TestFile testFile1;
@@ -60,25 +61,29 @@ class RansomAwareUnitTest extends BaseIT {
         SessionManager.register(username2, password2, "fake-cert", "fake-cert-2");
         testUser2 = new TestUser(username2, password2);
 
+        String username3 = "diogo";
+        String password3 = generateRandomString(10, true, true);
+        SessionManager.register(username3, password3, "fake-cert", "fake-cert-2");
+        testUser3 = new TestUser(username3, password3);
+
         // Get valid file
         testFile1 = loadFile(testFileName);
     }
 
     @AfterAll
     public static void oneTimeTearDown() {
-        server.shutdown();
     }
 
     // initialization and clean-up for each test
 
     @BeforeEach
     public void setUp() {
-
+        testFile1 = loadFile(testFileName);
+        server = new RansomAware(9999, true, false);
     }
 
     @AfterEach
     public void tearDown() {
-
     }
 
     // tests
@@ -90,9 +95,7 @@ class RansomAwareUnitTest extends BaseIT {
     @DisplayName("Upload file with invalid filename")
     void uploadInvalidFilename() {
         StoredFile fileSent = new StoredFile(testFile1.owner, invalidFilename, testFile1.data, testFile1.fileInfo);
-        assertThrows(InvalidFileNameException.class, () -> {
-            server.uploadFile(testUser1.username, fileSent);
-        });
+        assertThrows(InvalidFileNameException.class, () -> server.uploadFile(testUser1.username, fileSent));
     }
 
     @Test
@@ -102,28 +105,28 @@ class RansomAwareUnitTest extends BaseIT {
         fileInfoChanged.addProperty("author", testUser2.username);
 
         StoredFile fileSent = new StoredFile(testFile1.owner, testFile1.filename, testFile1.data, fileInfoChanged);
-        assertThrows(IllegalArgumentException.class, () -> {
-            server.uploadFile(testUser1.username, fileSent);
-        });
+        assertThrows(IllegalArgumentException.class, () -> server.uploadFile(testUser1.username, fileSent));
     }
 
     @Test
     @DisplayName("Reupload file with wrong permissions")
     void reuploadWrongPermissions() {
-        // First upload file
-        StoredFile fileSent1 = new StoredFile(testFile1.owner, testFile1.filename, testFile1.data, testFile1.fileInfo);
-        server.uploadFile(testUser1.username, fileSent1);
+        try {
+            // First upload file
+            StoredFile fileSent1 = new StoredFile(testUser1.username, testFile1.filename, testFile1.data, testFile1.fileInfo);
+            server.uploadFile(testUser1.username, fileSent1);
 
-        // Prepare reupload with wrong permissions
-        JsonObject fileInfoChanged = testFile1.fileInfo;
-        JsonObject keys = fileInfoChanged.getAsJsonObject("keys");
-        keys.addProperty(testUser2.username, "fake-key");
-        fileInfoChanged.add("keys", keys);
+            // Prepare reupload with wrong permissions
+            JsonObject fileInfoChanged = testFile1.fileInfo;
+            JsonObject keys = fileInfoChanged.getAsJsonObject("keys");
+            keys.addProperty(testUser2.username, "fake-key");
+            fileInfoChanged.add("keys", keys);
 
-        StoredFile fileSent2 = new StoredFile(testFile1.owner, testFile1.filename, testFile1.data, fileInfoChanged);
-        assertThrows(IllegalArgumentException.class, () -> {
-            server.uploadFile(testUser1.username, fileSent2);
-        });
+            StoredFile fileSent2 = new StoredFile(testFile1.owner, testFile1.filename, testFile1.data, fileInfoChanged);
+            assertThrows(IllegalArgumentException.class, () -> server.uploadFile(testUser1.username, fileSent2));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -157,9 +160,8 @@ class RansomAwareUnitTest extends BaseIT {
             server.uploadFile(testUser1.username, fileSent);
 
             // Get file with user 2
-            assertThrows(UnauthorizedException.class, () -> {
-                server.getFile(testUser2.username, new StoredFile(testFile1.owner, testFile1.filename));
-            });
+            StoredFile sendingFile = new StoredFile(testFile1.owner, testFile1.filename);
+            assertThrows(UnauthorizedException.class, () -> server.getFile(testUser2.username, sendingFile));
         } catch (Exception e) {
             fail("Should not have thrown exception.");
         }
@@ -170,17 +172,159 @@ class RansomAwareUnitTest extends BaseIT {
     void getNonExistentFile() {
         try {
             // Get file non-existent
-            assertThrows(NoSuchFileException.class, () -> {
-                server.getFile(testUser2.username, new StoredFile(testUser2.username, "file-does-not-exist"));
-            });
+            StoredFile file = new StoredFile(testUser2.username, "file-does-not-exist");
+            assertThrows(NoSuchFileException.class, () -> server.getFile(testUser2.username, file));
         } catch (Exception e) {
             fail("Should not have thrown exception.");
         }
     }
 
     /**
-     * Grant and revoke permissions tests
+     * Grant permissions tests
      */
+
+    @Test
+    @DisplayName("Owner grants permissions and user2 can get")
+    void ownerGrantUserCanGet() {
+        try {
+            // Upload file with user1
+            StoredFile fileSent = new StoredFile(testFile1.owner, testFile1.filename, testFile1.data, testFile1.fileInfo);
+            server.uploadFile(testUser1.username, fileSent);
+
+            // Verify that user2 can't get file
+            StoredFile file2 = new StoredFile(testFile1.owner, testFile1.filename);
+            assertThrows(UnauthorizedException.class, () -> server.getFile(testUser2.username, file2));
+
+            // User1 grants permission to user 2
+            server.grantPermission(testUser1.username, testUser2.username, fileSent);
+
+            // User2 can get file
+            server.getFile(testUser2.username, new StoredFile(testFile1.owner, testFile1.filename));
+        } catch (Exception e) {
+            fail("Should not have thrown exception");
+        }
+    }
+
+    @Test
+    @DisplayName("User2 tries to grant, but is not the owner and does not have access")
+    void userTriesGrantButShouldNot() {
+        try {
+            // Upload file with user1
+            StoredFile fileSent = new StoredFile(testFile1.owner, testFile1.filename, testFile1.data, testFile1.fileInfo);
+            server.uploadFile(testUser1.username, fileSent);
+
+            StoredFile fileToGet = new StoredFile(testFile1.owner, testFile1.filename);
+
+            // Verify that user2 can't get file
+            assertThrows(UnauthorizedException.class, () -> server.getFile(testUser2.username, fileToGet));
+
+            // User2 tries to grant permission to user3
+            assertThrows(UnauthorizedException.class, () -> server.grantPermission(testUser2.username, testUser3.username, fileToGet));
+
+            // User2 can't get file
+            assertThrows(UnauthorizedException.class, () -> server.getFile(testUser2.username, fileToGet));
+
+            // User3 can't get file
+            assertThrows(UnauthorizedException.class, () -> server.getFile(testUser3.username, fileToGet));
+        } catch (Exception e) {
+            fail("Should not have thrown exception");
+        }
+    }
+
+    @Test
+    @DisplayName("User2 tries to grant, but is not the owner and has access")
+    void userTriesGrantButShouldNot2() {
+        try {
+            // Upload file with user1
+            StoredFile fileSent = new StoredFile(testFile1.owner, testFile1.filename, testFile1.data, testFile1.fileInfo);
+            server.uploadFile(testUser1.username, fileSent);
+
+            StoredFile fileToGet = new StoredFile(testFile1.owner, testFile1.filename);
+
+            // Give access to user2
+            server.grantPermission(testUser1.username, testUser2.username, fileToGet);
+
+            // Verify that user2 can get file
+            server.getFile(testUser2.username, fileToGet);
+
+            // User2 tries to grant permission to user3
+            assertThrows(UnauthorizedException.class, () -> server.grantPermission(testUser2.username, testUser3.username, fileToGet));
+
+            // User3 can't get file
+            assertThrows(UnauthorizedException.class, () -> server.getFile(testUser3.username, fileToGet));
+        } catch (Exception e) {
+            fail("Should not have thrown exception");
+        }
+    }
+
+    @Test
+    @DisplayName("User tries to grant file that does not exist")
+    void userTriesGrantNonExistent() {
+        try {
+            String nonExistentFilename = "IDontExist";
+            StoredFile file = new StoredFile(testUser2.username, nonExistentFilename);
+
+            // Try to grant permission of file that does not exist
+            assertThrows(NoSuchFileException.class, () -> server.grantPermission(testUser2.username, testUser3.username,
+                    file));
+
+            // Try to get file that does not exist
+            assertThrows(NoSuchFileException.class, () -> server.getFile(testUser2.username, file));
+
+        } catch (Exception e) {
+            fail("Should not have thrown exception");
+        }
+    }
+
+    @Test
+    @DisplayName("User1 tries to grant permissions to itself")
+    void userTriesGrantToItself() {
+        try {
+            // Upload file with user1
+            StoredFile fileSent = new StoredFile(testFile1.owner, testFile1.filename, testFile1.data, testFile1.fileInfo);
+            server.uploadFile(testUser1.username, fileSent);
+
+            // Give access to user1
+            assertThrows(AlreadyGrantedException.class, () -> {
+                server.grantPermission(testUser1.username, testUser1.username, fileSent);
+            });
+        } catch (Exception e) {
+            fail("Should not have thrown exception");
+        }
+    }
+
+    @Test
+    @DisplayName("User1 tries to grant to user2 two times")
+    void userTriesGrantTwice() {
+        try {
+            // Upload file with user1
+            StoredFile fileSent = new StoredFile(testFile1.owner, testFile1.filename, testFile1.data, testFile1.fileInfo);
+            server.uploadFile(testUser1.username, fileSent);
+
+            // Give access to user2
+            server.grantPermission(testUser1.username, testUser2.username, fileSent);
+
+            // Verify that user2 can get file
+            server.getFile(testUser2.username, new StoredFile(testFile1.owner, testFile1.filename));
+
+            // Give access to user2 again
+            assertThrows(AlreadyGrantedException.class, () -> {
+                server.grantPermission(testUser1.username, testUser2.username, fileSent);
+            });
+
+        } catch (Exception e) {
+            fail("Should not have thrown exception");
+        }
+    }
+
+    /**
+     * Revoke permissions tests
+     */
+
+    /**
+     *
+     * Revoke
+    */
 
 
     // helper

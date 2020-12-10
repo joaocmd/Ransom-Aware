@@ -20,12 +20,16 @@ public class RansomAware {
     private final ConcurrentHashMap<String, Set<String>> userFiles = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Set<String>> usersWithAccess = new ConcurrentHashMap<>();
 
-    public RansomAware(int port, boolean firstTime) {
+    public RansomAware(int port, boolean firstTime, boolean startServer) {
         if (!firstTime) {
             spinUp();
         }
 
-        Server.start(this, port);
+        if (startServer) Server.start(this, port);
+    }
+
+    public RansomAware(int port, boolean firstTime) {
+        this(port, firstTime, true);
     }
 
     private boolean isOwner(String user, StoredFile file) {
@@ -120,7 +124,7 @@ public class RansomAware {
         SessionManager.hasUser(userToGrant);
 
         // Check if file exists
-        if (!(userFiles.containsKey(userGranting) && userFiles.get(userGranting).contains(filename))) {
+        if (!(userFiles.containsKey(file.getOwner()) && userFiles.get(file.getOwner()).contains(filename))) {
             throw new NoSuchFileException();
         }
 
