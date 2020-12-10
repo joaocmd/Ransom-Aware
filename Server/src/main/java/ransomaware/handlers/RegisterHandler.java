@@ -35,9 +35,11 @@ public class RegisterHandler extends AbstractHandler {
         LOGGER.info(String.format("register request: %s password: [REDACTED]", username));
 
         if (!validateCertificate(username, encodedEncryptCert, "Encrypting")) {
+            sendResponse(HttpURLConnection.HTTP_BAD_REQUEST, "Encryption certificate not found or invalid");
             return;
         }
         if (!validateCertificate(username, encodedSignCert, "Signing")) {
+            sendResponse(HttpURLConnection.HTTP_BAD_REQUEST, "Signing certificate not found or invalid");
             return;
         }
 
