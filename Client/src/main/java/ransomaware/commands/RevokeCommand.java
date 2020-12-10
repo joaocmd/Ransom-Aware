@@ -13,6 +13,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static ransomaware.commands.Utils.getFilePath;
+import static ransomaware.commands.Utils.getMetadataPath;
+
 public class RevokeCommand implements Command {
 
     private final SessionInfo sessionInfo;
@@ -76,6 +79,15 @@ public class RevokeCommand implements Command {
             Files.delete(fileToDeletePath);
         } catch (IOException ignored) {
             // ignored since we created it first, and if already erased it is intended.
+        }
+
+        // Delete current metadata to update next time
+        String storedFilePath = getFilePath(owner, filename);
+        Path metadataPath = getMetadataPath(storedFilePath);
+        try {
+            Files.delete(metadataPath);
+        } catch (IOException ignored) {
+            // If does not exist, ignore
         }
 
         System.out.println("Permissions successfully revoked");

@@ -12,6 +12,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Path;
 
 public class Utils {
 
@@ -60,6 +61,12 @@ public class Utils {
 
     public static String getFilePath(String owner, String filename) {
         return ClientVariables.WORKSPACE + '/' + owner + '/' + filename;
+    }
+
+    public static Path getMetadataPath(String filePath) {
+        Path path = Path.of(filePath);
+        String fileName = '.' + path.getFileName().toString() + ".metadata";
+        return path.resolveSibling(fileName);
     }
 
     public static void clearWorkspace(File dir) {
