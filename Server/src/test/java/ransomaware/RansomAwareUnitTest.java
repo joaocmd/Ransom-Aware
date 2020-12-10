@@ -4,6 +4,7 @@ import org.junit.jupiter.api.*;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import ransomaware.domain.StoredFile;
+import ransomaware.exceptions.*;
 
 import java.io.IOException;
 
@@ -37,11 +38,11 @@ class RansomAwareUnitTest extends BaseIT {
     }
 
     // static members
-    // FIXME: Port wrong
-    static RansomAware server = new RansomAware(0, true);
+    static RansomAware server = new RansomAware(9999, true);
     static TestUser testUser1;
     static TestUser testUser2;
     static String testFileName = "/test-file1.txt";
+    static String invalidFilename = "fake/joao.txt";
     static TestFile testFile1;
 
 
@@ -60,7 +61,7 @@ class RansomAwareUnitTest extends BaseIT {
         testUser2 = new TestUser(username2, password2);
 
         // Get valid file
-        testFile1 = getFile(testFileName);
+        testFile1 = loadFile(testFileName);
     }
 
     @AfterAll
@@ -83,8 +84,52 @@ class RansomAwareUnitTest extends BaseIT {
     // tests
 
     /**
-     * Upload and Get tests
+     * Upload tests
      */
+    @Test
+    @DisplayName("Upload file with invalid filename")
+    void uploadInvalidFilename() {
+        StoredFile fileSent = new StoredFile(testFile1.owner, invalidFilename, testFile1.data, testFile1.fileInfo);
+        assertThrows(InvalidFileNameException.class, () -> {
+            server.uploadFile(testUser1.username, fileSent);
+        });
+    }
+
+    @Test
+    @DisplayName("Upload file with wrong author")
+    void uploadWrongAuthor() {
+        JsonObject fileInfoChanged = testFile1.fileInfo;
+        fileInfoChanged.addProperty("author", testUser2.username);
+
+        StoredFile fileSent = new StoredFile(testFile1.owner, testFile1.filename, testFile1.data, fileInfoChanged);
+        assertThrows(IllegalArgumentException.class, () -> {
+            server.uploadFile(testUser1.username, fileSent);
+        });
+    }
+
+    @Test
+    @DisplayName("Reupload file with wrong permissions")
+    void reuploadWrongPermissions() {
+        // First upload file
+        StoredFile fileSent1 = new StoredFile(testFile1.owner, testFile1.filename, testFile1.data, testFile1.fileInfo);
+        server.uploadFile(testUser1.username, fileSent1);
+
+        // Prepare reupload with wrong permissions
+        JsonObject fileInfoChanged = testFile1.fileInfo;
+        JsonObject keys = fileInfoChanged.getAsJsonObject("keys");
+        keys.addProperty(testUser2.username, "fake-key");
+        fileInfoChanged.add("keys", keys);
+
+        StoredFile fileSent2 = new StoredFile(testFile1.owner, testFile1.filename, testFile1.data, fileInfoChanged);
+        assertThrows(IllegalArgumentException.class, () -> {
+            server.uploadFile(testUser1.username, fileSent2);
+        });
+    }
+
+    /**
+     * Get tests
+     */
+
     @Test
     @DisplayName("Upload valid file with owner and get it after, checking if they are equal")
     void uploadAndGetValidFile() {
@@ -103,15 +148,43 @@ class RansomAwareUnitTest extends BaseIT {
         }
     }
 
+    @Test
+    @DisplayName("Upload valid file with owner and get with user without access")
+    void getUnauthorizedFile() {
+        try {
+            // Upload file with user1
+            StoredFile fileSent = new StoredFile(testFile1.owner, testFile1.filename, testFile1.data, testFile1.fileInfo);
+            server.uploadFile(testUser1.username, fileSent);
+
+            // Get file with user 2
+            assertThrows(UnauthorizedException.class, () -> {
+                server.getFile(testUser2.username, new StoredFile(testFile1.owner, testFile1.filename));
+            });
+        } catch (Exception e) {
+            fail("Should not have thrown exception.");
+        }
+    }
+
+    @Test
+    @DisplayName("Get file that does not exist")
+    void getNonExistentFile() {
+        try {
+            // Get file non-existent
+            assertThrows(NoSuchFileException.class, () -> {
+                server.getFile(testUser2.username, new StoredFile(testUser2.username, "file-does-not-exist"));
+            });
+        } catch (Exception e) {
+            fail("Should not have thrown exception.");
+        }
+    }
+
     /**
-     * Upload
-     * Get
-     * grantPermission
-     * revokePermission
+     * Grant and revoke permissions tests
      */
 
+
     // helper
-    private static TestFile getFile(String name) {
+    private static TestFile loadFile(String name) {
         try {
             String fileBody = new String(BaseIT.class.getResourceAsStream(name).readAllBytes());
             JsonObject body = JsonParser.parseString(fileBody).getAsJsonObject();

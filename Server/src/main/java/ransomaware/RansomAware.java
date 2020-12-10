@@ -49,6 +49,11 @@ public class RansomAware {
             throw new InvalidFileNameException();
         }
 
+        // Check if author corresponds to user sending
+        if (!user.equals(file.getAuthor())) {
+            throw new IllegalArgumentException();
+        }
+
         if (hasAccessToFile(user, file)) {
             // Check if permissions are correct with server's
             if (usersWithAccess.containsKey(fileName) && !usersWithAccess.get(fileName).equals(file.getUsersWithAccess())) {
