@@ -1,6 +1,7 @@
 package ransomaware;
 
 import ransomaware.commands.*;
+import ransomaware.exceptions.ConnectionException;
 
 import java.io.Console;
 import java.net.CookieManager;
@@ -47,8 +48,17 @@ public class RansomAwareClient {
         Console console = System.console();
         String input;
 
-        register();
-        login();
+        try {
+            register();
+            login();
+        } catch (ConnectionException e) {
+            System.err.println("Can't connect to server");
+            // Shutdown client
+            executor.shutdownNow();
+            client = null;
+            System.gc();
+            return;
+        }
 
         do {
             input = console.readLine("> ");

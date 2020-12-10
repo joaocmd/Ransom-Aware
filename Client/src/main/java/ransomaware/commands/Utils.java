@@ -4,9 +4,11 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import ransomaware.ClientVariables;
 import ransomaware.SessionInfo;
+import ransomaware.exceptions.ConnectionException;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -36,6 +38,8 @@ public class Utils {
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             return JsonParser.parseString(response.body()).getAsJsonObject();
+        } catch (ConnectException e) {
+            throw new ConnectionException();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
@@ -52,6 +56,8 @@ public class Utils {
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             return JsonParser.parseString(response.body()).getAsJsonObject();
+        } catch (ConnectException e) {
+            throw new ConnectionException();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
