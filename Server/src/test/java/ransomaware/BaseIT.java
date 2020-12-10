@@ -21,7 +21,6 @@ public class BaseIT {
     private static MongoClient mongoClient;
     private static String dbName;
     private static File resourcesDirectory;
-    static String baseUrl;
 
     @BeforeAll
     public static void oneTimeSetup() throws IOException {
@@ -58,7 +57,6 @@ public class BaseIT {
 
         String HOST = testProps.getProperty("server.host");
         String PORT = testProps.getProperty("server.port");
-        baseUrl = "https://" + HOST + ":" + PORT;
     }
 
     @AfterAll

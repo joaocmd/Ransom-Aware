@@ -25,7 +25,9 @@ public class RansomAware {
             spinUp();
         }
 
-        if (!debug) Server.start(this, port);
+        if (!debug) {
+            Server.start(this, port);
+        }
     }
 
     public RansomAware(int port, boolean firstTime) {

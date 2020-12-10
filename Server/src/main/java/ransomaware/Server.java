@@ -89,6 +89,8 @@ public class Server {
     }
 
     public static void stop() {
-        if (serverStarted != null) serverStarted.stop(0);
+        if (serverStarted != null) {
+            serverStarted.stop(0);
+        }
     }
 }
