@@ -40,7 +40,7 @@ public class RevokeHandler extends AbstractHandler {
 
         try {
             server.revokePermission(owner, userToRevoke, new StoredFile(parts[0], parts[1]));
-            LOGGER.info(String.format("User '%s' granted revoked of File '%s' to '%s'", owner, file, userToRevoke));
+            LOGGER.info(String.format("User '%s' revoked permissions of File '%s' to '%s'", owner, file, userToRevoke));
             sendResponse(HttpURLConnection.HTTP_OK, "OK");
         } catch (NoSuchFileException e) {
             sendResponse(HttpURLConnection.HTTP_NOT_FOUND, "No such file");
