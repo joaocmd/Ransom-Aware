@@ -1,20 +1,15 @@
 package ransomaware;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import org.junit.jupiter.api.*;
 import ransomaware.exceptions.DuplicateUsernameException;
 import ransomaware.exceptions.InvalidUserNameException;
 import ransomaware.exceptions.UnauthorizedException;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @DisplayName("Test Register and Login functions")
-public class SessionManagerUnitTest extends BaseIT {
+class SessionManagerUnitTest extends BaseIT {
 
     // static members
     static String registeredUsername;
@@ -26,7 +21,6 @@ public class SessionManagerUnitTest extends BaseIT {
     // one-time initialization and clean-up
     @BeforeAll
     public static void oneTimeSetUp(){
-        ServerVariables.init("ransom-aware", "mongodb://localhost:27017", "localhost:rsync/");
     }
 
     @AfterAll

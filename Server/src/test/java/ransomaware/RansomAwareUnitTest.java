@@ -15,7 +15,8 @@ public class RansomAwareUnitTest extends BaseIT {
     // one-time initialization and clean-up
     @BeforeAll
     public static void oneTimeSetUp(){
-        ServerVariables.init("ransom-aware", "mongodb://localhost:27017", "localhost:rsync/");
+        // Get registered user
+
     }
 
     @AfterAll

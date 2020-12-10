@@ -35,13 +35,16 @@ public class BaseIT {
         try {
             String dbHost = testProps.getProperty("db.host");
             String dbPort = testProps.getProperty("db.port");
-            dbName = testProps.getProperty("db.name");
+            dbName = testProps.getProperty("db.test");
             mongoClient = new MongoClient(new MongoClientURI("mongodb://" + dbHost + ":" + dbPort));
             List<String> databases = mongoClient.getDatabaseNames();
             if (databases.contains(dbName)) {
                 mongoClient.dropDatabase(dbName);
-                mongoClient.getDB(dbName);
             }
+
+            mongoClient.getDB(dbName);
+
+            ServerVariables.init("ransom-aware", "mongodb://" + dbHost + ":" + dbPort, "localhost:rsync/", dbName);
         } catch (UnknownHostException e) {
             System.out.print("Could not connect to MongoDB database");
             throw e;
@@ -51,15 +54,13 @@ public class BaseIT {
         String HOST = testProps.getProperty("server.host");
         String PORT = testProps.getProperty("server.port");
         baseUrl = "https://" + HOST + ":" + PORT;
-        ServerVariables.init("ransom-aware", "mongodb://localhost:27017", "localhost:rsync/");
     }
 
     @AfterAll
     public static void cleanup() {
         // Comment next line to keep testing data
-        mongoClient.dropDatabase(dbName);
+        // mongoClient.dropDatabase(dbName);
 
-        mongoClient.getDB(dbName);
         System.gc();
     }
 
