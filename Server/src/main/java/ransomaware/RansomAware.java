@@ -31,7 +31,7 @@ public class RansomAware {
     }
 
     public RansomAware(int port, boolean firstTime) {
-        this(port, firstTime, true);
+        this(port, firstTime, false);
     }
 
     private boolean isOwner(String user, StoredFile file) {
