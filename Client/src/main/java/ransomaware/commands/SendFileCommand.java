@@ -22,6 +22,8 @@ import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 
+import static ransomaware.commands.Utils.getMetadataPath;
+
 public class SendFileCommand implements Command {
 
     private final String owner;
@@ -88,7 +90,7 @@ public class SendFileCommand implements Command {
 
             JsonObject response = Utils.requestPostFromURL(ClientVariables.URL + "/save", jsonRoot, client);
             if (response.get("status").getAsInt() == HttpURLConnection.HTTP_OK) {
-                Files.write(getMetadataPath(), info.toString().getBytes());
+                Files.write(getMetadataPath(filePath), info.toString().getBytes());
                 System.out.println("File successfully saved");
             } else {
                 Utils.handleError(response, this.sessionInfo);
@@ -156,7 +158,7 @@ public class SendFileCommand implements Command {
     }
 
     private FileInfo getFileInfoFile(HttpClient client) throws IOException {
-        Path metadataPath = getMetadataPath();
+        Path metadataPath = getMetadataPath(filePath);
 
         try {
             byte[] data = Files.readAllBytes(metadataPath);
@@ -173,12 +175,6 @@ public class SendFileCommand implements Command {
         } catch (NoSuchFileException e) {
             return getFileInfoServer(client);
         }
-    }
-
-    private Path getMetadataPath() {
-        Path path = Path.of(filePath);
-        String fileName = '.' + path.getFileName().toString() + ".metadata";
-        return path.resolveSibling(fileName);
     }
 
     private static class FileInfo {

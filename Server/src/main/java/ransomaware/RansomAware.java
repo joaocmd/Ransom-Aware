@@ -20,12 +20,18 @@ public class RansomAware {
     private final ConcurrentHashMap<String, Set<String>> userFiles = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Set<String>> usersWithAccess = new ConcurrentHashMap<>();
 
-    public RansomAware(int port, boolean firstTime) {
+    public RansomAware(int port, boolean firstTime, boolean debug) {
         if (!firstTime) {
             spinUp();
         }
 
-        Server.start(this, port);
+        if (!debug) {
+            Server.start(this, port);
+        }
+    }
+
+    public RansomAware(int port, boolean firstTime) {
+        this(port, firstTime, false);
     }
 
     private boolean isOwner(String user, StoredFile file) {
@@ -47,6 +53,11 @@ public class RansomAware {
         String name = file.getName();
         if (name.matches("[.]*") || name.contains("/")) {
             throw new InvalidFileNameException();
+        }
+
+        // Check if author corresponds to user sending
+        if (!user.equals(file.getAuthor())) {
+            throw new IllegalArgumentException();
         }
 
         if (hasAccessToFile(user, file)) {
@@ -115,7 +126,7 @@ public class RansomAware {
         SessionManager.hasUser(userToGrant);
 
         // Check if file exists
-        if (!(userFiles.containsKey(userGranting) && userFiles.get(userGranting).contains(filename))) {
+        if (!(userFiles.containsKey(file.getOwner()) && userFiles.get(file.getOwner()).contains(filename))) {
             throw new NoSuchFileException();
         }
 
@@ -145,7 +156,7 @@ public class RansomAware {
         SessionManager.hasUser(userToRevoke);
 
         // Check if file exists
-        if (!(userFiles.containsKey(userRevoking) && userFiles.get(userRevoking).contains(filename))) {
+        if (!(userFiles.containsKey(file.getOwner()) && userFiles.get(file.getOwner()).contains(filename))) {
             throw new NoSuchFileException();
         }
 
@@ -217,7 +228,6 @@ public class RansomAware {
                     // Get file to read
                     String mostRecentPath = mostRecent.get().getAbsolutePath();
                     StoredFile fileWithOwner = new StoredFile(user.getName(), file.getName());
-                    fileWithOwner.toString();
                     String data = Files.readString(Path.of(mostRecentPath));
                     StoredFile storedFile = new StoredFile(fileWithOwner, data);
 
@@ -274,5 +284,9 @@ public class RansomAware {
             LOGGER.severe("Could not read new file version");
             throw new RuntimeException(e);
         }
+    }
+
+    public void shutdown() {
+        Server.stop();
     }
 }

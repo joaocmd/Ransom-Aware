@@ -32,7 +32,7 @@ public class FileManager {
     public static int getFileVersion(String fileName) {
         MongoClient client = getMongoClient();
         var query = new BasicDBObject("_id", fileName);
-        DBObject file = client.getDB(ServerVariables.FS_PATH)
+        DBObject file = client.getDB(ServerVariables.DB_NAME)
                 .getCollection(ServerVariables.DB_COLLECTION_FILES)
                 .findOne(query);
         client.close();
@@ -46,7 +46,7 @@ public class FileManager {
 
     public static void dropDB(){
         MongoClient client = getMongoClient();
-        client.getDB(ServerVariables.FS_PATH).getCollection(ServerVariables.DB_COLLECTION_FILES).drop();
+        client.getDB(ServerVariables.DB_NAME).getCollection(ServerVariables.DB_COLLECTION_FILES).drop();
         client.close();
     }
 
@@ -54,7 +54,7 @@ public class FileManager {
         MongoClient client = getMongoClient();
         var query = new BasicDBObject("_id", fileName);
         var update = new BasicDBObject("version", version);
-        client.getDB(ServerVariables.FS_PATH)
+        client.getDB(ServerVariables.DB_NAME)
                 .getCollection(ServerVariables.DB_COLLECTION_FILES)
                 .update(query, update, true, false);
         client.close();
@@ -142,7 +142,7 @@ public class FileManager {
         MongoClient client = getMongoClient();
         var query = new BasicDBObject("_id", fileName);
         var update = new BasicDBObject("version", newVersion);
-        client.getDB(ServerVariables.FS_PATH)
+        client.getDB(ServerVariables.DB_NAME)
                 .getCollection(ServerVariables.DB_COLLECTION_FILES)
                 .update(query, update);
         client.close();

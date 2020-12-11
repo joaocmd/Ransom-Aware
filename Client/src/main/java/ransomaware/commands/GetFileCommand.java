@@ -19,6 +19,8 @@ import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 
+import static ransomaware.commands.Utils.getMetadataPath;
+
 public class GetFileCommand implements Command {
 
     private final SessionInfo sessionInfo;
@@ -117,7 +119,7 @@ public class GetFileCommand implements Command {
     private boolean fileIsFresh(JsonObject info) {
         Instant receivedTs = Instant.parse(info.get("timestamp").getAsString());
         try {
-            byte[] data = Files.readAllBytes(getMetadataPath());
+            byte[] data = Files.readAllBytes(getMetadataPath(getOutputFilePath()));
             JsonObject metadata = JsonParser.parseString(new String(data)).getAsJsonObject();
             Instant localTs = Instant.parse(metadata.get("timestamp").getAsString());
             if (localTs.isAfter(receivedTs)) {
@@ -127,12 +129,6 @@ public class GetFileCommand implements Command {
             // Ignored, file not found
         }
         return true;
-    }
-
-    private Path getMetadataPath() {
-        Path path = Path.of(getOutputFilePath());
-        String fileName = '.' + path.getFileName().toString() + ".metadata";
-        return path.resolveSibling(fileName);
     }
 
     private byte[] getCorrectKey(JsonObject keys) {

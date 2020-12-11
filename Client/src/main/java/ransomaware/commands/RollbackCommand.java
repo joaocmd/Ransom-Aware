@@ -43,7 +43,7 @@ public class RollbackCommand implements Command {
             file.addProperty("name", filename);
             jsonRoot.add("file", file);
 
-
+            System.out.println("WARNING: If rolling back after granting/revoking, the permissions will return to the previous state.");
 
             JsonObject response = Utils.requestPostFromURL(ClientVariables.URL + "/rollback", jsonRoot, client);
             if (response.get("status").getAsInt() == HttpURLConnection.HTTP_OK) {

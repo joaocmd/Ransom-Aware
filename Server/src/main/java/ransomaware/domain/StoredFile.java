@@ -87,6 +87,10 @@ public class StoredFile {
         return keys.keySet();
     }
 
+    public String getAuthor() {
+        return author;
+    }
+
     @Override
     public String toString() {
         return getAsJsonObject().toString();
