@@ -108,3 +108,39 @@ the client should reply with the given certificate:
 Path to encryption certificate: ransom-aware/<user>-encrypt.pem
 Path to signing certificate: ransom-aware/<user>-sign.pem
 ```
+## Example usage
+
+Having the server running, run the client like explained above, example user could be `joao`:
+
+```
+help                     # shows help menu
+create a.txt             # creates a.txt on the local fs, and edit it as you wish
+save a.txt               # saves a.txt on the server
+list                     # shows saved files
+list-permissions  a.txt  # lists users with access to the a.txt file
+```
+
+Login as a different user `daniel`:
+```
+get joao/a.txt          # tries to get joao/a.txt but fails because of permissions
+```
+
+Grant permissions to `daniel`:
+```
+grant a.txt daniel
+```
+
+Now `daniel` can edit the file:
+```
+list-permissions joao/a.txt
+get joao/a.txt           # stored locally on workspace/joao/a.txt, edit the file
+save joao/a.txt
+```
+
+`joao` can see the modiffications and roll them back:
+```
+get a.txt
+rollback a.txt 1        # rolls back a.txt 1 version
+revoke a.txt daniel     # revokes access permissions from daniel
+exit                    # logs out and exits the application
+```
