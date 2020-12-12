@@ -7,6 +7,7 @@ import ransomaware.SecurityUtils;
 import ransomaware.SessionInfo;
 import ransomaware.exceptions.CertificateInvalidException;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
@@ -128,12 +129,18 @@ public class SendFileCommand implements Command {
                 byte[] decodedCert = SecurityUtils.decodeBase64(entry.getValue().getAsString());
                 X509Certificate cert = SecurityUtils.getCertFromBytes(decodedCert);
                 PublicKey userKey = SecurityUtils.getKeyFromCert(SecurityUtils.getCertFromBytes(decodedCert));
-                String encryptedKey = SecurityUtils.getBase64(SecurityUtils.rsaCipher(Cipher.ENCRYPT_MODE, secretKey, userKey));
+                try {
+                    String encryptedKey = SecurityUtils.getBase64(SecurityUtils.rsaCipher(Cipher.ENCRYPT_MODE, secretKey, userKey));
 
-                if (!SecurityUtils.isCertificateValid(cert)) {
-                    throw new CertificateInvalidException();
+                    if (!SecurityUtils.isCertificateValid(cert)) {
+                        throw new CertificateInvalidException();
+                    }
+                    keys.addProperty(entry.getKey(), encryptedKey);
+                } catch (BadPaddingException e) {
+                    System.err.println("Got bad certificate from server, exiting");
+                    e.printStackTrace();
+                    System.exit(1);
                 }
-                keys.addProperty(entry.getKey(), encryptedKey);
             });
         } else if (responseStatus == HttpURLConnection.HTTP_NOT_FOUND) {
             // File not created yet, just get my certificate
@@ -141,12 +148,18 @@ public class SendFileCommand implements Command {
             byte[] decodedCert = SecurityUtils.decodeBase64(response.getAsJsonObject("certs").get("encrypt").getAsString());
             X509Certificate cert = SecurityUtils.getCertFromBytes(decodedCert);
             PublicKey userKey = SecurityUtils.getKeyFromCert(cert);
-            String encryptedKey = SecurityUtils.getBase64(SecurityUtils.rsaCipher(Cipher.ENCRYPT_MODE, secretKey, userKey));
+            try {
+                String encryptedKey = SecurityUtils.getBase64(SecurityUtils.rsaCipher(Cipher.ENCRYPT_MODE, secretKey, userKey));
 
-            if (!SecurityUtils.isCertificateValid(cert)) {
-                throw new CertificateInvalidException();
+                if (!SecurityUtils.isCertificateValid(cert)) {
+                    throw new CertificateInvalidException();
+                }
+                keys.addProperty(sessionInfo.getUsername(), encryptedKey);
+            } catch (BadPaddingException e) {
+                System.err.println("Got bad certificate from server, exiting");
+                e.printStackTrace();
+                System.exit(1);
             }
-            keys.addProperty(sessionInfo.getUsername(), encryptedKey);
         }
 
         root.add("keys", keys);
@@ -172,7 +185,7 @@ public class SendFileCommand implements Command {
             SecretKey key = SecurityUtils.getKeyFromBytes(SecurityUtils.rsaCipher(Cipher.DECRYPT_MODE, keyBytes, privKey));
 
             return new FileInfo(new IvParameterSpec(ivBytes), key, metadata);
-        } catch (NoSuchFileException e) {
+        } catch (NoSuchFileException | BadPaddingException e) {
             return getFileInfoServer(client);
         }
     }

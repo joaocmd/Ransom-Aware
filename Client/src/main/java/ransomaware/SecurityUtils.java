@@ -82,12 +82,12 @@ public class SecurityUtils {
         return new byte[0];
     }
 
-    public static byte[] rsaCipher(int opmode, byte[] data, Key key) {
+    public static byte[] rsaCipher(int opmode, byte[] data, Key key) throws BadPaddingException {
         try {
             Cipher cipher = Cipher.getInstance("RSA");
             cipher.init(opmode, key);
             return cipher.doFinal(data);
-        } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
+        } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | IllegalBlockSizeException e) {
             e.printStackTrace();
             System.exit(1);
         }

@@ -6,6 +6,7 @@ import ransomaware.ClientVariables;
 import ransomaware.SecurityUtils;
 import ransomaware.SessionInfo;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
@@ -67,10 +68,8 @@ public class GetFileCommand implements Command {
 
             byte[] keyBytes = getCorrectKey(info.getAsJsonObject("keys"));
             PrivateKey privKey = SecurityUtils.readPrivateKey(sessionInfo.getEncryptKeyPath());
-            SecretKey key = SecurityUtils.getKeyFromBytes(SecurityUtils.rsaCipher(Cipher.DECRYPT_MODE, keyBytes, privKey));
-            byte[] iv = SecurityUtils.decodeBase64(info.get("iv").getAsString());
 
-            byte[] unencryptedData = SecurityUtils.aesCipher(Cipher.DECRYPT_MODE, encryptedFile, key, new IvParameterSpec(iv));
+            byte[] unencryptedData = getUnencryptedData(encryptedFile, info, keyBytes, privKey);
             JsonObject fileJson = JsonParser.parseString(new String(unencryptedData)).getAsJsonObject();
 
             String encodedSignature = fileJson.get("signature").getAsString();
@@ -79,26 +78,25 @@ public class GetFileCommand implements Command {
             if (!fileJson.getAsJsonObject("info").equals(info)) {
                 System.out.println(fileJson.getAsJsonObject("info").toString());
                 System.out.println(info.toString());
-                System.out.println("WARNING: Signed info did not match public info");
+                System.out.println("ERROR: Signed info did not match public info, aborting");
                 return;
             }
 
             X509Certificate cert = getUserCert(fileJson.getAsJsonObject("info").get("author").getAsString(), client);
             if (cert == null) {
-                System.err.println("Could not get certificate for author");
+                System.err.println("ERROR: Could not get certificate for author, aborting");
                 return;
             }
             if (!SecurityUtils.isCertificateValid(cert)) {
-                System.err.println("Signature is not from trusted CA");
+                System.err.println("ERROR: Certificate is not trusted, aborting");
             }
             if (!SecurityUtils.verifySignature(SecurityUtils.decodeBase64(encodedSignature), fileJson.toString().getBytes(), cert)) {
-                System.err.println("WARNING: File contains bad signature");
+                System.err.println("ERROR: File contains bad signature, aborting");
                 return;
             }
 
             if (!rollback && !fileIsFresh(info)) {
-                System.err.println("WARNING: File received is not fresh");
-                return;
+                System.err.println("WARNING: File received is not fresh, this might be intentional, resuming");
             }
 
             byte[] fileData = SecurityUtils.decodeBase64(fileJson.get("data").getAsString());
@@ -115,6 +113,18 @@ public class GetFileCommand implements Command {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private byte[] getUnencryptedData(byte[] encryptedFile, JsonObject info, byte[] keyBytes, PrivateKey privKey) {
+        try {
+            SecretKey key = SecurityUtils.getKeyFromBytes(SecurityUtils.rsaCipher(Cipher.DECRYPT_MODE, keyBytes, privKey));
+            byte[] iv = SecurityUtils.decodeBase64(info.get("iv").getAsString());
+            return SecurityUtils.aesCipher(Cipher.DECRYPT_MODE, encryptedFile, key, new IvParameterSpec(iv));
+        } catch (BadPaddingException e) {
+            System.err.println("Got bad key from server, exiting");
+            System.exit(1);
+        }
+        return new byte[0];
     }
 
     private boolean fileIsFresh(JsonObject info) {
