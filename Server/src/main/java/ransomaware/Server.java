@@ -79,13 +79,10 @@ public class Server {
         server.start();
         serverStarted = server;
 
-        // Create new thread where we wait for user to end the server
-        new Thread(() -> {
-            LOGGER.info("<Press enter to shutdown>");
-            new Scanner(System.in).nextLine();
-
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            LOGGER.info("Shutting down");
             server.stop(0);
-        }).start();
+        }));
     }
 
     public static void stop() {

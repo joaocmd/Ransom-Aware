@@ -239,10 +239,8 @@ public class RansomAware {
                         usersWithAccess.get(fileName).add(userWithAccess);
                     }
                 } catch (IOException e) {
-                    // FIXME: Should the server be prepared for problems reading the file?
                     e.printStackTrace();
                 }
-
             }
         }
     }

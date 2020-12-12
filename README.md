@@ -6,7 +6,7 @@ The system was developed using JDK 11, and so, Java 11 is necessary to run the p
 
 ### Server
 * MongoDB (`docker run -p 27017:27017 --name mongodb mongo`);
-* `ssh-askpass` might be needed if the server does not trust the backup server yet or if the ssh is pashphrase protected (which it should be).
+* `ssh-askpass` might be needed if the server does not trust the backup server yet or if the ssh is passphrase protected (which it should be).
 
 ### Backup Server
 * `openssh-server`
@@ -56,6 +56,12 @@ openssl pkcs12 -export -name server-ssl -in server-ssl.pem -inkey server-ssl.key
 The server requires a keypair for using rsync over ssh:
 ```shell script
 ssh-keygen -t ed25519 -C "ransom-aware-server"
+```
+
+If you chose to add a passphrase to the password, add it to the ssh agent so that it is not asked everytime:
+
+```shell script
+ssh-add id_rsync
 ```
 
 This requires the server to have `ssh-askpass` installed.

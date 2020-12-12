@@ -14,7 +14,7 @@ cd ..
 # generate server certificate
 openssl genrsa -out server-ssl.key
 openssl rsa -in server-ssl.key -pubout > server-ssl.pubkey
-openssl req -new -key server-ssl.key -out server-ssl.csr -subj "/C=PT/ST=Cartaxo/L=Coimbra/O=RansomAware/OU=TRUST/CN=ransom-aware"
+openssl req -new -key server-ssl.key -out server-ssl.csr -subj "/C=PT/ST=Cartaxo/L=Coimbra/O=RansomAware/OU=TRUST/CN=localhost"
 openssl x509 -req -days 365 -in server-ssl.csr -CA root-ca/root-ca.pem -CAkey root-ca/root-ca.key -out server-ssl.pem
 
 # put in pkcs12

@@ -6,6 +6,7 @@ import ransomaware.ClientVariables;
 import ransomaware.SecurityUtils;
 import ransomaware.SessionInfo;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
@@ -67,10 +68,8 @@ public class GetFileCommand implements Command {
 
             byte[] keyBytes = getCorrectKey(info.getAsJsonObject("keys"));
             PrivateKey privKey = SecurityUtils.readPrivateKey(sessionInfo.getEncryptKeyPath());
-            SecretKey key = SecurityUtils.getKeyFromBytes(SecurityUtils.rsaCipher(Cipher.DECRYPT_MODE, keyBytes, privKey));
-            byte[] iv = SecurityUtils.decodeBase64(info.get("iv").getAsString());
 
-            byte[] unencryptedData = SecurityUtils.aesCipher(Cipher.DECRYPT_MODE, encryptedFile, key, new IvParameterSpec(iv));
+            byte[] unencryptedData = getUnencryptedData(encryptedFile, info, keyBytes, privKey);
             JsonObject fileJson = JsonParser.parseString(new String(unencryptedData)).getAsJsonObject();
 
             String encodedSignature = fileJson.get("signature").getAsString();
@@ -114,6 +113,18 @@ public class GetFileCommand implements Command {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private byte[] getUnencryptedData(byte[] encryptedFile, JsonObject info, byte[] keyBytes, PrivateKey privKey) {
+        try {
+            SecretKey key = SecurityUtils.getKeyFromBytes(SecurityUtils.rsaCipher(Cipher.DECRYPT_MODE, keyBytes, privKey));
+            byte[] iv = SecurityUtils.decodeBase64(info.get("iv").getAsString());
+            return SecurityUtils.aesCipher(Cipher.DECRYPT_MODE, encryptedFile, key, new IvParameterSpec(iv));
+        } catch (BadPaddingException e) {
+            System.err.println("Got bad key from server, exiting");
+            System.exit(1);
+        }
+        return new byte[0];
     }
 
     private boolean fileIsFresh(JsonObject info) {
