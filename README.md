@@ -78,6 +78,7 @@ The server supports the following arguments:
 -p/--path: Path to folder where data is kept (by default it is ransom-aware)
 -P/--Port: Port to bind the server to
 -db/--db-url: Mongo DB url
+-r/--rsync-uri: URI for rsync server, default is localhost:rsync/
 ```
 
 To use the defaults:
@@ -119,14 +120,15 @@ When running the client, the path to the private keys must be given:
 mvn compile exec:java -Dexec.args="-d <path-to-user-encrypt-key> -s <path-to-user-sign-key>"`
 ```
 
+A url other than `https://localhost:8443` server url can be chosen with the `-u/--url` option.
+
 Running the `./start-client.sh` script does the same as the command above:
 
 ```shell script
 ./start-client.sh <user>
 ```
 
-When first registering a client, the certificates must be given to the server, and so they will be prompted,
-the client should reply with the given certificate:
+When first registering a client, the certificates must be given to the server, and so they will be prompted, the client should provide the path of the certificates:
 ```
 Path to encryption certificate: ransom-aware/<user>-encrypt.pem
 Path to signing certificate: ransom-aware/<user>-sign.pem
