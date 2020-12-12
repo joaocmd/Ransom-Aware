@@ -119,6 +119,12 @@ When running the client, the path to the private keys must be given:
 mvn compile exec:java -Dexec.args="-d <path-to-user-encrypt-key> -s <path-to-user-sign-key>"`
 ```
 
+Running the `./start-client.sh` script does the same as the command above:
+
+```shell script
+./start-client.sh <user>
+```
+
 When first registering a client, the certificates must be given to the server, and so they will be prompted,
 the client should reply with the given certificate:
 ```
